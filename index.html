@@ -212,7 +212,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&feature=countdown&dial=salmon&mode=day&ramadan=true&time=660&nomarkers" loading="lazy" title="Fasting countdown"></iframe>
+<iframe src="https://cookmom.github.io/ramadan-clock/?embed&feature=countdown&dial=white&mode=day&ramadan=true&time=660&nomarkers" loading="lazy" title="Fasting countdown"></iframe>
 </div>
 </div>
 </div>
@@ -225,7 +225,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&tawaf=true&nomarkers" loading="lazy" title="Tawaf animation"></iframe>
+<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=salmon&tawaf=true&nomarkers" loading="lazy" title="Tawaf animation"></iframe>
 </div>
 </div>
 </div>
@@ -244,7 +244,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=tennis&mode=day&nomarkers" loading="lazy" title="Qibla compass"></iframe>
+<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=signal-blue&mode=day&nomarkers" loading="lazy" title="Qibla compass"></iframe>
 </div>
 </div>
 </div>
@@ -300,7 +300,7 @@ footer a:hover{color:var(--text)}
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
 <div class="feature-visual-box" id="dialHero">
-<iframe id="dialIframe" src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&mode=day&nomarkers" loading="lazy"></iframe>
+<iframe id="dialIframe" src="https://cookmom.github.io/ramadan-clock/?embed&dial=white&mode=day&nomarkers" loading="lazy"></iframe>
 </div>
 <span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
 <div id="dialDots" style="display:flex;gap:6px">
@@ -323,7 +323,7 @@ footer a:hover{color:var(--text)}
 const DIALS=['white','tennis','salmon','slate','signal-blue','cream'];
 const DIAL_NAMES=['White','Tennis','Salmon','Slate','Signal Blue','Cream'];
 const DIAL_COLORS={'white':'#e8e6e0','tennis':'#c2b55a','salmon':'#c17c65','slate':'#4a4f54','signal-blue':'#3a5a7c','cream':'#d8d0c0'};
-let dialIdx=3;
+let dialIdx=0;
 function updateDial(){
   const d=DIALS[dialIdx];
   document.getElementById('dialHero').style.background=DIAL_COLORS[d]||'transparent';

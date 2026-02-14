@@ -131,11 +131,55 @@ footer a:hover{color:var(--text)}
 <p class="section-body">Automatic prayer time calculations based on your location. Gentle alarms for Fajr, Dhuhr, Asr, Maghrib, and Isha — so you never miss a moment.</p>
 </div>
 <div class="feature-visual">
-<div class="feature-visual-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&feature=prayers&dial=white&mode=day&ramadan=true" loading="lazy" title="Prayer times"></iframe>
+<div class="feature-visual-box" id="prayerCard" style="flex-direction:column;padding:2rem;gap:.75rem;font-family:var(--font);background:#fff">
+<p style="font-size:.7rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)" id="pcHijri">Loading...</p>
+<p style="font-size:.8rem;font-weight:300;color:var(--text-muted)" id="pcGreg"></p>
+<p style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-bottom:.5rem" id="pcLoc"></p>
+<div id="pcTimes" style="display:flex;flex-direction:column;gap:.5rem;width:100%"></div>
+<p style="font-size:.75rem;font-weight:300;color:var(--gold);margin-top:.5rem" id="pcNext"></p>
 </div>
 </div>
 </div>
+<script>
+(async()=>{
+  try{
+    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:5000}):j());
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    const geoR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const geo=await geoR.json();
+    const city=geo.address?.city||geo.address?.town||geo.address?.village||'Unknown';
+    const country=geo.address?.country_code?.toUpperCase()||'';
+    const r=await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
+    const j=await r.json();
+    if(j.code!==200)return;
+    const t=j.data.timings,d=j.data.date;
+    document.getElementById('pcHijri').textContent=`${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH`;
+    document.getElementById('pcGreg').textContent=`${d.gregorian.weekday.en}, ${d.gregorian.day} ${d.gregorian.month.en} ${d.gregorian.year}`;
+    document.getElementById('pcLoc').textContent=`${city}${country?' · '+country:''}`;
+    const prayers=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+    const colors={Fajr:'#5b7fa5',Sunrise:'#e6a23c',Dhuhr:'#c8a44e',Asr:'#d4845e',Maghrib:'#c0392b',Isha:'#6366f1'};
+    const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
+    const toMin=s=>{const[h,m]=s.split(':').map(Number);return h*60+m;};
+    const to12=s=>{const[h,m]=s.split(':');const hr=parseInt(h);return(hr%12||12)+':'+m+(hr>=12?' PM':' AM');};
+    let nextP='';
+    prayers.forEach(p=>{
+      const pm=toMin(t[p]);
+      const isNext=!nextP&&pm>nowM;
+      if(isNext)nextP=p;
+    });
+    document.getElementById('pcTimes').innerHTML=prayers.map(p=>{
+      const isNext=p===nextP;
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;${isNext?'font-weight:500;':'font-weight:300;color:var(--text-muted);'}">
+        <span style="display:flex;align-items:center;gap:.5rem"><span style="width:6px;height:6px;border-radius:50%;background:${colors[p]};display:inline-block"></span>${p}</span>
+        <span style="font-variant-numeric:tabular-nums;font-size:.9rem">${to12(t[p])}</span>
+      </div>`;
+    }).join('');
+    if(nextP)document.getElementById('pcNext').textContent=`Next: ${nextP} at ${to12(t[nextP])}`;
+  }catch(e){
+    document.getElementById('pcHijri').textContent='Allow location for prayer times';
+  }
+})();
+</script>
 
 <div class="feature reverse reveal">
 <div class="feature-text">

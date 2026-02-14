@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0a0a">
+<title>Ramadan Clock — From Suhoor to Iftar</title>
+<meta name="description" content="A prayer-aware clock with fasting countdown, Qibla compass, and tawaf animation. Beautiful enough to leave on all day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0a0a;--fg:#f5f5f0;--dim:rgba(245,245,240,.5);--muted:rgba(245,245,240,.25);
+  --accent:#c8a44e;--accent2:#4ade80;
+  --glass:rgba(255,255,255,.04);--glass-border:rgba(255,255,255,.08);
+  --section-gap:clamp(100px,15vh,180px);
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,-apple-system,sans-serif;}
+body{background:var(--bg);overflow-x:hidden;}
+
+/* ── Typography ── */
+h1{font-size:clamp(2.8rem,7vw,5.5rem);font-weight:200;line-height:1.05;letter-spacing:-.03em;}
+h2{font-size:clamp(1.8rem,4vw,3.2rem);font-weight:200;line-height:1.15;letter-spacing:-.02em;}
+h3{font-size:clamp(1rem,2vw,1.4rem);font-weight:400;line-height:1.4;letter-spacing:-.01em;}
+p,.body-text{font-size:clamp(.95rem,1.3vw,1.15rem);font-weight:300;line-height:1.7;color:var(--dim);}
+.label{font-size:clamp(.65rem,.9vw,.8rem);font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+
+/* ── Layout ── */
+.container{max-width:1200px;margin:0 auto;padding:0 clamp(24px,5vw,64px);}
+section{padding:var(--section-gap) 0;}
+.text-center{text-align:center;}
+
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:80px 24px 60px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);margin-bottom:40px;}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.hero h1{margin-bottom:24px;}
+.hero h1 em{font-style:normal;color:var(--accent);}
+.hero-sub{max-width:520px;margin:0 auto 48px;font-size:clamp(1rem,1.5vw,1.25rem);}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:500;letter-spacing:.01em;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);text-decoration:none;border:none;}
+.btn-primary{background:var(--fg);color:var(--bg);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(245,245,240,.15);}
+.btn-secondary{background:transparent;color:var(--fg);border:1px solid var(--glass-border);}
+.btn-secondary:hover{background:var(--glass);border-color:rgba(255,255,255,.15);}
+
+/* ── Clock Preview ── */
+.clock-preview{width:min(85vw,560px);height:min(85vw,560px);border-radius:50%;margin:60px auto 0;position:relative;overflow:hidden;border:1px solid var(--glass-border);box-shadow:0 0 120px rgba(200,164,78,.06),0 0 60px rgba(0,0,0,.4);background:#1a1a1a;}
+.clock-preview iframe{width:100%;height:100%;border:none;border-radius:50%;pointer-events:none;transform:scale(1.15);}
+.clock-glow{position:absolute;inset:-40%;border-radius:50%;background:radial-gradient(circle,rgba(200,164,78,.04) 0%,transparent 70%);pointer-events:none;}
+
+/* ── Scroll Reveal ── */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1);}
+.reveal.visible{opacity:1;transform:none;}
+
+/* ── Feature Sections ── */
+.feature{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,8vw,100px);align-items:center;}
+.feature.reverse{direction:rtl;}
+.feature.reverse>*{direction:ltr;}
+.feature-visual{aspect-ratio:1;border-radius:24px;background:var(--glass);border:1px solid var(--glass-border);overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;}
+.feature-visual img{width:100%;height:100%;object-fit:cover;}
+.feature-visual .placeholder{font-size:4rem;opacity:.15;}
+.feature-text .label{margin-bottom:16px;}
+.feature-text h2{margin-bottom:20px;}
+.feature-text p{max-width:440px;}
+
+@media(max-width:768px){
+  .feature,.feature.reverse{grid-template-columns:1fr;direction:ltr;gap:40px;}
+  .feature.reverse>*{direction:ltr;}
+  .feature-visual{max-width:400px;margin:0 auto;}
+}
+
+/* ── Dial Gallery ── */
+.dial-gallery{display:flex;gap:20px;overflow-x:auto;padding:40px 0 20px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.dial-gallery::-webkit-scrollbar{display:none;}
+.dial-card{flex:0 0 min(280px,75vw);aspect-ratio:1;border-radius:20px;scroll-snap-align:center;position:relative;overflow:hidden;border:1px solid var(--glass-border);transition:transform .4s cubic-bezier(.4,0,.2,1);}
+.dial-card:hover{transform:scale(1.03);}
+.dial-card .dial-name{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);background:rgba(0,0,0,.4);backdrop-filter:blur(8px);padding:6px 14px;border-radius:100px;}
+
+/* Dial colors as backgrounds until we have screenshots */
+.dial-tennis{background:linear-gradient(145deg,#c0392b 0%,#a83228 100%);}
+.dial-white{background:linear-gradient(145deg,#e8e4dc 0%,#d4d0c8 100%);}
+.dial-salmon{background:linear-gradient(145deg,#e8967a 0%,#d4826a 100%);}
+.dial-slate{background:linear-gradient(145deg,#4a5568 0%,#3a4558 100%);}
+.dial-signal{background:linear-gradient(145deg,#2563eb 0%,#1d4ed8 100%);}
+.dial-cream{background:linear-gradient(145deg,#f5f0e0 0%,#e8e3d3 100%);}
+
+/* ── Testimonials (future) ── */
+.testimonial-track{display:flex;gap:24px;animation:scroll 30s linear infinite;}
+@keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.testimonial-card{flex:0 0 340px;padding:28px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);}
+.testimonial-card blockquote{font-size:1rem;font-weight:300;line-height:1.6;margin-bottom:16px;font-style:italic;color:var(--dim);}
+.testimonial-card .author{font-size:.8rem;font-weight:500;color:var(--fg);}
+.testimonial-card .role{font-size:.75rem;color:var(--muted);}
+
+/* ── Waitlist ── */
+.waitlist{text-align:center;padding:var(--section-gap) 0;}
+.waitlist-form{display:flex;gap:12px;max-width:440px;margin:32px auto 0;justify-content:center;}
+.waitlist-form input{flex:1;padding:14px 20px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--fg);font-family:inherit;font-size:.95rem;outline:none;transition:border-color .3s;}
+.waitlist-form input:focus{border-color:var(--accent);}
+.waitlist-form input::placeholder{color:var(--muted);}
+
+/* ── Features Grid ── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;}
+.feature-card{padding:32px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border);transition:all .3s;}
+.feature-card:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);}
+.feature-card .icon{font-size:2rem;margin-bottom:16px;}
+.feature-card h3{font-size:1.05rem;font-weight:500;margin-bottom:8px;}
+.feature-card p{font-size:.9rem;color:var(--dim);line-height:1.6;}
+@media(max-width:768px){.features-grid{grid-template-columns:1fr;}}
+
+/* ── Footer ── */
+footer{padding:60px 0;border-top:1px solid var(--glass-border);text-align:center;}
+footer p{font-size:.85rem;color:var(--muted);}
+footer a{color:var(--dim);text-decoration:none;transition:color .3s;}
+footer a:hover{color:var(--fg);}
+.footer-links{display:flex;gap:32px;justify-content:center;margin-bottom:24px;}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:16px 0;transition:all .4s;}
+nav.scrolled{background:rgba(10,10,10,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--glass-border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 clamp(24px,5vw,64px);display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:1rem;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;}
+.nav-logo .crescent{font-size:1.2rem;}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nav-links a{font-size:.85rem;font-weight:400;color:var(--dim);text-decoration:none;transition:color .3s;}
+.nav-links a:hover{color:var(--fg);}
+
+/* ── Divider ── */
+.divider{width:60px;height:1px;background:var(--glass-border);margin:0 auto;}
+
+/* ── Crescent separator ── */
+.crescent-sep{text-align:center;font-size:1.5rem;opacity:.15;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="nav-logo"><span class="crescent">☪</span> Ramadan Clock</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#dials">Dials</a>
+      <a href="#app">iOS App</a>
+      <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-secondary" style="padding:8px 20px;font-size:.8rem;">Open Clock</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    <span class="label" style="margin:0;">Free &middot; Open Source &middot; Ramadan 2026</span>
+  </div>
+  <h1>From Suhoor<br>to <em>Iftar.</em></h1>
+  <p class="hero-sub body-text">A prayer-aware clock with fasting countdown, Qibla compass, and a tawaf animation at Maghrib. Beautiful enough to leave on all day.</p>
+  <div class="hero-cta">
+    <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary">Open Clock ↗</a>
+    <a href="#features" class="btn btn-secondary">See Features</a>
+  </div>
+  <div class="clock-preview">
+    <div class="clock-glow"></div>
+    <iframe src="https://cookmom.github.io/ramadan-clock/" loading="lazy" title="Ramadan Clock preview"></iframe>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section id="features" class="container">
+  <div class="text-center reveal">
+    <p class="label">Built for Ramadan</p>
+    <h2>Everything you need,<br>nothing you don't.</h2>
+  </div>
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <div class="icon">🕌</div>
+      <h3>Prayer Alarms</h3>
+      <p>Gentle oud-pluck alerts for all five prayers plus Sunrise. Auto-detects your location for accurate times.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⏱</div>
+      <h3>Split-Flap Countdown</h3>
+      <p>Mechanical flip-clock counts down to Iftar or Fajr. Always visible at 6 o'clock — no tap required.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🕋</div>
+      <h3>Tawaf at Maghrib</h3>
+      <p>At sunset, the hands spin counter-clockwise — seven circuits around the Kaaba — with an oud pluck marking each revolution.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧭</div>
+      <h3>Qibla Compass</h3>
+      <p>Built into the dial at 12 o'clock. Turns green when you're facing Mecca. Uses your device gyroscope.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🌙</div>
+      <h3>Day &amp; Night</h3>
+      <p>Automatic transitions with moon phase, stars, and celestial animations. The clock breathes with the sky.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎨</div>
+      <h3>Hand-Tuned Dials</h3>
+      <p>Six curated colorways — from classic White to bold Tennis. Swipe to change. Each one refined to the smallest detail.</p>
+    </div>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- Tawaf Feature Deep Dive -->
+<section class="container">
+  <div class="feature reveal">
+    <div class="feature-visual">
+      <div class="placeholder">🕋</div>
+    </div>
+    <div class="feature-text">
+      <p class="label">The Maghrib Moment</p>
+      <h2>Seven circuits.<br>One signal to break fast.</h2>
+      <p>When the sun sets, the clock comes alive. The hour hand spins counter-clockwise — the direction of Tawaf around the Kaaba — completing seven revolutions as oud strings mark each circuit. The first note lands exactly at Maghrib. Stars emerge. The moon rises. Then stillness.</p>
+    </div>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- Qibla Feature -->
+<section class="container">
+  <div class="feature reverse reveal">
+    <div class="feature-visual">
+      <div class="placeholder">🧭</div>
+    </div>
+    <div class="feature-text">
+      <p class="label">Always Know the Direction</p>
+      <h2>Qibla compass,<br>built into the dial.</h2>
+      <p>A subtle triangle at 12 o'clock points toward Mecca. Pick up your phone, and it turns green when you're aligned. No separate app needed — just glance at your clock.</p>
+    </div>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- Dial Gallery -->
+<section id="dials" class="container">
+  <div class="text-center reveal">
+    <p class="label">Six Colorways</p>
+    <h2>Clock dials that feel right.</h2>
+    <p class="body-text" style="max-width:480px;margin:16px auto 0;">Hand-tuned to shine by day and glow by night. Swipe to browse.</p>
+  </div>
+  <div class="dial-gallery reveal">
+    <div class="dial-card dial-white"><span class="dial-name">White</span></div>
+    <div class="dial-card dial-tennis"><span class="dial-name">Tennis</span></div>
+    <div class="dial-card dial-salmon"><span class="dial-name">Salmon</span></div>
+    <div class="dial-card dial-slate"><span class="dial-name">Slate</span></div>
+    <div class="dial-card dial-signal"><span class="dial-name">Signal Blue</span></div>
+    <div class="dial-card dial-cream"><span class="dial-name">Cream</span></div>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- How to Use -->
+<section class="container">
+  <div class="text-center reveal">
+    <p class="label">Get Started</p>
+    <h2>Add to your Home Screen.</h2>
+    <p class="body-text" style="max-width:500px;margin:16px auto 0;">No app store, no download. Open the clock in Safari, tap Share, then "Add to Home Screen." It runs like a native app.</p>
+  </div>
+  <div class="features-grid reveal" style="grid-template-columns:repeat(3,1fr);margin-top:48px;">
+    <div class="feature-card text-center">
+      <div class="icon">📱</div>
+      <h3>1. Open in Safari</h3>
+      <p>Tap "Open Clock" above on your iPhone or iPad.</p>
+    </div>
+    <div class="feature-card text-center">
+      <div class="icon">↗️</div>
+      <h3>2. Tap Share</h3>
+      <p>Hit the share button at the bottom of Safari.</p>
+    </div>
+    <div class="feature-card text-center">
+      <div class="icon">➕</div>
+      <h3>3. Add to Home Screen</h3>
+      <p>Scroll down and tap "Add to Home Screen." Done.</p>
+    </div>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- iOS App Waitlist -->
+<section id="app" class="waitlist container reveal">
+  <p class="label">Coming Soon</p>
+  <h2>A native iOS app<br>is on the way.</h2>
+  <p class="body-text" style="max-width:480px;margin:16px auto 0;">Premium dials, Apple Watch complication, widgets, and offline prayer times. Join the waitlist to be first.</p>
+  <div class="waitlist-form">
+    <input type="email" placeholder="your@email.com" aria-label="Email address">
+    <button class="btn btn-primary" style="flex:none;">Join Waitlist</button>
+  </div>
+</section>
+
+<div class="crescent-sep reveal">☪</div>
+
+<!-- Gesture Guide -->
+<section class="container">
+  <div class="text-center reveal">
+    <p class="label">No Buttons Needed</p>
+    <h2>Gesture-driven.</h2>
+  </div>
+  <div class="features-grid reveal" style="grid-template-columns:repeat(2,1fr);max-width:700px;margin:48px auto 0;">
+    <div class="feature-card text-center">
+      <div class="icon">👆</div>
+      <h3>Swipe Left / Right</h3>
+      <p>Change dial color</p>
+    </div>
+    <div class="feature-card text-center">
+      <div class="icon">👆</div>
+      <h3>Swipe Up / Down</h3>
+      <p>Toggle day &amp; night mode</p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://cookmom.github.io/ramadan-clock/">Open Clock</a>
+      <a href="mailto:support@ramadanclock.app">Support</a>
+      <a href="https://github.com/cookmom/ramadan-clock/issues">Report a Bug</a>
+      <a href="https://github.com/cookmom/ramadan-clock">GitHub</a>
+    </div>
+    <p>Made with ☪ for Ramadan 2026</p>
+    <p style="margin-top:8px;font-size:.75rem;">By <a href="https://tawfeeqmartin.com" style="color:var(--dim);">Tawfeeq Martin</a></p>
+  </div>
+</footer>
+
+<script>
+// Nav scroll effect
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>{
+  nav.classList.toggle('scrolled',window.scrollY>50);
+});
+
+// Scroll reveal
+const reveals=document.querySelectorAll('.reveal');
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target);}
+  });
+},{threshold:0.15,rootMargin:'0px 0px -40px 0px'});
+reveals.forEach(el=>observer.observe(el));
+</script>
+
+</body>
+</html>

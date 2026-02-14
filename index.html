@@ -67,21 +67,13 @@ section{padding:6rem 2rem}
 .feature.reverse .feature-text{order:1}
 .feature.reverse .feature-visual{order:2}
 .feature-visual-box iframe{transform:translate(-50%,-50%) scale(0.32)}
-.dial-strip{gap:1.5rem;justify-content:center}
-.dial-frame{width:140px;height:140px}
-.dial-frame iframe{width:390px;height:390px;transform:translate(-50%,-50%) scale(0.359)}
+/* removed old dial-strip mobile overrides */
 }
 
 /* Dials */
 .dials{padding:6rem 0;overflow:hidden}
 .dials-header{text-align:center;padding:0 2rem;margin-bottom:3rem}
-.dial-strip{display:flex;gap:2.5rem;overflow-x:auto;padding:0 2rem 2rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;justify-content:center;flex-wrap:wrap}
-.dial-strip::-webkit-scrollbar{display:none}
-.dial-card{flex:0 0 180px;display:flex;flex-direction:column;align-items:center;gap:.75rem;scroll-snap-align:start;transition:transform .3s}
-.dial-card:hover{transform:translateY(-4px)}
-.dial-frame{width:180px;height:180px;border-radius:50%;overflow:hidden;position:relative;box-shadow:none}
-.dial-frame iframe{position:absolute;top:50%;left:50%;width:500px;height:500px;transform:translate(-50%,-50%) scale(0.36);border:none;pointer-events:none}
-.dial-name{font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-top:auto;padding-top:1rem}
+.dials .feature-visual-box{pointer-events:auto}
 
 /* Install steps */
 .install{max-width:800px;margin:0 auto;text-align:center;padding:6rem 2rem}
@@ -277,14 +269,49 @@ footer a:hover{color:var(--text)}
 <h2 class="section-title">Dials that feel right.</h2>
 <p class="section-body" style="margin:0 auto;max-width:500px">Hand-tuned colors that shift from day to night. Pick the one that fits your space.</p>
 </div>
-<div class="dial-strip">
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=white&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">White</span></div>
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=tennis&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">Tennis</span></div>
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=salmon&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">Salmon</span></div>
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">Slate</span></div>
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=signal-blue&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">Signal Blue</span></div>
-<div class="dial-card"><div class="dial-frame"><iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=cream&mode=day&nomarkers" loading="lazy"></iframe></div><span class="dial-name">Cream</span></div>
+<div style="display:flex;align-items:center;justify-content:center;gap:2rem;padding:0 1rem">
+<button onclick="dialPrev()" aria-label="Previous dial" style="background:none;border:none;cursor:pointer;padding:.5rem">
+<i class="ph-thin ph-caret-left" style="font-size:2rem;color:var(--text);opacity:.3"></i>
+</button>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+<div class="feature-visual-box" id="dialHero">
+<iframe id="dialIframe" src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&mode=day&nomarkers" loading="lazy"></iframe>
 </div>
+<span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
+<div id="dialDots" style="display:flex;gap:6px">
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.6"></span>
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
+<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
+</div>
+</div>
+<button onclick="dialNext()" aria-label="Next dial" style="background:none;border:none;cursor:pointer;padding:.5rem">
+<i class="ph-thin ph-caret-right" style="font-size:2rem;color:var(--text);opacity:.3"></i>
+</button>
+</div>
+<p style="text-align:center;margin-top:1.5rem;font-weight:300;font-size:.85rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:.5rem">
+<i class="ph-thin ph-arrows-left-right" style="font-size:1.1rem"></i> Swipe left and right in the app to change dials
+</p>
+<script>
+const DIALS=['white','tennis','salmon','slate','signal-blue','cream'];
+const DIAL_NAMES=['White','Tennis','Salmon','Slate','Signal Blue','Cream'];
+let dialIdx=3;
+function updateDial(){
+  document.getElementById('dialIframe').src='https://cookmom.github.io/ramadan-clock/?embed&dial='+DIALS[dialIdx]+'&mode=day&nomarkers';
+  document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
+  document.querySelectorAll('#dialDots span').forEach((d,i)=>d.style.opacity=i===dialIdx?'.6':'.15');
+}
+function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
+function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
+// Touch swipe on dial hero
+(function(){
+  const el=document.getElementById('dialHero');let sx=0;
+  el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+  el.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40){dx<0?dialNext():dialPrev();}},{passive:true});
+})();
+</script>
 </section>
 
 <!-- Add to Home Screen -->
@@ -361,8 +388,8 @@ document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 <script>
 window.addEventListener('message',e=>{
   if(e.data&&e.data.type==='rc-bg'){
-    const iframe=Array.from(document.querySelectorAll('.feature-visual-box iframe, .dial-frame iframe')).find(f=>f.contentWindow===e.source);
-    if(iframe){const box=iframe.closest('.feature-visual-box')||iframe.closest('.dial-frame');if(box)box.style.background=e.data.bg;}
+    const iframe=Array.from(document.querySelectorAll('.feature-visual-box iframe')).find(f=>f.contentWindow===e.source);
+    if(iframe){const box=iframe.closest('.feature-visual-box');if(box)box.style.background=e.data.bg;}
   }
 });
 </script>

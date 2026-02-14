@@ -60,7 +60,7 @@ section{padding:6rem 2rem}
 .feature-visual{display:flex;align-items:center;justify-content:center}
 .feature-icon{font-size:4rem;color:var(--gold);margin-bottom:1.5rem;display:block}
 .feature-visual-box{width:100%;max-width:380px;aspect-ratio:1;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.06);position:relative}
-.feature-visual-box iframe{position:absolute;top:50%;left:50%;width:250%;height:250%;transform:translate(-50%,-50%);border:none}
+.feature-visual-box iframe{position:absolute;top:0;left:0;width:1000px;height:1000px;transform-origin:0 0;transform:scale(0.38);border:none}
 @media(max-width:768px){
 .feature{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem}
 .feature.reverse .feature-text{order:1}
@@ -75,7 +75,7 @@ section{padding:6rem 2rem}
 .dial-card{flex:0 0 180px;display:flex;flex-direction:column;align-items:center;gap:.75rem;scroll-snap-align:start;transition:transform .3s}
 .dial-card:hover{transform:translateY(-4px)}
 .dial-frame{width:180px;height:180px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.06)}
-.dial-frame iframe{position:absolute;top:50%;left:50%;width:600px;height:600px;transform:translate(-50%,-50%);border:none;pointer-events:none}
+.dial-frame iframe{position:absolute;top:0;left:0;width:500px;height:500px;transform-origin:0 0;transform:scale(0.36);border:none;pointer-events:none}
 .dial-name{font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-top:auto;padding-top:1rem}
 
 /* Install steps */

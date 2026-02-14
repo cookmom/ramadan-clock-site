@@ -422,6 +422,12 @@ window.addEventListener('message',e=>{
   if(e.data&&e.data.type==='rc-bg'){
     const iframe=Array.from(document.querySelectorAll('.feature-visual-box iframe')).find(f=>f.contentWindow===e.source);
     if(iframe){const box=iframe.closest('.feature-visual-box');if(box)box.style.background=e.data.bg;}
+    // Update ambient section bg to match night mode clock
+    const ambientIframe=document.querySelector('.ambient-box iframe');
+    if(ambientIframe&&ambientIframe.contentWindow===e.source){
+      const sec=ambientIframe.closest('.ambient-section');
+      if(sec)sec.style.background=e.data.bg;
+    }
   }
 });
 </script>

@@ -264,8 +264,30 @@ footer a:hover{color:var(--text)}
 <p class="section-body">The tick follows the second hand using HRTF spatial audio — you hear it sweep past your ears. Prayer alarms use a warm oud pluck. And at night, everything goes silent. The clock knows when to speak and when to listen.</p>
 </div>
 <div class="feature-visual">
-<div class="feature-visual-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=signal-blue&mode=day&nomarkers" loading="lazy" title="HRTF spatial audio"></iframe>
+<div style="width:min(380px,85vw);height:min(380px,85vw);display:flex;align-items:center;justify-content:center;margin:0 auto">
+<svg viewBox="0 0 200 200" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Head silhouette -->
+<circle cx="100" cy="85" r="22" fill="var(--text)" opacity=".12"/>
+<rect x="88" y="105" width="24" height="16" rx="4" fill="var(--text)" opacity=".12"/>
+<!-- Headband -->
+<path d="M62 95 Q62 55 100 50 Q138 55 138 95" stroke="var(--text)" stroke-width="3" stroke-linecap="round" opacity=".7" fill="none"/>
+<!-- Ear cups -->
+<rect x="54" y="88" width="14" height="22" rx="7" fill="var(--text)" opacity=".25"/>
+<rect x="132" y="88" width="14" height="22" rx="7" fill="var(--text)" opacity=".25"/>
+<!-- Sound waves left -->
+<path d="M48 99 Q38 99 38 85" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".5" fill="none"/>
+<path d="M44 99 Q28 99 28 78" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".35" fill="none"/>
+<path d="M40 99 Q18 99 18 71" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".2" fill="none"/>
+<!-- Sound waves right -->
+<path d="M152 99 Q162 99 162 85" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".5" fill="none"/>
+<path d="M156 99 Q172 99 172 78" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".35" fill="none"/>
+<path d="M160 99 Q182 99 182 71" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity=".2" fill="none"/>
+<!-- Label -->
+<text x="100" y="148" text-anchor="middle" font-family="var(--font)" font-weight="300" font-size="8" fill="var(--text)" opacity=".4" letter-spacing=".1em">HRTF SPATIAL AUDIO</text>
+<!-- Directional arrows (circular motion) -->
+<path d="M70 155 Q100 170 130 155" stroke="var(--gold)" stroke-width="1" stroke-linecap="round" opacity=".3" fill="none" stroke-dasharray="4 3"/>
+<polygon points="132,156 128,152 126,158" fill="var(--gold)" opacity=".3"/>
+</svg>
 </div>
 </div>
 </div>

@@ -60,7 +60,7 @@ section{padding:6rem 2rem}
 .feature.reverse .feature-visual{order:1}
 .feature-visual{display:flex;align-items:center;justify-content:center}
 .feature-icon{font-size:4rem;color:var(--gold);margin-bottom:1.5rem;display:block}
-.feature-visual-box{width:100%;max-width:380px;aspect-ratio:1;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.06);position:relative}
+.feature-visual-box{width:100%;max-width:380px;aspect-ratio:1;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:none;position:relative}
 .feature-visual-box iframe{position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none}
 @media(max-width:768px){
 .feature{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem}
@@ -358,6 +358,14 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
 // Scroll reveal
 const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+<script>
+window.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='rc-bg'){
+    const iframe=Array.from(document.querySelectorAll('.feature-visual-box iframe, .dial-frame iframe')).find(f=>f.contentWindow===e.source);
+    if(iframe){const box=iframe.closest('.feature-visual-box')||iframe.closest('.dial-frame');if(box)box.style.background=e.data.bg;}
+  }
+});
 </script>
 </body>
 </html>

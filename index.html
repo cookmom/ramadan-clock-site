@@ -375,26 +375,6 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
 </div>
 </section>
 
-<!-- Feedback -->
-<section class="waitlist reveal">
-<p class="section-label">Shape what's next</p>
-<h2 class="section-title">We'd love to hear<br>from you.</h2>
-<p class="section-body" style="margin:0 auto;max-width:500px">Would this clock be useful to you beyond Ramadan? What features would make it part of your daily practice? Your feedback shapes everything we build next.</p>
-<form class="waitlist-form" style="flex-direction:column;max-width:480px;align-items:stretch" onsubmit="event.preventDefault();const d={email:this.email.value,beyond:this.beyond.value,features:this.features.value};localStorage.setItem('rc-feedback',JSON.stringify(d));this.innerHTML='<p style=color:var(--gold);font-weight:400>Jazakallahu khairan. Your feedback means everything.</p>'">
-<input type="email" name="email" placeholder="Your email" required aria-label="Email address">
-<div style="display:flex;gap:.75rem;flex-wrap:wrap">
-<label style="flex:1;min-width:140px;display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border:1px solid var(--border);border-radius:100px;font-size:.85rem;cursor:pointer;transition:border-color .2s">
-<input type="radio" name="beyond" value="yes" required style="accent-color:var(--gold)"> Useful beyond Ramadan
-</label>
-<label style="flex:1;min-width:140px;display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border:1px solid var(--border);border-radius:100px;font-size:.85rem;cursor:pointer;transition:border-color .2s">
-<input type="radio" name="beyond" value="ramadan-only" style="accent-color:var(--gold)"> Ramadan only
-</label>
-</div>
-<textarea name="features" placeholder="What features would you love to see? (Quran reader, dhikr counter, Apple Watch, widgets...)" rows="3" style="padding:.75rem 1.25rem;border:1px solid var(--border);border-radius:16px;font-family:var(--font);font-size:.9rem;background:var(--bg);resize:vertical;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-<button type="submit" class="btn btn-primary" style="align-self:center">Send Feedback</button>
-</form>
-</section>
-
 <!-- Waitlist -->
 <section style="text-align:center;padding:4rem 2rem;background:var(--bg-alt)" class="reveal">
 <p class="section-label">Coming Soon</p>
@@ -408,7 +388,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
 
 <!-- Footer -->
 <footer>
-<p>By <a href="https://tawfeeqmartin.com" target="_blank" rel="noopener">Tawfeeq Martin</a><span class="footer-sep">·</span><a href="mailto:support@ramadanclock.app">Support</a><span class="footer-sep">·</span><a href="#credits" onclick="document.getElementById('credits').style.display=document.getElementById('credits').style.display==='none'?'block':'none';return false">Credits</a></p>
+<p>By <a href="https://tawfeeqmartin.com" target="_blank" rel="noopener">Tawfeeq Martin</a><span class="footer-sep">·</span><a href="mailto:feedback@ramadanclock.app">Feedback</a><span class="footer-sep">·</span><a href="mailto:support@ramadanclock.app">Support</a><span class="footer-sep">·</span><a href="#credits" onclick="document.getElementById('credits').style.display=document.getElementById('credits').style.display==='none'?'block':'none';return false">Credits</a></p>
 <div id="credits" style="display:none;max-width:520px;margin:1.5rem auto 0;text-align:left;font-size:.85rem;font-weight:300;color:var(--text-muted);line-height:1.8">
 <p style="font-weight:500;font-size:.75rem;letter-spacing:.08em;margin-bottom:.75rem">ACKNOWLEDGMENTS</p>
 <p><strong style="font-weight:500">Mishary Rashid al-Afasy</strong> — Quran recitation</p>

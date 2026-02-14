@@ -142,14 +142,25 @@ footer a:hover{color:var(--text)}
 </div>
 <script>
 (async()=>{
+  let city='Los Angeles',country='US',apiUrl;
   try{
-    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:5000}):j());
+    // Try GPS first
+    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}):j());
     const lat=pos.coords.latitude,lon=pos.coords.longitude;
-    const geoR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    apiUrl=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`;
+    try{const geoR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
     const geo=await geoR.json();
-    const city=geo.address?.city||geo.address?.town||geo.address?.village||'Unknown';
-    const country=geo.address?.country_code?.toUpperCase()||'';
-    const r=await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
+    city=geo.address?.city||geo.address?.town||geo.address?.village||city;
+    country=geo.address?.country_code?.toUpperCase()||country;}catch(e){}
+  }catch(e){
+    // Fallback: IP-based location via timezone
+    try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzCity=tz.split('/').pop().replace(/_/g,' ');
+    city=tzCity;country='';}catch(e2){}
+    apiUrl=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=US&method=2`;
+  }
+  try{
+    const r=await fetch(apiUrl);
     const j=await r.json();
     if(j.code!==200)return;
     const t=j.data.timings,d=j.data.date;
@@ -176,7 +187,7 @@ footer a:hover{color:var(--text)}
     }).join('');
     if(nextP)document.getElementById('pcNext').textContent=`Next: ${nextP} at ${to12(t[nextP])}`;
   }catch(e){
-    document.getElementById('pcHijri').textContent='Allow location for prayer times';
+    document.getElementById('pcHijri').textContent='Prayer times unavailable';
   }
 })();
 </script>

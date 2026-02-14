@@ -255,8 +255,28 @@ footer a:hover{color:var(--text)}
 </div>
 </section>
 
-<!-- Waitlist -->
+<!-- Feedback -->
 <section class="waitlist reveal">
+<p class="section-label">Shape what's next</p>
+<h2 class="section-title">We'd love to hear<br>from you.</h2>
+<p class="section-body" style="margin:0 auto;max-width:500px">Would this clock be useful to you beyond Ramadan? What features would make it part of your daily practice? Your feedback shapes everything we build next.</p>
+<form class="waitlist-form" style="flex-direction:column;max-width:480px;align-items:stretch" onsubmit="event.preventDefault();const d={email:this.email.value,beyond:this.beyond.value,features:this.features.value};localStorage.setItem('rc-feedback',JSON.stringify(d));this.innerHTML='<p style=color:var(--gold);font-weight:400>Jazakallahu khairan. Your feedback means everything.</p>'">
+<input type="email" name="email" placeholder="Your email" required aria-label="Email address">
+<div style="display:flex;gap:.75rem">
+<label style="flex:1;display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border:1px solid var(--border);border-radius:100px;font-size:.9rem;cursor:pointer;transition:border-color .2s">
+<input type="radio" name="beyond" value="yes" required style="accent-color:var(--gold)"> Useful beyond Ramadan
+</label>
+<label style="flex:1;display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border:1px solid var(--border);border-radius:100px;font-size:.9rem;cursor:pointer;transition:border-color .2s">
+<input type="radio" name="beyond" value="ramadan-only" style="accent-color:var(--gold)"> Ramadan only
+</label>
+</div>
+<textarea name="features" placeholder="What features would you love to see? (Quran reader, dhikr counter, Apple Watch, widgets...)" rows="3" style="padding:.75rem 1.25rem;border:1px solid var(--border);border-radius:16px;font-family:var(--font);font-size:.9rem;background:var(--bg);resize:vertical;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+<button type="submit" class="btn btn-primary" style="align-self:center">Send Feedback</button>
+</form>
+</section>
+
+<!-- Waitlist -->
+<section style="text-align:center;padding:4rem 2rem;background:var(--bg-alt)" class="reveal">
 <p class="section-label">Coming Soon</p>
 <h2 class="section-title">iOS app on the way.</h2>
 <p class="section-body" style="margin:0 auto">Be the first to know when it launches.</p>

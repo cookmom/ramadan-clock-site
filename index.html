@@ -58,8 +58,8 @@ section{padding:6rem 2rem}
 .feature.reverse .feature-visual{order:1}
 .feature-visual{display:flex;align-items:center;justify-content:center}
 .feature-icon{font-size:4rem;color:var(--gold);margin-bottom:1.5rem;display:block}
-.feature-visual-box{width:min(380px,85vw);height:min(380px,85vw);border-radius:50%;background:transparent;border:none;overflow:hidden;box-shadow:none;position:relative;margin:0 auto;flex-shrink:0}
-.feature-visual-box iframe{position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none}
+.feature-visual-box{width:min(380px,85vw);height:min(380px,85vw);border-radius:50%;background:transparent;border:none;overflow:hidden;box-shadow:none;position:relative;margin:0 auto;flex-shrink:0;pointer-events:none}
+.feature-visual-box iframe{position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:none}
 @media(max-width:768px){
 .feature{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem}
 .feature.reverse .feature-text{order:1}
@@ -72,6 +72,7 @@ section{padding:6rem 2rem}
 .dials{padding:6rem 0;overflow:hidden}
 .dials-header{text-align:center;padding:0 2rem;margin-bottom:3rem}
 .dials .feature-visual-box{pointer-events:auto}
+.dials .feature-visual-box iframe{pointer-events:auto}
 
 /* Install steps */
 .install{max-width:800px;margin:0 auto;text-align:center;padding:6rem 2rem}

@@ -71,9 +71,9 @@ section{padding:6rem 2rem}
 /* Dials */
 .dials{padding:6rem 0;overflow:hidden}
 .dials-header{text-align:center;padding:0 2rem;margin-bottom:3rem}
-.ambient-box{height:min(520px,115vw)!important;border-radius:24px!important;pointer-events:auto!important}
-.ambient-box iframe{transform:translate(-50%,-50%) scale(0.52)!important;pointer-events:auto!important}
-@media(max-width:768px){.ambient-box iframe{transform:translate(-50%,-50%) scale(0.44)!important}}
+.ambient-box{width:min(380px,85vw);height:min(540px,120vw);border-radius:24px;background:#1a1a20;overflow:hidden;position:relative;pointer-events:auto}
+.ambient-box iframe{position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.5);border:none;pointer-events:auto}
+@media(max-width:768px){.ambient-box iframe{transform:translate(-50%,-50%) scale(0.42)}}
 .dials .feature-visual-box{pointer-events:auto}
 .dials .feature-visual-box iframe{pointer-events:auto}
 
@@ -271,27 +271,25 @@ footer a:hover{color:var(--text)}
 </div>
 </div>
 
-<div class="feature reverse reveal">
-<div class="feature-text">
+<section style="text-align:center;padding:5rem 2rem;max-width:680px;margin:0 auto" class="reveal">
 <p class="section-label">Ambient</p>
-<h2 class="section-title">Day fades<br>into night.</h2>
-<p class="section-body">At night, the movement goes silent — a smooth digital sweep that preserves your peace. Exactly eleven stars appear above the dial, arranged in a prostration arc. In Surah Yusuf (12:4), the young prophet dreamed of eleven stars, the sun, and the moon prostrating before him — the stars his eleven brothers, the sun his father Ya'qub, the moon his mother. Our stars bow the way the Quran describes them: in sujud, arcing toward the moon. Every detail is intentional.</p>
-<div style="margin-top:2.5rem;text-align:center">
+<h2 class="section-title">Day fades into night.</h2>
+<p class="section-body" style="max-width:520px;margin:0 auto 2.5rem">At night, the movement goes silent — a smooth digital sweep that preserves your peace. Exactly eleven stars appear above the dial, arranged in a prostration arc. In Surah Yusuf (12:4), the young prophet dreamed of eleven stars, the sun, and the moon prostrating before him — the stars his eleven brothers, the sun his father Ya'qub, the moon his mother. Our stars bow the way the Quran describes them: in sujud, arcing toward the moon. Every detail is intentional.</p>
+
+<div class="ambient-box" style="margin:0 auto">
+<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&mode=night&nomarkers&swipev" loading="lazy" title="Night mode with stars"></iframe>
+</div>
+<p style="font-size:.8rem;font-weight:300;color:var(--text-muted);margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
+<i class="ph-thin ph-arrows-down-up" style="font-size:1.1rem"></i> Swipe up and down in the app to shift between day and night
+</p>
+
+<div style="margin-top:2.5rem">
 <p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text);margin-bottom:1rem;">إِذْ قَالَ يُوسُفُ لِأَبِيهِ يَـٰٓأَبَتِ إِنِّى رَأَيْتُ أَحَدَ عَشَرَ كَوْكَبًا وَٱلشَّمْسَ وَٱلْقَمَرَ رَأَيْتُهُمْ لِى سَـٰجِدِينَ</p>
 <p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7;max-width:520px;margin:0 auto .75rem;">"When Yusuf said to his father, 'O my father, indeed I have seen eleven stars and the sun and the moon; I saw them prostrating to me.'"</p>
 <p style="font-size:.75rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1rem;">— Surah Yusuf 12:4</p>
 <button onclick="if(!this._a){this._a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/012004.mp3');this._a.onended=()=>{this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse'}}this._a.paused?( this._a.play(),this.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'):(this._a.pause(),this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem;"><i class="ph-thin ph-play"></i> Listen to this verse</button>
 </div>
-</div>
-<div class="feature-visual">
-<div class="feature-visual-box ambient-box">
-<iframe src="https://cookmom.github.io/ramadan-clock/?embed&dial=slate&mode=night&nomarkers&swipev" loading="lazy" title="Night mode with stars"></iframe>
-</div>
-<p class="gesture-hint" style="text-align:center;font-size:.8rem;font-weight:300;color:var(--text-muted);margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
-<i class="ph-thin ph-arrows-down-up" style="font-size:1.1rem"></i> Swipe up and down in the app to shift between day and night
-</p>
-</div>
-</div>
+</section>
 
 <!-- Dial Gallery -->
 <section class="dials">

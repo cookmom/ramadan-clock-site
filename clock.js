@@ -413,10 +413,9 @@ function updateScrollIndicator() {
     ty = Math.sin(ang) * trackR;
     targetOpacity = 1;
   }
-  const ease = 0.08;
-  scrollIndicatorCurrent.x += (tx - scrollIndicatorCurrent.x) * ease;
-  scrollIndicatorCurrent.y += (ty - scrollIndicatorCurrent.y) * ease;
-  scrollIndicatorCurrent.opacity += (targetOpacity - scrollIndicatorCurrent.opacity) * ease;
+  scrollIndicatorCurrent.x = tx;
+  scrollIndicatorCurrent.y = ty;
+  scrollIndicatorCurrent.opacity = targetOpacity;
   scrollIndicator.position.x = scrollIndicatorCurrent.x;
   scrollIndicator.position.y = scrollIndicatorCurrent.y;
   scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;

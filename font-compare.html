@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arabic Numeral Font Comparison — Watch Dial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500&family=Readex+Pro:wght@200;300;400;500&family=Tajawal:wght@200;300;400;500&family=Alexandria:wght@100;200;300;400;500&family=El+Messiri:wght@400;500;600&family=Noto+Kufi+Arabic:wght@100;200;300;400;500&family=Noto+Sans+Arabic:wght@100;200;300;400;500&family=Rubik:wght@300;400;500&family=Cairo:wght@200;300;400;500&family=Almarai:wght@300;400&family=Changa:wght@200;300;400;500&family=Harmattan:wght@400;700&family=Mada:wght@200;300;400;500&family=Markazi+Text:wght@400;500;600&family=Reem+Kufi:wght@400;500;600&family=Scheherazade+New:wght@400;700&family=Amiri:wght@400;700&family=Lateef:wght@400&family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8f7f4;color:#1a1a1a;padding:2rem;font-weight:300}
+h1{font-weight:200;font-size:1.8rem;margin-bottom:0.3rem}
+.subtitle{color:#6b6b6b;margin-bottom:2rem;font-size:0.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.5rem}
+.card{background:#fff;border:1px solid #e5e3dd;border-radius:12px;padding:1.5rem;transition:box-shadow 0.2s}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.2rem}
+.card-header h3{font-weight:400;font-size:1rem}
+.card-header .rank{color:#c8a44e;font-weight:500;font-size:0.8rem}
+.meta{font-size:0.75rem;color:#999;margin-bottom:1rem}
+.dial{width:260px;height:260px;border-radius:50%;margin:0 auto 1rem;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dial.slate{background:#585860}
+.dial.white{background:#e8e4dc}
+.numeral{position:absolute;color:#d0d0d4;text-align:center;line-height:1}
+.dial.white .numeral{color:#2a2a2e}
+.marker{position:absolute;background:#d0d0d4;border-radius:1px}
+.dial.white .marker{background:#2a2a2e}
+.center-dot{width:8px;height:8px;border-radius:50%;background:#d0d0d4;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2}
+.dial.white .center-dot{background:#2a2a2e}
+.weight-row{display:flex;gap:1.5rem;justify-content:center;margin-bottom:0.8rem;flex-wrap:wrap}
+.weight-sample{text-align:center}
+.weight-sample .nums{font-size:2rem;direction:rtl;line-height:1.3}
+.weight-sample .wlabel{font-size:0.65rem;color:#999;margin-top:2px}
+.tags{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.8rem}
+.tag{font-size:0.65rem;padding:2px 8px;border-radius:10px;background:#f0efe9;color:#666}
+.tag.rec{background:#c8a44e;color:#fff}
+.tag.free{background:#e8f5e9;color:#2e7d32}
+.tag.paid{background:#fff3e0;color:#e65100}
+.toggle-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.toggle-row button{font-family:'Inter',sans-serif;font-weight:300;font-size:0.85rem;padding:0.4rem 1rem;border:1px solid #e5e3dd;border-radius:20px;background:#fff;cursor:pointer;transition:all 0.2s}
+.toggle-row button.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.note{font-size:0.8rem;color:#6b6b6b;margin-top:2rem;padding-top:1rem;border-top:1px solid #e5e3dd;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>Eastern Arabic Numerals — Font Comparison</h1>
+<p class="subtitle">For the watch dial. Pick the one that feels premium.</p>
+
+<div class="toggle-row">
+<button class="active" onclick="setDial('slate',this)">Slate dial</button>
+<button onclick="setDial('white',this)">White dial</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<p class="note">
+All numerals shown at watch-dial scale. The dial positions match the actual clock layout: ١٢ at 12, ٢ at 2, ٤ at 4, ٨ at 8, ١٠ at 10. Stick markers at odd positions, no numeral at 6 (Qibla subdial).
+<br>Lateef (current) shown last for comparison.
+</p>
+
+<script>
+const FONTS = [
+  { name:'IBM Plex Sans Arabic', family:'IBM Plex Sans Arabic', weights:[200,300,400], rec:true, free:true,
+    note:'Wael Morcos. Engineered, monolinear, warm precision.' },
+  { name:'Readex Pro', family:'Readex Pro', weights:[200,300,400], free:true,
+    note:'Nadine Chahine. Pure geometric, open apertures.' },
+  { name:'Tajawal', family:'Tajawal', weights:[200,300,400], free:true,
+    note:'Boutros foundry. Modern geometric, corporate edge.' },
+  { name:'Alexandria', family:'Alexandria', weights:[100,200,300,400], free:true,
+    note:'Geometric, wide weight range, cosmopolitan.' },
+  { name:'Noto Kufi Arabic', family:'Noto Kufi Arabic', weights:[100,200,300,400], free:true,
+    note:'Angular Kufic style. Bauhaus potential.' },
+  { name:'Noto Sans Arabic', family:'Noto Sans Arabic', weights:[100,200,300,400], free:true,
+    note:'The "safe" choice. Neutral, invisible.' },
+  { name:'El Messiri', family:'El Messiri', weights:[400,500,600], free:true,
+    note:'Display-oriented. More personality, slightly decorative.' },
+  { name:'Cairo', family:'Cairo', weights:[200,300,400], free:true,
+    note:'Contemporary Egyptian. Clean but wide.' },
+  { name:'Changa', family:'Changa', weights:[200,300,400], free:true,
+    note:'Geometric with slight Kufic flavor.' },
+  { name:'Mada', family:'Mada', weights:[200,300,400], free:true,
+    note:'Low contrast, gentle curves. Quiet luxury?' },
+  { name:'Rubik', family:'Rubik', weights:[300,400,500], free:true,
+    note:'Rounded geometric. Casual/friendly.' },
+  { name:'Reem Kufi', family:'Reem Kufi', weights:[400,500,600], free:true,
+    note:'Kufic-inspired, angular, distinctive.' },
+  { name:'Almarai', family:'Almarai', weights:[300,400], free:true,
+    note:'Saudi-designed body text. Plain.' },
+  { name:'Harmattan', family:'Harmattan', weights:[400,700], free:true,
+    note:'West African Arabic. Unique character.' },
+  { name:'Markazi Text', family:'Markazi Text', weights:[400,500,600], free:true,
+    note:'Naskh with modern proportions. Calligraphic DNA.' },
+  { name:'Scheherazade New', family:'Scheherazade New', weights:[400,700], free:true,
+    note:'Traditional Naskh. Rich calligraphy.' },
+  { name:'Amiri', family:'Amiri', weights:[400,700], free:true,
+    note:'Based on Bulaq press. Classic Naskh, high contrast.' },
+  { name:'Lateef (current)', family:'Lateef', weights:[400], free:true, current:true,
+    note:'Nastaliq calligraphy. What we have now.' },
+];
+
+const ARABIC = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١','١٢'];
+const POSITIONS = [ // angle from 12 o'clock CW, [index, angle_deg]
+  [12, 0], [2, 60], [4, 120], [8, 240], [10, 300]
+];
+const STICK_POS = [1,3,5,7,9,11]; // stick markers (no 6)
+const R = 110; // dial radius
+const NR = 82; // numeral radius
+const MR_OUTER = 98; // marker outer
+const MR_INNER = 88; // marker inner
+
+let currentDial = 'slate';
+
+function setDial(d, btn) {
+  currentDial = d;
+  document.querySelectorAll('.toggle-row button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.dial').forEach(el=>{
+    el.className = 'dial ' + d;
+  });
+}
+
+function buildCard(font, idx) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  
+  const bestWeight = font.weights.includes(300) ? 300 : font.weights[0];
+  
+  card.innerHTML = `
+    <div class="card-header">
+      <h3>${font.name}</h3>
+      ${font.rec ? '<span class="rank">Recommended</span>' : ''}
+      ${font.current ? '<span class="rank" style="color:#d44">Current</span>' : ''}
+    </div>
+    <div class="meta">${font.note}</div>
+    <div class="dial ${currentDial}" id="dial-${idx}"></div>
+    <div class="weight-row">
+      ${font.weights.map(w => `
+        <div class="weight-sample">
+          <div class="nums" style="font-family:'${font.family}',sans-serif;font-weight:${w}">١٢ ٢ ٤ ٨ ١٠</div>
+          <div class="wlabel">${w}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="tags">
+      ${font.free ? '<span class="tag free">Google Fonts</span>' : '<span class="tag paid">Commercial</span>'}
+      ${font.rec ? '<span class="tag rec">Top pick</span>' : ''}
+      <span class="tag">Weight ${bestWeight}</span>
+    </div>
+  `;
+  
+  // Build dial
+  const dial = card.querySelector('.dial');
+  
+  // Numerals
+  POSITIONS.forEach(([num, angleDeg]) => {
+    const angleRad = (angleDeg - 90) * Math.PI / 180;
+    const x = R + Math.cos(angleRad) * NR;
+    const y = R + Math.sin(angleRad) * NR;
+    const label = ARABIC[num];
+    const el = document.createElement('div');
+    el.className = 'numeral';
+    el.textContent = label;
+    el.style.cssText = `font-family:'${font.family}',sans-serif;font-weight:${bestWeight};font-size:${num===12?'1.4rem':'1.6rem'};left:${x}px;top:${y}px;transform:translate(-50%,-50%);width:40px`;
+    dial.appendChild(el);
+  });
+  
+  // Stick markers at odd hours + 6
+  [...STICK_POS, 6].forEach(h => {
+    const angleDeg = h * 30;
+    const angleRad = (angleDeg - 90) * Math.PI / 180;
+    const cos = Math.cos(angleRad), sin = Math.sin(angleRad);
+    const el = document.createElement('div');
+    el.className = 'marker';
+    const w = 2, len = h===6 ? 0 : 10;
+    if(h===6) return; // skip 6 (subdial)
+    el.style.cssText = `width:${w}px;height:${len}px;left:${R + cos*MR_INNER - w/2}px;top:${R + sin*MR_INNER - len/2}px;transform:rotate(${angleDeg}deg);transform-origin:center center`;
+    dial.appendChild(el);
+  });
+  
+  // Center dot
+  const dot = document.createElement('div');
+  dot.className = 'center-dot';
+  dial.appendChild(dot);
+  
+  return card;
+}
+
+const grid = document.getElementById('grid');
+FONTS.forEach((f, i) => grid.appendChild(buildCard(f, i)));
+</script>
+</body>
+</html>

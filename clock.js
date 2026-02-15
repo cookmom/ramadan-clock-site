@@ -389,12 +389,15 @@ function buildScrollIndicator() {
   mat.envMapIntensity = 0;
   scrollIndicator = new THREE.Mesh(geo, mat);
   scrollIndicator.position.z = 4; // above markers
-  // Start at 12 o'clock position
-  const trackR = R * 0.72; // inward from hour markers
-  const ang = Math.PI/2; // 12 o'clock
-  scrollIndicator.position.x = Math.cos(ang) * trackR;
-  scrollIndicator.position.y = Math.sin(ang) * trackR;
-  scrollIndicatorCurrent = {x: scrollIndicator.position.x, y: scrollIndicator.position.y, opacity: 1};
+  // Restore position from current state (don't reset on dial switch)
+  const trackR = R * 0.72;
+  const hourPos = SCROLL_HOUR_MAP[scrollIndicatorTarget] ?? 0;
+  const ang = Math.PI/2 - (hourPos/12) * Math.PI * 2;
+  const sx = scrollIndicatorCurrent.x || Math.cos(ang) * trackR;
+  const sy = scrollIndicatorCurrent.y || Math.sin(ang) * trackR;
+  scrollIndicator.position.x = sx;
+  scrollIndicator.position.y = sy;
+  scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity ?? 1;
   clockGroup.add(scrollIndicator);
 }
 

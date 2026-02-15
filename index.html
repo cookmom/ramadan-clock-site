@@ -224,8 +224,8 @@ footer a:hover{color:var(--text)}
 </div>
 </div>
 <div class="feature-visual">
-<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#e8e4dc;display:flex;align-items:center;justify-content:center;margin:0 auto">
-<i class="ph-thin ph-hourglass-medium" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
+<div class="feature-icon-circle" data-day-bg="#e8e4dc" data-lume="#ffa0c0" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#e8e4dc;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
+<i class="ph-thin ph-hourglass-medium" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
 </div>
 </div>
 </div>
@@ -237,8 +237,8 @@ footer a:hover{color:var(--text)}
 <p class="section-body">At sunset, the clock hand traces a gentle tawaf — seven circuits around the dial. A quiet, meditative moment as the fast breaks.</p>
 </div>
 <div class="feature-visual">
-<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#d4a08c;display:flex;align-items:center;justify-content:center;margin:0 auto">
-<i class="ph-thin ph-arrows-counter-clockwise" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
+<div class="feature-icon-circle" data-day-bg="#d8988c" data-lume="#ffc070" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#d8988c;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
+<i class="ph-thin ph-arrows-counter-clockwise" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
 </div>
 </div>
 </div>
@@ -256,8 +256,8 @@ footer a:hover{color:var(--text)}
 </div>
 </div>
 <div class="feature-visual">
-<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#b8d4e8;display:flex;align-items:center;justify-content:center;margin:0 auto">
-<i class="ph-thin ph-compass" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
+<div class="feature-icon-circle" data-day-bg="#82b8d8" data-lume="#80d0ff" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#82b8d8;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
+<i class="ph-thin ph-compass" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
 </div>
 </div>
 </div>
@@ -276,7 +276,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div style="display:flex;align-items:center;justify-content:center;margin:0 auto">
-<i class="ph-thin ph-headphones" style="font-size:min(12rem,40vw);color:var(--text);opacity:.15"></i>
+<i class="ph-thin ph-headphones" id="soundIcon" style="font-size:min(12rem,40vw);color:var(--text);opacity:.15;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
 </div>
 </div>
 </div>
@@ -381,6 +381,27 @@ function togglePageNight(){
   // Update toggle icon
   const btn=document.getElementById('nightToggle');
   btn.innerHTML=pageNight?'<i class="ph-thin ph-sun"></i>':'<i class="ph-thin ph-moon"></i>';
+  // Activate lume on feature circles
+  document.querySelectorAll('.feature-icon-circle').forEach(c=>{
+    const lume=c.dataset.lume;
+    const dayBg=c.dataset.dayBg;
+    const icon=c.querySelector('i');
+    if(pageNight){
+      c.style.background='#0c0c12';
+      c.style.boxShadow='0 0 60px '+lume+'40, 0 0 120px '+lume+'20, inset 0 0 40px '+lume+'15';
+      if(icon){icon.style.color=lume;icon.style.opacity='0.85';icon.style.textShadow='0 0 30px '+lume+', 0 0 60px '+lume+'80';}
+    }else{
+      c.style.background=dayBg||'#e8e4dc';
+      c.style.boxShadow='none';
+      if(icon){icon.style.color=c.dataset.iconDay||'#1a1a1a';icon.style.opacity='0.25';icon.style.textShadow='none';}
+    }
+  });
+  // Sound icon glow
+  const snd=document.getElementById('soundIcon');
+  if(snd){
+    if(pageNight){snd.style.color='#c8e8a0';snd.style.opacity='0.6';snd.style.textShadow='0 0 40px #c8e8a080';}
+    else{snd.style.color='var(--text)';snd.style.opacity='0.15';snd.style.textShadow='none';}
+  }
   // Tell clock iframe to match
   if(dialIframe){try{dialIframe.contentWindow.postMessage({type:pageNight?'nightOn':'nightOff'},'*');}catch(e){}}
   // Update ambient section

@@ -63,7 +63,7 @@ const R = 80; // world-space radius
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
 renderer.samples = 4;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
+renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 3));
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -82,7 +82,7 @@ const scene = new THREE.Scene();
 const aspect = W/H;
 const camZ = 280;
 const cam = new THREE.PerspectiveCamera(32, aspect, 1, 2000);
-cam.position.set(0, CONTAINED ? 0 : -3, camZ);
+cam.position.set(0, -3, camZ);
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════
@@ -319,7 +319,7 @@ if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
 
 const clockGroup = new THREE.Group(); // everything lives here for parallax
-clockGroup.scale.setScalar(CONTAINED ? 0.85 : (EMBED ? 0.65 : 0.50));
+clockGroup.scale.setScalar(CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50));
 scene.add(clockGroup);
 
 // Dial face
@@ -499,7 +499,7 @@ function buildNumerals() {
     const ang = Math.PI/2 - (i/12)*Math.PI*2; // CW from 12
     const r = R - R*0.18; // centered in marker gap
     const fontSize = R*0.286;
-    const dpr = 4;
+    const dpr = 6;
     // Measure actual text width
     const measCv = document.createElement('canvas');
     const measCtx = measCv.getContext('2d');
@@ -517,7 +517,7 @@ function buildNumerals() {
     const tex = new THREE.CanvasTexture(cv);
     tex.minFilter = THREE.LinearFilter;
     const geo = new THREE.PlaneGeometry(tw, th);
-    const faceMat = new THREE.MeshStandardMaterial({map:tex, transparent:true, metalness:0.3, roughness:0.4, color:0xffffff, depthWrite:false, emissive: new THREE.Color(c.lume), emissiveIntensity: 0}); faceMat.envMapIntensity = 0;
+    const faceMat = new THREE.MeshStandardMaterial({map:tex, transparent:true, metalness:0.0, roughness:0.9, color:0xffffff, depthWrite:false, emissive: new THREE.Color(c.lume), emissiveIntensity: 0}); faceMat.envMapIntensity = 0;
     const mesh = new THREE.Mesh(geo, faceMat);
     mesh.position.x = Math.cos(ang)*r;
     mesh.position.y = Math.sin(ang)*r;
@@ -1477,8 +1477,8 @@ function animate(){
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
-  cam.position.x = CONTAINED ? 0 : gx*15;
-  cam.position.y = CONTAINED ? 0 : (-30 + -gy*12);
+    if(!CONTAINED) { cam.position.x = gx*15; }
+  cam.position.y = CONTAINED ? -8 : (-30 + -gy*12);
   cam.lookAt(0,0,0);
   
   // Spec point follows tilt — highlight glides across dial like turning a watch under a lamp

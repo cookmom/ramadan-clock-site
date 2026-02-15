@@ -1412,7 +1412,7 @@ function animate(){
   renderer.toneMappingExposure = 1.4 - modeBlend * 0.5;
   
   // Vignette at night
-  vignetteEl.style.opacity = modeBlend * 0.8;
+  if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
   
   // Second hand subtle glow at night
   if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;

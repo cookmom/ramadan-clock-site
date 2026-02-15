@@ -82,7 +82,7 @@ const scene = new THREE.Scene();
 const aspect = W/H;
 const camZ = 280;
 const cam = new THREE.PerspectiveCamera(32, aspect, 1, 2000);
-cam.position.set(0, -3, camZ);
+cam.position.set(0, CONTAINED ? -3 : -3, camZ);
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════
@@ -319,7 +319,7 @@ if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
 
 const clockGroup = new THREE.Group(); // everything lives here for parallax
-clockGroup.scale.setScalar(CONTAINED ? 0.45 : (EMBED ? 0.65 : 0.50));
+clockGroup.scale.setScalar(CONTAINED ? 0.85 : (EMBED ? 0.65 : 0.50));
 scene.add(clockGroup);
 
 // Dial face
@@ -1127,14 +1127,20 @@ function buildAll(){
   updateSurah();
 }
 // Debug — expose internals
-window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane };
+window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getAnimCount: () => _animCount };
 // Expose controls for landing page
 window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
 window._clockSetNight = function(on){ modeTarget=on?1:0; };
 window._clockGetDial = function(){ return currentDial; };
 
 // Wait for fonts then build (Lateef for Arabic numerals)
-document.fonts.ready.then(()=>buildAll());
+document.fonts.ready.then(()=>{
+  buildAll();
+  // Set initial bg color immediately (animate loop will maintain it)
+  const initBg = new THREE.Color(DIALS[currentDial].bg);
+  scene.background = initBg;
+  bgPlaneMat.color.copy(initBg);
+});
 
 // ══════════════════════════════════════════
 // UPDATES
@@ -1313,8 +1319,9 @@ const vignetteEl = CONTAINED ? null : document.getElementById('vignette');
 let _animCount=0;
 function animate(){
   requestAnimationFrame(animate);
-  if(CONTAINED && _animCount===0) console.log('[clock] animate running, modeBlend:', modeBlend);
+  if(CONTAINED && _animCount<3) console.log('[clock] animate frame', _animCount);
   _animCount++;
+  try {
   // Night blend
   if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.015;
   else modeBlend=modeTarget;
@@ -1469,8 +1476,8 @@ function animate(){
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
-  cam.position.x = gx*15;
-  cam.position.y = -30 + -gy*12;
+  cam.position.x = CONTAINED ? 0 : gx*15;
+  cam.position.y = CONTAINED ? -3 : (-30 + -gy*12);
   cam.lookAt(0,0,0);
   
   // Spec point follows tilt — highlight glides across dial like turning a watch under a lamp
@@ -1533,6 +1540,7 @@ function animate(){
   } else {
     renderer.render(scene, cam);
   }
+  } catch(e) { if(_animCount < 5) console.error('[clock] animate error:', e.message, e.stack); }
 }
 animate();
 if(!CONTAINED){

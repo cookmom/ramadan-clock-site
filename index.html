@@ -337,54 +337,23 @@ const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','q
 const DIAL_NAMES=['Ar-Raḥmān','An-Nūr','Ash-Shams','Al-Layl','Al-Burūj','Al-Kawthar','Aḍ-Ḍuḥā','An-Najm','Al-Qamar','Al-Wāqiʿah','Al-Mulk'];
 const DIAL_COLORS={'tennis':'#68b890','white':'#e8e4dc','salmon':'#d8988c','slate':'#585860','sky':'#82b8d8','kawthar':'#f2dce0','dhuha':'#f08040','najm':'#384870','qamar':'#c0c4cc','ward':'#d89098','lilas':'#8878a8'};
 let dialIdx=3; // default slate
-// Surah number + ayah count for full recitation
-const DIAL_SURAHS={
-  'tennis':{num:'055',ayahs:78},  // Ar-Rahman
-  'white': {num:'024',ayahs:64},  // An-Nur
-  'salmon':{num:'091',ayahs:15},  // Ash-Shams
-  'slate': {num:'092',ayahs:21},  // Al-Layl
-  'sky':   {num:'085',ayahs:22},  // Al-Buruj
-  'kawthar':{num:'108',ayahs:3},  // Al-Kawthar
-  'dhuha': {num:'093',ayahs:11},  // Ad-Duha
-  'najm':  {num:'053',ayahs:62},  // An-Najm
-  'qamar': {num:'054',ayahs:55},  // Al-Qamar
-  'ward':  {num:'056',ayahs:96},  // Al-Waqiah
-  'lilas': {num:'067',ayahs:30}   // Al-Mulk
-};
-let dialAudio=null, dialAyahIdx=0, dialPlaying=false;
+// Full surah audio from Quran.com CDN (single MP3 per surah — no gaps)
+const DIAL_SURAHS={'tennis':55,'white':24,'salmon':91,'slate':92,'sky':85,'kawthar':108,'dhuha':93,'najm':53,'qamar':54,'ward':56,'lilas':67};
+let dialAudio=null, dialPlaying=false;
 function playDialSurah(){
-  const s=DIAL_SURAHS[DIALS[dialIdx]];
-  if(!s)return;
+  const num=DIAL_SURAHS[DIALS[dialIdx]];
+  if(!num)return;
   const btn=document.getElementById('dialListen');
   if(dialPlaying&&dialAudio&&!dialAudio.paused){
     dialAudio.pause();dialPlaying=false;
     btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
   }
-  dialAyahIdx=1;dialPlaying=true;
-  let nextAudio=null;
-  function preload(idx){
-    if(idx>s.ayahs)return null;
-    const a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/'+s.num+String(idx).padStart(3,'0')+'.mp3');
-    a.preload='auto';return a;
-  }
-  function playNext(){
-    if(!dialPlaying||dialAyahIdx>s.ayahs){
-      dialPlaying=false;dialAyahIdx=0;nextAudio=null;
-      btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
-    }
-    // Use preloaded audio if available, otherwise create fresh
-    dialAudio=nextAudio||preload(dialAyahIdx);
-    if(!dialAudio){playNext();return;}
-    // Start preloading the next ayah immediately
-    nextAudio=preload(dialAyahIdx+1);
-    dialAudio.onended=()=>{dialAyahIdx++;playNext();};
-    dialAudio.onerror=()=>{dialAyahIdx++;playNext();};
-    dialAudio.play().catch(()=>{});
-    btn.innerHTML='<i class="ph-thin ph-pause"></i> Ayah '+dialAyahIdx+'/'+s.ayahs+' — al-Afasy';
-  }
-  // Preload first ayah then play
-  nextAudio=preload(1);
-  playNext();
+  dialPlaying=true;
+  dialAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/'+num+'.mp3');
+  dialAudio.onended=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
+  dialAudio.onerror=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
+  dialAudio.play().catch(()=>{});
+  btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
 }
 let dialIframe=null;
 function updateDial(){

@@ -569,9 +569,11 @@ document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
   },{passive:true});
 })();
 
-// Always start at top on refresh
+// Always start at top on refresh — MUST be before anything else
 history.scrollRestoration='manual';
-window.scrollTo(0,0);
+window.scrollTo({top:0,behavior:'instant'});
+document.documentElement.scrollTop=0;
+document.body.scrollTop=0;
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
@@ -580,11 +582,13 @@ _cs.type='module';_cs.src='clock.js?v=9';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
-// SCROLL → CLOCK INDICATOR
+// SCROLL → CLOCK INDICATOR (delayed to avoid false trigger on reload)
 // ══════════════════════════════════════════
-(function(){
+setTimeout(()=>{
   const secs=['sec-hook','sec-qibla','sec-prayer','sec-dials','sec-night','sec-adhan','sec-install'];
   let activeIdx=0;
+  // Force initial state
+  if(window._clockSetScrollSection) window._clockSetScrollSection(0);
   const obs=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
       if(e.isIntersecting){
@@ -595,7 +599,7 @@ document.head.appendChild(_cs);
     if(window._clockSetScrollSection) window._clockSetScrollSection(activeIdx);
   },{threshold:0.15});
   secs.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el);});
-})();
+},600);
 
 // Setup scroll observers after a brief delay to let clock init
 setTimeout(setupScrollObservers,500);

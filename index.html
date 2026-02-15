@@ -317,7 +317,7 @@ footer a:hover{color:var(--text)}
 <i class="ph-thin ph-caret-left" style="font-size:2rem;color:var(--text);opacity:.3"></i>
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-<div class="feature-visual-box" id="dialHero">
+<div class="feature-visual-box" id="dialHero" style="background:#3a3a44">
 <div id="dialEmbed" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
 </div>
 <span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
@@ -355,7 +355,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
       const f=document.createElement('iframe');
       f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=116&embed&dial='+DIALS[dialIdx]+'&nomarkers';
       f.title='Dial picker';
-      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:auto';
+      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.50);border:none;pointer-events:auto';
       el.appendChild(f);
       dialIframe=f;
     }

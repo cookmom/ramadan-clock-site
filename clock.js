@@ -369,6 +369,58 @@ function buildDial() {
 // Case ring removed — using dial circle edge only
 const caseR = R * 1.12;
 
+// ── Scroll indicator disc (landing page only) ──
+let scrollIndicator = null;
+let scrollIndicatorTarget = -1; // -1 = hidden, 0-11 = hour position
+let scrollIndicatorCurrent = {x:0, y:0, opacity:0};
+const SCROLL_HOUR_MAP = [0, 1, 2, 3, 4, 5, 7]; // sections → hour positions (skip 6=subdial)
+
+function buildScrollIndicator() {
+  if(scrollIndicator) { clockGroup.remove(scrollIndicator); scrollIndicator=null; }
+  if(!CONTAINED) return; // only on landing page
+  const c = DIALS[currentDial];
+  const dotR = R * 0.03;
+  const geo = new THREE.CircleGeometry(dotR, 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color: c.hand, roughness: 0.3, metalness: 0.4,
+    emissive: c.hand, emissiveIntensity: 0.3,
+    transparent: true, opacity: 0
+  });
+  mat.envMapIntensity = 0;
+  scrollIndicator = new THREE.Mesh(geo, mat);
+  scrollIndicator.position.z = 4; // above markers
+  // Start at 12 o'clock position
+  const trackR = R * 0.72; // inward from hour markers
+  const ang = Math.PI/2; // 12 o'clock
+  scrollIndicator.position.x = Math.cos(ang) * trackR;
+  scrollIndicator.position.y = Math.sin(ang) * trackR;
+  scrollIndicatorCurrent = {x: scrollIndicator.position.x, y: scrollIndicator.position.y, opacity: 0};
+  clockGroup.add(scrollIndicator);
+}
+
+function updateScrollIndicator() {
+  if(!scrollIndicator) return;
+  const trackR = R * 0.72;
+  let targetOpacity = 0;
+  let tx = scrollIndicatorCurrent.x, ty = scrollIndicatorCurrent.y;
+  if(scrollIndicatorTarget >= 0) {
+    const hourPos = SCROLL_HOUR_MAP[scrollIndicatorTarget] ?? scrollIndicatorTarget;
+    const ang = Math.PI/2 - (hourPos/12) * Math.PI * 2;
+    tx = Math.cos(ang) * trackR;
+    ty = Math.sin(ang) * trackR;
+    targetOpacity = 1;
+  }
+  const ease = 0.08;
+  scrollIndicatorCurrent.x += (tx - scrollIndicatorCurrent.x) * ease;
+  scrollIndicatorCurrent.y += (ty - scrollIndicatorCurrent.y) * ease;
+  scrollIndicatorCurrent.opacity += (targetOpacity - scrollIndicatorCurrent.opacity) * ease;
+  scrollIndicator.position.x = scrollIndicatorCurrent.x;
+  scrollIndicator.position.y = scrollIndicatorCurrent.y;
+  scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;
+  // Pulse emissive gently
+  scrollIndicator.material.emissiveIntensity = 0.3 + Math.sin(Date.now()*0.003)*0.15;
+}
+
 // Hour markers (extruded pills — actual 3D)
 let markerMeshes = [], lumeMeshes = [];
 function buildMarkers() {
@@ -406,7 +458,7 @@ function buildMarkers() {
         mesh.position.z = depth/2;
         mesh.rotation.x = Math.PI/2;
         clockGroup.add(mesh); markerMeshes.push(mesh);
-        mesh.userData.kawtharButton = true;
+        mesh.userData.kawtharButton = true; mesh.userData.hourIdx = hourIdx;
         lumeMeshes.push(mesh); // they all glow at night
       } else if(!isHour) {
         // Simple small dots — rose gold
@@ -474,6 +526,7 @@ function buildMarkers() {
         mesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(mesh);
         markerMeshes.push(mesh);
+        mesh.userData.hourIdx = hourIdx;
         
         // Lume insert
         const lGeo = new THREE.BoxGeometry(mW*0.5, mH*0.65, depth+0.5);
@@ -1148,6 +1201,7 @@ function buildAll(){
   buildQibla();
   buildFlap();
   buildStars();
+  buildScrollIndicator();
   updateSurah();
 }
 // Debug — expose internals
@@ -1156,6 +1210,7 @@ window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getA
 window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
 window._clockSetNight = function(on){ modeTarget=on?1:0; };
 window._clockGetDial = function(){ return currentDial; };
+window._clockSetScrollSection = function(idx){ scrollIndicatorTarget = idx; }; // -1=hide, 0-6=section index
 
 // Wait for fonts then build (Lateef for Arabic numerals)
 document.fonts.ready.then(()=>{
@@ -1517,6 +1572,7 @@ function animate(){
   updateHands();
   updateFlap();
   updateQibla();
+  updateScrollIndicator();
   // Spin subdial rings — wild when off Qibla, decelerate and lock when aligned
   if(window._subdialRings && qiblaRotor) {
     const qiblaOffset = ((qiblaBearing - compassHeading) % 360 + 360) % 360;

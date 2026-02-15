@@ -139,12 +139,10 @@ footer a:hover{color:var(--text)}
 <div class="section">
   <h2>Stay updated</h2>
   <p style="font-size:.9rem;font-weight:300;color:var(--text-muted);margin-bottom:1rem">Be the first to know when the iPhone app launches.</p>
-  <form id="emailForm" action="https://formspree.io/f/mojndzlr" method="POST">
-    <input type="hidden" name="_subject" value="New signup — A Gift of Time">
-    <input type="hidden" name="_type" value="signup">
+  <form id="emailForm">
     <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-      <input type="text" name="name" placeholder="Your name" style="flex:1;min-width:140px" required>
-      <input type="email" name="email" placeholder="Email address" style="flex:1.5;min-width:200px" required>
+      <input type="text" id="signupName" placeholder="Your name" style="flex:1;min-width:140px" required>
+      <input type="email" id="signupEmail" placeholder="Email address" style="flex:1.5;min-width:200px" required>
     </div>
     <button type="submit" class="btn btn-primary" style="margin-top:1rem;width:100%"><i class="ph-thin ph-envelope"></i> Keep me posted</button>
   </form>
@@ -158,17 +156,15 @@ footer a:hover{color:var(--text)}
 <div class="section">
   <h2>Feedback</h2>
   <p style="font-size:.9rem;font-weight:300;color:var(--text-muted);margin-bottom:1rem">What would make this better for your family?</p>
-  <form id="feedbackForm" action="https://formspree.io/f/mojndzlr" method="POST">
-    <input type="hidden" name="_subject" value="Feedback — A Gift of Time">
-    <input type="hidden" name="_type" value="feedback">
+  <form id="feedbackForm">
     <div class="form-group">
-      <input type="text" name="name" placeholder="Your name (optional)">
+      <input type="text" id="fbName" placeholder="Your name (optional)">
     </div>
     <div class="form-group">
-      <input type="email" name="email" placeholder="Email (optional, if you'd like a reply)">
+      <input type="email" id="fbEmail" placeholder="Email (optional, if you'd like a reply)">
     </div>
     <div class="form-group">
-      <textarea name="message" placeholder="Ideas, suggestions, duas..." required></textarea>
+      <textarea id="fbMessage" placeholder="Ideas, suggestions, duas..." required></textarea>
     </div>
     <button type="submit" class="btn btn-outline" style="width:100%"><i class="ph-thin ph-paper-plane-tilt"></i> Send feedback</button>
   </form>
@@ -185,7 +181,19 @@ footer a:hover{color:var(--text)}
 </div>
 
 <script>
-document.querySelectorAll('form').forEach(form=>{
+const SB_URL='https://ypniokxbftuebagppxzj.supabase.co/rest/v1';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwbmlva3hiZnR1ZWJhZ3BweHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTQ2MjcsImV4cCI6MjA4Njc3MDYyN30.u63gpVUX7bOm5WQZkgt1elVWwwSBx_UGektwDTnllhw';
+
+async function sbInsert(table, data){
+  const r=await fetch(`${SB_URL}/${table}`,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(data)
+  });
+  return r.ok;
+}
+
+function formHandler(form, fn){
   form.addEventListener('submit',async e=>{
     e.preventDefault();
     const btn=form.querySelector('button[type="submit"]');
@@ -193,20 +201,22 @@ document.querySelectorAll('form').forEach(form=>{
     btn.innerHTML='<i class="ph-thin ph-circle-notch"></i> Sending...';
     btn.disabled=true;
     try{
-      const r=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
-      if(r.ok){
-        form.style.display='none';
-        form.nextElementSibling.style.display='block';
-      }else{
-        btn.innerHTML='Something went wrong — try again';
-        setTimeout(()=>{btn.innerHTML=origHTML;btn.disabled=false;},2000);
-      }
+      const ok=await fn();
+      if(ok){form.style.display='none';form.nextElementSibling.style.display='block';}
+      else{btn.innerHTML='Something went wrong — try again';setTimeout(()=>{btn.innerHTML=origHTML;btn.disabled=false;},2000);}
     }catch(err){
-      btn.innerHTML='Network error — try again';
-      setTimeout(()=>{btn.innerHTML=origHTML;btn.disabled=false;},2000);
+      btn.innerHTML='Network error — try again';setTimeout(()=>{btn.innerHTML=origHTML;btn.disabled=false;},2000);
     }
   });
-});
+}
+
+formHandler(document.getElementById('emailForm'),()=>
+  sbInsert('signups',{name:document.getElementById('signupName').value,email:document.getElementById('signupEmail').value,source:'website'})
+);
+
+formHandler(document.getElementById('feedbackForm'),()=>
+  sbInsert('feedback',{name:document.getElementById('fbName').value||null,email:document.getElementById('fbEmail').value||null,message:document.getElementById('fbMessage').value,type:'feedback'})
+);
 </script>
 </body>
 </html>

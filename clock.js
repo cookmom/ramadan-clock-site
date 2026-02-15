@@ -371,7 +371,7 @@ const caseR = R * 1.12;
 
 // ── Scroll indicator disc (landing page only) ──
 let scrollIndicator = null;
-let scrollIndicatorTarget = -1; // -1 = hidden, 0-11 = hour position
+let scrollIndicatorTarget = 0; // 0=home (12 o'clock), -1=hidden
 let scrollIndicatorCurrent = {x:0, y:0, opacity:0};
 const SCROLL_HOUR_MAP = [0, 1, 2, 3, 4, 5, 7]; // sections → hour positions (skip 6=subdial)
 
@@ -384,7 +384,7 @@ function buildScrollIndicator() {
   const mat = new THREE.MeshStandardMaterial({
     color: c.hand, roughness: 0.3, metalness: 0.4,
     emissive: c.hand, emissiveIntensity: 0.3,
-    transparent: true, opacity: 0
+    transparent: true, opacity: 1
   });
   mat.envMapIntensity = 0;
   scrollIndicator = new THREE.Mesh(geo, mat);
@@ -394,7 +394,7 @@ function buildScrollIndicator() {
   const ang = Math.PI/2; // 12 o'clock
   scrollIndicator.position.x = Math.cos(ang) * trackR;
   scrollIndicator.position.y = Math.sin(ang) * trackR;
-  scrollIndicatorCurrent = {x: scrollIndicator.position.x, y: scrollIndicator.position.y, opacity: 0};
+  scrollIndicatorCurrent = {x: scrollIndicator.position.x, y: scrollIndicator.position.y, opacity: 1};
   clockGroup.add(scrollIndicator);
 }
 

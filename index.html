@@ -273,7 +273,8 @@ footer a:hover{color:var(--text)}
     <p class="section-label">Adhan</p>
     <h2 class="section-title">Hear the call to prayer.</h2>
     <p class="section-body">Mishary Rashid al-Afasy's voice, spatialized toward Qibla. The sound comes from the direction of Mecca.</p>
-    <button id="adhanBtn" onclick="playAdhan(this)" class="btn btn-outline adhan-btn"><i class="ph-thin ph-play"></i> Play Adhan Preview</button>
+    <button id="adhanBtn" onclick="playAdhan(this)" class="btn btn-outline adhan-btn"><i class="ph-thin ph-play"></i> Play Spatial Adhan</button>
+    <p style="font-size:.7rem;color:var(--text-muted);margin-top:.75rem;font-weight:300;opacity:.6">Best with headphones — sound moves toward Mecca as you turn</p>
   </div>
 </section>
 
@@ -418,15 +419,98 @@ function setNightMode(on){
 }
 
 // ══════════════════════════════════════════
-// ADHAN
+// SPATIAL ADHAN (HRTF toward Qibla)
 // ══════════════════════════════════════════
-function playAdhan(btn){
-  if(!adhanAudio){
-    adhanAudio=new Audio('https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3');
-    adhanAudio.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Play Adhan Preview'};
+let adhanCtx=null, adhanBufSrc=null, adhanPanner=null, adhanGain=null;
+let adhanDecodedBuf=null, adhanInterval=null;
+let adhanDeviceHeading=0, adhanQiblaAngle=0, adhanCurrentPan=0;
+let adhanHasCompass=false;
+
+// Get Qibla bearing from user location
+async function adhanGetQibla(){
+  try{
+    const pos=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:5000}));
+    const lat=pos.coords.latitude*Math.PI/180, lng=pos.coords.longitude*Math.PI/180;
+    const mLat=21.4225*Math.PI/180, mLng=39.8262*Math.PI/180;
+    adhanQiblaAngle=Math.atan2(Math.sin(mLng-lng),Math.cos(lat)*Math.tan(mLat)-Math.sin(lat)*Math.cos(mLng-lng));
+  }catch(e){}
+}
+
+// Track device compass
+function adhanCompassHandler(e){
+  const h=e.webkitCompassHeading||e.alpha;
+  if(h==null)return;
+  adhanHasCompass=true;
+  adhanDeviceHeading=h*Math.PI/180;
+}
+
+function updateAdhanPan(){
+  if(!adhanPanner||!adhanHasCompass)return;
+  const ra=adhanQiblaAngle-adhanDeviceHeading;
+  const target=Math.max(-1,Math.min(1,Math.sin(ra)));
+  adhanCurrentPan+=(target-adhanCurrentPan)*0.15;
+  adhanPanner.pan.value=adhanCurrentPan;
+}
+
+async function playAdhan(btn){
+  // Stop if playing
+  if(adhanBufSrc){
+    try{adhanBufSrc.stop();}catch(e){}
+    adhanBufSrc=null;
+    if(adhanInterval){clearInterval(adhanInterval);adhanInterval=null;}
+    btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
+    return;
   }
-  if(adhanAudio.paused){adhanAudio.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy'}
-  else{adhanAudio.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Play Adhan Preview'}
+  // Also stop plain audio if it was playing
+  if(adhanAudio&&!adhanAudio.paused){adhanAudio.pause();adhanAudio=null;}
+
+  btn.innerHTML='<i class="ph-thin ph-circle-notch"></i> Loading...';
+
+  // Request compass permission (iOS)
+  if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){
+    try{await DeviceOrientationEvent.requestPermission();}catch(e){}
+  }
+  window.addEventListener('deviceorientation',adhanCompassHandler);
+
+  // Get Qibla direction
+  await adhanGetQibla();
+
+  // Create audio context + decode
+  if(!adhanCtx) adhanCtx=new(window.AudioContext||window.webkitAudioContext)();
+  await adhanCtx.resume();
+
+  if(!adhanDecodedBuf){
+    try{
+      const r=await fetch('https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3');
+      const ab=await r.arrayBuffer();
+      adhanDecodedBuf=await adhanCtx.decodeAudioData(ab);
+    }catch(e){
+      btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
+      return;
+    }
+  }
+
+  // Play through StereoPanner toward Qibla
+  adhanBufSrc=adhanCtx.createBufferSource();
+  adhanBufSrc.buffer=adhanDecodedBuf;
+  adhanPanner=adhanCtx.createStereoPanner();
+  adhanGain=adhanCtx.createGain();
+  adhanGain.gain.value=1.0;
+  adhanBufSrc.connect(adhanGain).connect(adhanPanner).connect(adhanCtx.destination);
+
+  updateAdhanPan();
+  adhanInterval=setInterval(updateAdhanPan,100);
+
+  adhanBufSrc.start(0);
+  adhanBufSrc.onended=()=>{
+    adhanBufSrc=null;
+    if(adhanInterval){clearInterval(adhanInterval);adhanInterval=null;}
+    btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
+  };
+
+  btn.innerHTML=adhanHasCompass
+    ?'<i class="ph-thin ph-pause"></i> Playing toward Qibla — turn your phone'
+    :'<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
 }
 
 // ══════════════════════════════════════════

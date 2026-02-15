@@ -144,6 +144,35 @@ a{color:inherit;text-decoration:none}
 .step h3{font-weight:400;font-size:1rem;margin-bottom:.4rem;transition:color 1s ease}
 .step p{font-weight:300;font-size:.875rem;color:var(--text-muted);line-height:1.5;transition:color 1s ease}
 
+/* ── Side Nav Dots ── */
+.side-nav{
+  position:fixed;right:1rem;top:50%;transform:translateY(-50%);z-index:90;
+  display:flex;flex-direction:column;gap:1.25rem;
+  opacity:0;transition:opacity .6s ease;
+  pointer-events:none;
+}
+.side-nav.visible{opacity:1;pointer-events:auto}
+.side-nav a{
+  display:block;width:8px;height:8px;border-radius:50%;
+  background:var(--text);opacity:.15;
+  transition:opacity .4s ease,transform .4s ease,background .4s ease;
+  position:relative;
+}
+.side-nav a.active{opacity:.6;transform:scale(1.5)}
+.side-nav a::after{
+  content:attr(data-label);
+  position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);
+  font-family:var(--font);font-size:.65rem;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text);opacity:0;
+  white-space:nowrap;pointer-events:none;
+  transition:opacity .3s ease;
+}
+.side-nav a:hover::after{opacity:.5}
+
+/* ── Scroll Snap ── */
+.scroll-content{scroll-snap-type:y proximity}
+.scroll-section{scroll-snap-align:start}
+
 /* ── Footer ── */
 footer{
   padding:3rem 2rem;text-align:center;border-top:1px solid var(--border);
@@ -170,6 +199,17 @@ footer a:hover{color:var(--text)}
 <nav>
   <div class="nav-logo">A Gift of Time</div>
   <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
+</nav>
+
+<!-- Side Nav Dots -->
+<nav class="side-nav" id="sideNav">
+  <a href="#sec-hook" data-sec="sec-hook" data-label="Intro"></a>
+  <a href="#sec-qibla" data-sec="sec-qibla" data-label="Qibla"></a>
+  <a href="#sec-prayer" data-sec="sec-prayer" data-label="Prayer"></a>
+  <a href="#sec-dials" data-sec="sec-dials" data-label="Dials"></a>
+  <a href="#sec-night" data-sec="sec-night" data-label="Night"></a>
+  <a href="#sec-adhan" data-sec="sec-adhan" data-label="Adhan"></a>
+  <a href="#sec-install" data-sec="sec-install" data-label="Install"></a>
 </nav>
 
 <!-- Sticky Clock -->
@@ -570,6 +610,41 @@ window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
 _cs.type='module';_cs.src='clock.js?v=7';
 document.head.appendChild(_cs);
+
+// ══════════════════════════════════════════
+// SIDE NAV DOTS
+// ══════════════════════════════════════════
+(function(){
+  const sideNav=document.getElementById('sideNav');
+  const dots=[...sideNav.querySelectorAll('a')];
+  const secIds=dots.map(d=>d.dataset.sec);
+  let activeId='sec-hook';
+
+  // Show dots once user starts scrolling past first section
+  let shown=false;
+  const showCheck=()=>{
+    if(!shown&&window.scrollY>window.innerHeight*0.3){shown=true;sideNav.classList.add('visible');}
+    else if(shown&&window.scrollY<100){sideNav.classList.remove('visible');shown=false;}
+  };
+  window.addEventListener('scroll',showCheck,{passive:true});
+
+  // Track which section is in view
+  const secObs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) activeId=e.target.id;
+    });
+    dots.forEach(d=>d.classList.toggle('active',d.dataset.sec===activeId));
+  },{threshold:0.35});
+  secIds.forEach(id=>{const el=document.getElementById(id);if(el)secObs.observe(el);});
+
+  // Smooth scroll on dot click
+  dots.forEach(d=>{
+    d.addEventListener('click',e=>{
+      e.preventDefault();
+      document.getElementById(d.dataset.sec)?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+})();
 
 // Setup scroll observers after a brief delay to let clock init
 setTimeout(setupScrollObservers,500);

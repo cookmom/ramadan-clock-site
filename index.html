@@ -2,351 +2,375 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>A Gift of Time — Prayer Clock for Muslim Families</title>
-<meta name="description" content="A beautiful, prayer-aware clock for Muslim families. Prayer alarms, fasting countdown, Qibla compass, and 11 handcrafted dial themes.">
+<meta name="description" content="A beautiful, prayer-aware clock for Muslim families. Prayer alarms, Qibla compass, and 11 handcrafted dial themes named for Surahs of the Holy Quran.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Lateef:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/thin/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/thin/style.css">
 <script type="importmap">
 {"imports":{"three":"https://esm.sh/three@0.170.0","three/addons/":"https://esm.sh/three@0.170.0/examples/jsm/"}}
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
---bg:#f8f7f4;--bg-alt:#f0efe9;--text:#1a1a1a;--text-muted:#6b6b6b;--gold:#c8a44e;--border:#e5e3dd;
---font:'Inter',system-ui,-apple-system,sans-serif;
+  --bg:#f8f7f4;--bg-alt:#f0efe9;--text:#1a1a1a;--text-muted:#6b6b6b;
+  --gold:#c8a44e;--border:#e5e3dd;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+  --clock-size:min(380px,85vw);
 }
-*,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth;font-size:16px}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background 1s ease,color 1s ease}
-a{color:inherit;text-decoration:none}
-section,nav,.feature-text,.section-title,.section-body,.section-label,.step,.step p,.step h3,footer,footer p,#prayerCard{transition:color 1s ease,background-color 1s ease,border-color 1s ease}
-.btn-outline{transition:color .5s ease,background-color .5s ease,border-color .5s ease}
-img{max-width:100%;display:block}
+html{font-size:16px}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  transition:background 1s ease,color 1s ease;
+}
 
-/* Scroll reveal */
+/* ── Sticky clock ── */
+.clock-sticky{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  height:calc(var(--clock-size) + 2rem);
+  padding:1rem 0;
+  background:var(--bg);
+  transition:background 1s ease;
+}
+#dialHero{
+  width:var(--clock-size);height:var(--clock-size);
+  border-radius:50%;overflow:hidden;
+  background:#585860;
+  flex-shrink:0;
+  transition:box-shadow 1.5s ease;
+}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  transition:background .3s,box-shadow .3s;
+}
+nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--border)}
+.nav-logo{font-weight:500;font-size:.9rem;letter-spacing:.02em}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.65rem 1.5rem;border-radius:100px;
+  font-family:var(--font);font-size:.875rem;font-weight:500;
+  cursor:pointer;border:none;transition:all .2s;
+}
+.btn-primary{background:var(--text);color:var(--bg)}
+.btn-primary:hover{opacity:.85}
+.btn-outline{
+  background:transparent;border:1px solid var(--border);color:var(--text);
+  transition:color .5s ease,background-color .5s ease,border-color .5s ease;
+}
+.btn-outline:hover{border-color:var(--text)}
+a{color:inherit;text-decoration:none}
+
+/* ── Sections ── */
+.scroll-section{
+  min-height:80vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  padding:6rem 2rem;
+  position:relative;
+  transition:background 1s ease,color 1s ease;
+}
+.section-label{
+  font-weight:500;font-size:.7rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:1rem;
+}
+.section-title{
+  font-weight:200;font-size:clamp(2rem,5vw,3.5rem);
+  line-height:1.15;letter-spacing:-.02em;margin-bottom:1.25rem;
+  transition:color 1s ease;
+}
+.section-body{
+  font-weight:200;font-size:1.05rem;line-height:1.7;
+  color:var(--text-muted);max-width:480px;margin:0 auto;
+  transition:color 1s ease;
+}
+
+/* ── Quran verse block ── */
+.verse{text-align:center;margin-top:2rem;max-width:560px}
+.verse-ar{
+  font-family:'Lateef','Traditional Arabic',serif;
+  font-size:clamp(1.5rem,3.5vw,2.2rem);line-height:2;
+  direction:rtl;color:var(--text);margin-bottom:1rem;
+  transition:color 1s ease;
+}
+.verse-en{
+  font-size:1rem;font-weight:300;color:var(--text-muted);
+  font-style:italic;line-height:1.7;margin-bottom:.5rem;
+  transition:color 1s ease;
+}
+.verse-ref{
+  font-size:.8rem;font-weight:500;letter-spacing:.08em;
+  color:var(--text-muted);margin-bottom:1rem;
+  transition:color 1s ease;
+}
+
+/* ── Reveal animation ── */
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
 .reveal.visible{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 
-/* Nav */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;transition:background .3s,box-shadow .3s}
-nav.scrolled{background:var(--bg);opacity:.95;backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--border);transition:background 1s ease}
-.nav-logo{font-weight:500;font-size:1rem;letter-spacing:.02em}
-.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-radius:100px;font-family:var(--font);font-size:.875rem;font-weight:500;cursor:pointer;border:none;transition:all .2s}
-.btn-primary{background:var(--text);color:var(--bg)}
-.btn-primary:hover{background:#333}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-outline:hover{border-color:var(--text)}
-
-/* Hero */
-.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem}
-.hero h1{font-weight:200;font-size:clamp(3rem,8vw,6rem);line-height:1.05;letter-spacing:-.03em;margin-bottom:1.5rem}
-.hero .subtitle{font-weight:300;font-size:clamp(1rem,2vw,1.25rem);color:var(--text-muted);max-width:480px;margin:0 auto 2.5rem}
-.hero-cta{display:flex;gap:1rem;justify-content:center;margin-bottom:4rem}
-
-/* One-liner */
-.oneliner{padding:6rem 2rem;text-align:center}
-.oneliner p{font-weight:200;font-size:clamp(1.5rem,3.5vw,2.5rem);line-height:1.4;max-width:700px;margin:0 auto;letter-spacing:-.02em}
-
-/* Section helpers */
-section{padding:6rem 2rem}
-.section-label{font-weight:500;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem}
-.section-title{font-weight:200;font-size:clamp(2rem,4vw,3.5rem);line-height:1.15;letter-spacing:-.02em;margin-bottom:1.5rem}
-.section-body{font-weight:300;font-size:1.05rem;line-height:1.7;color:var(--text-muted);max-width:500px}
-
-/* Feature rows */
-.feature{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;max-width:1100px;margin:0 auto;padding:5rem 2rem}
-.feature.reverse .feature-text{order:2}
-.feature.reverse .feature-visual{order:1}
-.feature-visual{display:flex;align-items:center;justify-content:center}
-.feature-icon{font-size:4rem;color:var(--gold);margin-bottom:1.5rem;display:block}
-.feature-visual-box{width:min(380px,85vw);height:min(380px,85vw);border-radius:50%;background:transparent;border:none;overflow:hidden;box-shadow:none;position:relative;margin:0 auto;flex-shrink:0;pointer-events:none}
-.feature-visual-box iframe,.feature-visual-box .lazy-embed iframe{position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:none}
-.lazy-embed{position:absolute;top:0;left:0;width:100%;height:100%}
-@media(max-width:768px){
-.feature{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem}
-.feature.reverse .feature-text{order:1}
-.feature.reverse .feature-visual{order:2}
-.feature-visual-box iframe{transform:translate(-50%,-50%) scale(0.32)}
-/* removed old dial-strip mobile overrides */
+/* ── Prayer card ── */
+#prayerCard{
+  width:100%;max-width:360px;
+  background:#fff;border:1px solid var(--border);
+  padding:1.75rem;display:flex;flex-direction:column;gap:.5rem;
+  font-family:var(--font);margin-top:2rem;
+  transition:background 1s ease,border-color 1s ease,color 1s ease;
 }
 
-/* Dials */
-.dials{padding:6rem 0;overflow:hidden}
-.dials-header{text-align:center;padding:0 2rem;margin-bottom:3rem}
-.ambient-box{width:min(380px,85vw);height:min(580px,130vw);border-radius:0;background:transparent;overflow:hidden;position:relative;pointer-events:auto}
-.ambient-box iframe{position:absolute;bottom:-240px;left:50%;width:1000px;height:1000px;transform:translateX(-50%) scale(0.38);border:none;pointer-events:auto}
-@media(max-width:768px){.ambient-box iframe{bottom:-260px;transform:translateX(-50%) scale(0.32)}}
-.dials .feature-visual-box{pointer-events:auto}
-.dials .feature-visual-box iframe{pointer-events:auto}
+/* ── Dial picker ── */
+.dial-dots{display:flex;gap:6px;justify-content:center;margin-top:1rem;flex-wrap:wrap}
+.dial-dot{
+  width:8px;height:8px;border-radius:50%;border:none;
+  cursor:pointer;padding:0;transition:opacity .3s,transform .3s;
+  opacity:.2;background:var(--text);
+}
+.dial-dot.active{opacity:.7;transform:scale(1.3)}
 
-/* Install steps */
-.install{max-width:800px;margin:0 auto;text-align:center;padding:6rem 2rem}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:3rem;margin-top:3rem}
-.step-icon{font-size:2.5rem;color:var(--text-muted);margin-bottom:1rem}
-.step-num{font-weight:500;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
-.step h3{font-weight:400;font-size:1rem;margin-bottom:.5rem}
-.step p{font-weight:300;font-size:.9rem;color:var(--text-muted);line-height:1.5}
+/* ── Install steps ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2.5rem;margin-top:2.5rem;max-width:700px}
+.step{text-align:center}
+.step-icon{font-size:2.5rem;color:var(--text-muted);margin-bottom:.75rem;transition:color 1s ease}
+.step-num{font-weight:500;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.step h3{font-weight:400;font-size:1rem;margin-bottom:.4rem;transition:color 1s ease}
+.step p{font-weight:300;font-size:.875rem;color:var(--text-muted);line-height:1.5;transition:color 1s ease}
 
-/* Waitlist */
-.waitlist{text-align:center;padding:6rem 2rem;background:var(--bg-alt)}
-.waitlist-form{display:flex;gap:.75rem;max-width:420px;margin:2rem auto 0;flex-wrap:wrap;justify-content:center}
-.waitlist-form input{flex:1;min-width:0;width:100%;padding:.75rem 1.25rem;border:1px solid var(--border);border-radius:100px;font-family:var(--font);font-size:.9rem;background:var(--bg);outline:none;transition:border-color .2s}
-.waitlist-form input:focus{border-color:var(--gold)}
-
-/* Footer */
-footer{padding:3rem 2rem;text-align:center;border-top:1px solid var(--border)}
-footer p{font-weight:300;font-size:.85rem;color:var(--text-muted)}
+/* ── Footer ── */
+footer{
+  padding:3rem 2rem;text-align:center;border-top:1px solid var(--border);
+  transition:border-color 1s ease;
+}
+footer p{font-weight:300;font-size:.85rem;color:var(--text-muted);transition:color 1s ease}
 footer a{transition:color .2s}
 footer a:hover{color:var(--text)}
 .footer-sep{margin:0 .75rem;opacity:.4}
+
+/* ── Adhan button ── */
+.adhan-btn{
+  margin-top:1.5rem;padding:.75rem 2rem;font-size:1rem;gap:.75rem;
+}
+
+@media(max-width:768px){
+  .scroll-section{padding:4rem 1.5rem;min-height:60vh}
+}
 </style>
 </head>
 <body>
 
 <!-- Nav -->
 <nav>
-<div class="nav-logo">A Gift of Time</div>
-<a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary">Open Clock</a>
+  <div class="nav-logo">A Gift of Time</div>
+  <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
-<h1 class="reveal">A Gift<br>of Time.</h1>
-<p class="subtitle reveal">A beautiful, prayer-aware clock for Muslim families everywhere.</p>
-<div class="hero-cta reveal">
-<a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary">Open Clock</a>
+<!-- Sticky Clock -->
+<div class="clock-sticky">
+  <div id="dialHero"></div>
 </div>
+
+<!-- 1. THE HOOK -->
+<section class="scroll-section" id="sec-hook">
+  <div class="reveal">
+    <p class="section-label">Introducing</p>
+    <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1>
+    <p class="section-body">A beautiful, prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
+    <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary" style="margin-top:2rem">Open Clock</a>
+  </div>
 </section>
 
-<!-- Ramadan Launch -->
-<section style="text-align:center;padding:4rem 2rem 2rem;max-width:620px;margin:0 auto" class="reveal">
-<p class="section-label" style="margin-bottom:.75rem">Ramadan 2026</p>
-<h2 style="font-weight:200;font-size:clamp(1.5rem,3vw,2.2rem);line-height:1.3;letter-spacing:-.02em;margin-bottom:1.25rem">From Suhoor to Iftar.</h2>
-<p style="font-weight:300;font-size:1rem;color:var(--text-muted);line-height:1.7;max-width:520px;margin:0 auto">We are excited to launch during Ramadan with features to help you ponder, observe your prayers on time, and make sure you never miss Iftar.</p>
+<!-- 2. QIBLA -->
+<section class="scroll-section" id="sec-qibla">
+  <div class="reveal">
+    <p class="section-label">Direction</p>
+    <h2 class="section-title">Always facing Qibla.</h2>
+    <p class="section-body">The subdial compass finds the direction of al-Masjid al-Haram. Turn your phone, and it turns with you.</p>
+    <div class="verse">
+      <p class="verse-ar">فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ</p>
+      <p class="verse-en">"So turn your face toward al-Masjid al-Haram."</p>
+      <p class="verse-ref">Al-Baqarah 2:144</p>
+      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/151.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
+    </div>
+  </div>
 </section>
 
-<!-- Al-Asr -->
-<section style="text-align:center;padding:5rem 2rem;max-width:680px;margin:0 auto" class="reveal">
-<p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text);margin-bottom:1.5rem">
-وَٱلْعَصْرِ ۝ إِنَّ ٱلْإِنسَـٰنَ لَفِى خُسْرٍ ۝ إِلَّا ٱلَّذِينَ ءَامَنُوا۟ وَعَمِلُوا۟ ٱلصَّـٰلِحَـٰتِ وَتَوَاصَوْا۟ بِٱلْحَقِّ وَتَوَاصَوْا۟ بِٱلصَّبْرِ
-</p>
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7;max-width:520px;margin:0 auto .75rem">
-"By time. Indeed, mankind is in loss. Except for those who have believed, done righteous deeds, and advised each other to truth and patience."
-</p>
-<p style="font-size:.85rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted)">— Surah Al-Asr 103:1-3</p>
-<button onclick="(function(b){if(!b._q){var u='https://audio.qurancdn.com/Alafasy/mp3/';b._q=[u+'103001.mp3',u+'103002.mp3',u+'103003.mp3'];b._i=0;b._a=new Audio();b._a.onended=function(){b._i++;if(b._i<b._q.length){b._a.src=b._q[b._i];b._a.play()}else{b._i=0;b.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this surah'}}}if(b._a.paused||b._a.ended){b._a.src=b._q[b._i];b._a.play();b.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'}else{b._a.pause();b.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this surah'}})(this)" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem;margin-top:1rem"><i class="ph-thin ph-play"></i> Listen to this surah</button>
+<!-- 3. PRAYER TIMES -->
+<section class="scroll-section" id="sec-prayer">
+  <div class="reveal">
+    <p class="section-label">Prayer Times</p>
+    <h2 class="section-title">Every salah, right on time.</h2>
+    <p class="section-body">Automatic prayer times for your location. From Fajr to Isha, never miss a moment.</p>
+    <div id="prayerCard">
+      <p style="font-size:.7rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)" id="pcHijri">Loading...</p>
+      <p style="font-size:.8rem;font-weight:300;color:var(--text-muted)" id="pcGreg"></p>
+      <p style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-bottom:.25rem" id="pcLoc"></p>
+      <div id="pcTimes" style="display:flex;flex-direction:column;gap:.4rem;width:100%"></div>
+      <p style="font-size:.75rem;font-weight:300;color:var(--gold);margin-top:.25rem" id="pcNext"></p>
+    </div>
+    <div class="verse">
+      <p class="verse-ar">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
+      <p class="verse-en">"Indeed, prayer has been decreed upon the believers at specified times."</p>
+      <p class="verse-ref">An-Nisa 4:103</p>
+      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/574.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
+    </div>
+  </div>
 </section>
 
-<!-- Features -->
-<div class="feature reveal">
-<div class="feature-text">
-<p class="section-label">Prayer Times</p>
-<h2 class="section-title">Every salah,<br>right on time.</h2>
-<p class="section-body">Automatic prayer time calculations based on your location. Gentle alarms for Fajr, Dhuhr, Asr, Maghrib, and Isha — so you never miss a moment.</p>
-<div style="text-align:center;margin-top:1.5rem">
-<p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text)">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7">"Indeed, prayer has been decreed upon the believers a decree of specified times."</p>
-<p style="font-size:.85rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1rem">— An-Nisa 4:103</p>
-<button onclick="if(!this._a){this._a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/004103.mp3');this._a.onended=()=>{this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse'}}this._a.paused?(this._a.play(),this.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'):(this._a.pause(),this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem"><i class="ph-thin ph-play"></i> Listen to this verse</button>
-</div>
-</div>
-<div class="feature-visual">
-<div id="prayerCard" style="width:100%;max-width:380px;background:#fff;border:1px solid var(--border);display:flex;flex-direction:column;padding:2rem;gap:.75rem;font-family:var(--font);margin:0 auto;overflow:hidden">
-<p style="font-size:.7rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)" id="pcHijri">Loading...</p>
-<p style="font-size:.8rem;font-weight:300;color:var(--text-muted)" id="pcGreg"></p>
-<p style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-bottom:.5rem" id="pcLoc"></p>
-<div id="pcTimes" style="display:flex;flex-direction:column;gap:.5rem;width:100%"></div>
-<p style="font-size:.75rem;font-weight:300;color:var(--gold);margin-top:.5rem" id="pcNext"></p>
-</div>
-</div>
-</div>
+<!-- 4. ELEVEN DIALS -->
+<section class="scroll-section" id="sec-dials">
+  <div class="reveal">
+    <p class="section-label">Dial Themes</p>
+    <h2 class="section-title">Eleven stars, eleven dials.</h2>
+    <p class="section-body">Each dial is named for a Surah of the Holy Quran — chosen to inspire reflection on mercy, creation, and time.</p>
+    <div style="margin-top:1.5rem;display:flex;align-items:center;gap:1.5rem">
+      <button onclick="dialPrev()" aria-label="Previous" style="background:none;border:none;cursor:pointer;padding:.5rem"><i class="ph-thin ph-caret-left" style="font-size:1.5rem;color:var(--text);opacity:.3"></i></button>
+      <div style="text-align:center">
+        <span id="dialLabel" style="font-weight:400;font-size:.95rem;letter-spacing:.04em">Al-Layl</span>
+        <div class="dial-dots" id="dialDots"></div>
+      </div>
+      <button onclick="dialNext()" aria-label="Next" style="background:none;border:none;cursor:pointer;padding:.5rem"><i class="ph-thin ph-caret-right" style="font-size:1.5rem;color:var(--text);opacity:.3"></i></button>
+    </div>
+    <button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem;margin-top:1rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
+    <div class="verse" style="margin-top:2.5rem">
+      <p class="verse-ar">إِذْ قَالَ يُوسُفُ لِأَبِيهِ يَـٰٓأَبَتِ إِنِّىٓ رَأَيْتُ أَحَدَ عَشَرَ كَوْكَبًا وَٱلشَّمْسَ وَٱلْقَمَرَ رَأَيْتُهُمْ لِى سَـٰجِدِينَ</p>
+      <p class="verse-en">"When Joseph said to his father, 'O my father, indeed I have seen eleven stars and the sun and the moon; I saw them prostrating to me.'"</p>
+      <p class="verse-ref">Yusuf 12:4</p>
+      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1378.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
+    </div>
+  </div>
+</section>
+
+<!-- 5. NIGHT MODE -->
+<section class="scroll-section" id="sec-night">
+  <div class="reveal">
+    <p class="section-label">Night Mode</p>
+    <h2 class="section-title">The lume reveals itself.</h2>
+    <p class="section-body">As darkness falls, SuperLuminova indices glow to life. Each dial has its own lume colour — a quiet constellation on your wrist.</p>
+    <div class="verse">
+      <p class="verse-ar">وَجَعَلَ ٱلظُّلُمَـٰتِ وَٱلنُّورَ</p>
+      <p class="verse-en">"And He made darknesses and light."</p>
+      <p class="verse-ref">Al-An'am 6:1</p>
+      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/728.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
+    </div>
+  </div>
+</section>
+
+<!-- 6. ADHAN -->
+<section class="scroll-section" id="sec-adhan">
+  <div class="reveal">
+    <p class="section-label">Adhan</p>
+    <h2 class="section-title">Hear the call to prayer.</h2>
+    <p class="section-body">Mishary Rashid al-Afasy's voice, spatialized toward Qibla. The sound comes from the direction of Mecca.</p>
+    <button id="adhanBtn" onclick="playAdhan(this)" class="btn btn-outline adhan-btn"><i class="ph-thin ph-play"></i> Play Adhan Preview</button>
+  </div>
+</section>
+
+<!-- 7. INSTALL -->
+<section class="scroll-section" id="sec-install">
+  <div class="reveal">
+    <p class="section-label">Install</p>
+    <h2 class="section-title">Add to your home screen.</h2>
+    <div class="steps">
+      <div class="step">
+        <i class="ph-thin ph-globe step-icon"></i>
+        <p class="step-num">Step 1</p>
+        <h3>Open in Safari</h3>
+        <p>Visit the clock in your mobile browser.</p>
+      </div>
+      <div class="step">
+        <i class="ph-thin ph-share-network step-icon"></i>
+        <p class="step-num">Step 2</p>
+        <h3>Tap Share</h3>
+        <p>Select "Add to Home Screen."</p>
+      </div>
+      <div class="step">
+        <i class="ph-thin ph-house step-icon"></i>
+        <p class="step-num">Step 3</p>
+        <h3>Launch anytime</h3>
+        <p>Opens full-screen, like a native app.</p>
+      </div>
+    </div>
+    <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary" style="margin-top:3rem">Open Clock</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p style="margin-bottom:.5rem">By <a href="https://tawfeeqmartin.com" target="_blank" rel="noopener">Tawfeeq Martin</a></p>
+  <p><a href="mailto:feedback@agiftoftime.app">Feedback</a><span class="footer-sep">·</span><a href="mailto:support@agiftoftime.app">Support</a></p>
+</footer>
+
 <script>
-(async()=>{
-  let city='Los Angeles',country='US',apiUrl;
-  try{
-    // Try GPS first
-    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}):j());
-    const lat=pos.coords.latitude,lon=pos.coords.longitude;
-    apiUrl=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`;
-    try{const geoR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
-    const geo=await geoR.json();
-    city=geo.address?.city||geo.address?.town||geo.address?.village||city;
-    country=geo.address?.country_code?.toUpperCase()||country;}catch(e){}
-  }catch(e){
-    // Fallback: IP-based location via timezone
-    try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const tzCity=tz.split('/').pop().replace(/_/g,' ');
-    city=tzCity;country='';}catch(e2){}
-    apiUrl=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=US&method=2`;
-  }
-  try{
-    const r=await fetch(apiUrl);
-    const j=await r.json();
-    if(j.code!==200)return;
-    const t=j.data.timings,d=j.data.date;
-    document.getElementById('pcHijri').textContent=`${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH`;
-    document.getElementById('pcGreg').textContent=`${d.gregorian.weekday.en}, ${d.gregorian.day} ${d.gregorian.month.en} ${d.gregorian.year}`;
-    document.getElementById('pcLoc').textContent=`${city}${country?' · '+country:''}`;
-    const prayers=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
-    const colors={Fajr:'#5b7fa5',Sunrise:'#e6a23c',Dhuhr:'#c8a44e',Asr:'#d4845e',Maghrib:'#c0392b',Isha:'#6366f1'};
-    const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
-    const toMin=s=>{const[h,m]=s.split(':').map(Number);return h*60+m;};
-    const to12=s=>{const[h,m]=s.split(':');const hr=parseInt(h);return(hr%12||12)+':'+m+(hr>=12?' PM':' AM');};
-    let nextP='';
-    prayers.forEach(p=>{
-      const pm=toMin(t[p]);
-      const isNext=!nextP&&pm>nowM;
-      if(isNext)nextP=p;
-    });
-    document.getElementById('pcTimes').innerHTML=prayers.map(p=>{
-      const isNext=p===nextP;
-      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;${isNext?'font-weight:500;':'font-weight:300;color:var(--text-muted);'}">
-        <span style="display:flex;align-items:center;gap:.5rem"><span style="width:6px;height:6px;border-radius:50%;background:${colors[p]};display:inline-block"></span>${p}</span>
-        <span style="font-variant-numeric:tabular-nums;font-size:.9rem">${to12(t[p])}</span>
-      </div>`;
-    }).join('');
-    if(nextP)document.getElementById('pcNext').textContent=`Next: ${nextP} at ${to12(t[nextP])}`;
-  }catch(e){
-    document.getElementById('pcHijri').textContent='Prayer times unavailable';
-  }
-})();
-</script>
-
-<div class="feature reverse reveal">
-<div class="feature-text">
-<p class="section-label">Fasting</p>
-<h2 class="section-title">Suhoor to Iftar,<br>counted down.</h2>
-<p class="section-body">A live countdown to your next meal. See exactly how long until Iftar, displayed beautifully on the clock face. The hours feel lighter when you can see them.</p>
-<div style="text-align:center;margin-top:1.5rem">
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7">"There are two blessings which many people lose: health and free time for doing good."</p>
-<p style="font-size:.85rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted)">— Bukhari</p>
-</div>
-</div>
-<div class="feature-visual">
-<div class="feature-icon-circle" data-day-bg="#e8e4dc" data-lume="#ffa0c0" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#e8e4dc;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
-<i class="ph-thin ph-hourglass-medium" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
-</div>
-</div>
-</div>
-
-<div class="feature reveal">
-<div class="feature-text">
-<p class="section-label">Tawaf</p>
-<h2 class="section-title">Tawaf at Maghrib.</h2>
-<p class="section-body">At sunset, the clock hand traces a gentle tawaf — seven circuits around the dial. A quiet, meditative moment as the fast breaks.</p>
-</div>
-<div class="feature-visual">
-<div class="feature-icon-circle" data-day-bg="#d8988c" data-lume="#ffc070" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#d8988c;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
-<i class="ph-thin ph-arrows-counter-clockwise" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
-</div>
-</div>
-</div>
-
-<div class="feature reverse reveal">
-<div class="feature-text">
-<p class="section-label">Direction</p>
-<h2 class="section-title">Always facing<br>Qibla.</h2>
-<p class="section-body">A subtle compass indicator always points toward Mecca. Wherever you are, the clock knows which way to turn.</p>
-<div style="text-align:center;margin-top:1.5rem">
-<p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text)">فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا۟ وُجُوهَكُمْ شَطْرَهُۥ</p>
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7">"So turn your face toward al-Masjid al-Haram. And wherever you are, turn your faces toward it."</p>
-<p style="font-size:.85rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1rem">— Al-Baqarah 2:144</p>
-<button onclick="if(!this._a){this._a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/002144.mp3');this._a.onended=()=>{this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse'}}this._a.paused?(this._a.play(),this.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'):(this._a.pause(),this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem"><i class="ph-thin ph-play"></i> Listen to this verse</button>
-</div>
-</div>
-<div class="feature-visual">
-<div class="feature-icon-circle" data-day-bg="#82b8d8" data-lume="#80d0ff" data-icon-day="#1a1a1a" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#82b8d8;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease">
-<i class="ph-thin ph-compass" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
-</div>
-</div>
-</div>
-
-<div class="feature reveal">
-<div class="feature-text">
-<p class="section-label">Sound</p>
-<h2 class="section-title">Sound that moves<br>around you.</h2>
-<p class="section-body">The tick follows the second hand using HRTF spatial audio — you hear it sweep past your ears. The adhan plays spatially toward Qibla. And at night, everything goes silent. The clock knows when to speak and when to listen.</p>
-<div style="text-align:center;margin-top:1.5rem">
-<p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text)">ٱلشَّمْسُ وَٱلْقَمَرُ بِحُسْبَانٍ</p>
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7">"The sun and the moon move by precise calculation."</p>
-<p style="font-size:.85rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1rem">— Ar-Rahman 55:5</p>
-<button onclick="if(!this._a){this._a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/055005.mp3');this._a.onended=()=>{this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse'}}this._a.paused?(this._a.play(),this.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'):(this._a.pause(),this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem"><i class="ph-thin ph-play"></i> Listen to this verse</button>
-</div>
-</div>
-<div class="feature-visual">
-<div style="display:flex;align-items:center;justify-content:center;margin:0 auto">
-<i class="ph-thin ph-headphones" id="soundIcon" style="font-size:min(12rem,40vw);color:var(--text);opacity:.15;transition:color 1.5s ease,opacity 1.5s ease,text-shadow 1.5s ease"></i>
-</div>
-</div>
-</div>
-
-<section style="text-align:center;padding:5rem 2rem;max-width:680px;margin:0 auto" class="reveal">
-<p class="section-label">Ambient</p>
-<h2 class="section-title">Day fades into night.</h2>
-<p class="section-body" style="max-width:520px;margin:0 auto 2.5rem">At night, the movement goes silent — a smooth digital sweep that preserves your peace. Exactly eleven stars appear above the dial, arranged in a prostration arc. In Surah Yusuf (12:4), the young prophet dreamed of eleven stars, the sun, and the moon prostrating before him — the stars his eleven brothers, the sun his father Ya'qub, the moon his mother. Our stars bow the way the Quran describes them: in sujud, arcing toward the moon. Every detail is intentional.</p>
-</section>
-
-<section class="ambient-section" style="background:#0a0a10;padding:4rem 0 3rem;margin:0;text-align:center">
-<div style="margin:0 auto;max-width:320px">
-<div style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a10 100%);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;box-shadow:0 0 60px rgba(136,255,48,0.08)">
-<i class="ph-thin ph-moon-stars" style="font-size:min(6rem,18vw);color:rgba(200,232,160,0.35)"></i>
-</div>
-</div>
-<p style="font-size:.8rem;font-weight:300;color:rgba(255,255,255,.45);margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
-<i class="ph-thin ph-arrows-down-up" style="font-size:1.1rem"></i> Swipe up and down in the app to shift between day and night
-</p>
-</section>
-
-<section style="text-align:center;padding:3rem 2rem 5rem;max-width:680px;margin:0 auto" class="reveal">
-<div>
-<p style="font-family:'Lateef','Traditional Arabic',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:2;direction:rtl;color:var(--text);margin-bottom:1rem;">إِذْ قَالَ يُوسُفُ لِأَبِيهِ يَـٰٓأَبَتِ إِنِّى رَأَيْتُ أَحَدَ عَشَرَ كَوْكَبًا وَٱلشَّمْسَ وَٱلْقَمَرَ رَأَيْتُهُمْ لِى سَـٰجِدِينَ</p>
-<p style="font-size:1rem;font-weight:300;color:var(--text-muted);font-style:italic;line-height:1.7;max-width:520px;margin:0 auto .75rem;">"When Yusuf said to his father, 'O my father, indeed I have seen eleven stars and the sun and the moon; I saw them prostrating to me.'"</p>
-<p style="font-size:.75rem;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1rem;">— Surah Yusuf 12:4</p>
-<button onclick="if(!this._a){this._a=new Audio('https://audio.qurancdn.com/Alafasy/mp3/012004.mp3');this._a.onended=()=>{this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse'}}this._a.paused?( this._a.play(),this.innerHTML='<i class=\'ph-thin ph-pause\'></i> Playing — Mishary Rashid al-Afasy'):(this._a.pause(),this.innerHTML='<i class=\'ph-thin ph-play\'></i> Listen to this verse')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem;gap:.5rem;"><i class="ph-thin ph-play"></i> Listen to this verse</button>
-</div>
-</section>
-
-<!-- Dial Gallery -->
-<section class="dials">
-<div class="dials-header reveal">
-<p class="section-label">Dial Themes</p>
-<h2 class="section-title">Eleven stars, eleven dials.</h2>
-<p class="section-body" style="margin:0 auto;max-width:540px">Each dial is named for a Surah of the Holy Quran — chosen to inspire reflection on Allah's mercy, creation, and the passage of time.</p>
-</div>
-<div style="display:flex;align-items:center;justify-content:center;gap:2rem;padding:0 1rem">
-<button onclick="dialPrev()" aria-label="Previous dial" style="background:none;border:none;cursor:pointer;padding:.5rem">
-<i class="ph-thin ph-caret-left" style="font-size:2rem;color:var(--text);opacity:.3"></i>
-</button>
-<div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-<div id="dialHero" style="width:min(380px,85vw);height:min(380px,85vw);border-radius:50%;background:#585860;margin:0 auto;overflow:hidden;transition:box-shadow 1.5s ease"></div>
-<span id="dialLabel" style="font-weight:400;font-size:.9rem;letter-spacing:.04em">Al-Layl</span>
-<div style="display:flex;align-items:center;gap:.75rem;margin-top:.5rem">
-<button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
-<button id="nightToggle" onclick="togglePageNight()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem .75rem;gap:.4rem" aria-label="Toggle day/night"><i class="ph-thin ph-moon"></i></button>
-</div>
-<div id="dialDots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
-<script>document.getElementById('dialDots').innerHTML=Array.from({length:11},(_, i)=>`<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:${i===3?'.6':'.15'}"></span>`).join('');</script>
-</div>
-<button onclick="dialNext()" aria-label="Next dial" style="background:none;border:none;cursor:pointer;padding:.5rem">
-<i class="ph-thin ph-caret-right" style="font-size:2rem;color:var(--text);opacity:.3"></i>
-</button>
-</div>
-<p style="text-align:center;margin-top:1.5rem;font-weight:300;font-size:.85rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:.5rem">
-<i class="ph-thin ph-arrows-left-right" style="font-size:1.1rem"></i> Swipe left and right in the app to change dials
-</p>
-<script>
+// ══════════════════════════════════════════
+// DIAL DATA
+// ══════════════════════════════════════════
 const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','qamar','ward','lilas'];
-const DIAL_NAMES=['Ar-Raḥmān','An-Nūr','Ash-Shams','Al-Layl','Al-Burūj','Al-Kawthar','Aḍ-Ḍuḥā','An-Najm','Al-Qamar','Al-Wāqiʿah','Al-Mulk'];
+const DIAL_NAMES={'tennis':'Ar-Raḥmān','white':'An-Nūr','salmon':'Ash-Shams','slate':'Al-Layl','sky':'Al-Burūj','kawthar':'Al-Kawthar','dhuha':'Aḍ-Ḍuḥā','najm':'An-Najm','qamar':'Al-Qamar','ward':'Al-Wāqiʿah','lilas':'Al-Mulk'};
 const DIAL_COLORS={'tennis':'#68b890','white':'#e8e4dc','salmon':'#d8988c','slate':'#585860','sky':'#82b8d8','kawthar':'#f2dce0','dhuha':'#f08040','najm':'#384870','qamar':'#c0c4cc','ward':'#d89098','lilas':'#8878a8'};
 const DIAL_LUMES={'tennis':'#88ff30','white':'#ffa0c0','salmon':'#ffc070','slate':'#c8e8a0','sky':'#80d0ff','kawthar':'#ffa0c0','dhuha':'#ffc040','najm':'#90b8ff','qamar':'#e8f0ff','ward':'#ff80a8','lilas':'#c090ff'};
-let dialIdx=3; // default slate
-// Full surah audio from Quran.com CDN (single MP3 per surah — no gaps)
 const DIAL_SURAHS={'tennis':55,'white':24,'salmon':91,'slate':92,'sky':85,'kawthar':108,'dhuha':93,'najm':53,'qamar':54,'ward':56,'lilas':67};
+
+let dialIdx=3; // slate default
+let pageNight=false;
 let dialAudio=null, dialPlaying=false;
+let adhanAudio=null;
+let dialCycleTimer=null;
+
+// ══════════════════════════════════════════
+// VERSE AUDIO HELPER
+// ══════════════════════════════════════════
+function playVerse(btn,url){
+  if(!btn._a){
+    btn._a=new Audio(url);
+    btn._a.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'};
+  }
+  if(btn._a.paused){btn._a.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing'}
+  else{btn._a.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'}
+}
+
+// ══════════════════════════════════════════
+// DIAL CONTROLS
+// ══════════════════════════════════════════
+function buildDots(){
+  const c=document.getElementById('dialDots');
+  c.innerHTML=DIALS.map((_,i)=>`<button class="dial-dot${i===dialIdx?' active':''}" onclick="switchDial(${i})" style="background:${DIAL_COLORS[DIALS[i]]}" aria-label="${DIAL_NAMES[DIALS[i]]}"></button>`).join('');
+}
+function switchDial(i){
+  dialIdx=i;
+  updateDial();
+}
+function updateDial(){
+  const d=DIALS[dialIdx];
+  document.getElementById('dialLabel').textContent=DIAL_NAMES[d];
+  document.querySelectorAll('.dial-dot').forEach((dot,i)=>{
+    dot.classList.toggle('active',i===dialIdx);
+  });
+  if(dialAudio&&!dialAudio.paused){dialAudio.pause();dialPlaying=false;}
+  document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
+  if(window._clockSwitchDial) window._clockSwitchDial(d);
+  updateLumeHalo();
+}
+function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
+function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
+
+function updateLumeHalo(){
+  const hero=document.getElementById('dialHero');
+  if(pageNight){
+    const lume=DIAL_LUMES[DIALS[dialIdx]]||'#c8e8a0';
+    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25';
+  }else{
+    hero.style.boxShadow='none';
+  }
+}
+
 function playDialSurah(){
   const num=DIAL_SURAHS[DIALS[dialIdx]];
   if(!num)return;
@@ -357,18 +381,20 @@ function playDialSurah(){
   }
   dialPlaying=true;
   dialAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/'+num+'.mp3');
-  dialAudio.onended=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
-  dialAudio.onerror=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
+  dialAudio.onended=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah'};
   dialAudio.play().catch(()=>{});
   btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
 }
-// ── Page-wide day/night ──
-let pageNight=false;
-function togglePageNight(){
-  pageNight=!pageNight;
+
+// ══════════════════════════════════════════
+// NIGHT MODE
+// ══════════════════════════════════════════
+function setNightMode(on){
+  if(pageNight===on)return;
+  pageNight=on;
   const r=document.documentElement;
-  if(pageNight){
-    r.style.setProperty('--bg','#0a0a0a');
+  if(on){
+    r.style.setProperty('--bg','#0c0c12');
     r.style.setProperty('--bg-alt','#111114');
     r.style.setProperty('--text','#e8e4dc');
     r.style.setProperty('--text-muted','#8a8a8a');
@@ -380,164 +406,173 @@ function togglePageNight(){
     r.style.setProperty('--text-muted','#6b6b6b');
     r.style.setProperty('--border','#e5e3dd');
   }
-  // Update toggle icon
-  const btn=document.getElementById('nightToggle');
-  btn.innerHTML=pageNight?'<i class="ph-thin ph-sun"></i>':'<i class="ph-thin ph-moon"></i>';
-  // Activate lume on feature circles
-  document.querySelectorAll('.feature-icon-circle').forEach(c=>{
-    const lume=c.dataset.lume;
-    const dayBg=c.dataset.dayBg;
-    const icon=c.querySelector('i');
-    if(pageNight){
-      c.style.background='#0c0c12';
-      c.style.boxShadow='0 0 60px '+lume+'40, 0 0 120px '+lume+'20, inset 0 0 40px '+lume+'15';
-      if(icon){icon.style.color=lume;icon.style.opacity='0.85';icon.style.textShadow='0 0 30px '+lume+', 0 0 60px '+lume+'80';}
-    }else{
-      c.style.background=dayBg||'#e8e4dc';
-      c.style.boxShadow='none';
-      if(icon){icon.style.color=c.dataset.iconDay||'#1a1a1a';icon.style.opacity='0.25';icon.style.textShadow='none';}
-    }
-  });
-  // Sound icon glow
-  const snd=document.getElementById('soundIcon');
-  if(snd){
-    if(pageNight){snd.style.color='#c8e8a0';snd.style.opacity='0.6';snd.style.textShadow='0 0 40px #c8e8a080';}
-    else{snd.style.color='var(--text)';snd.style.opacity='0.15';snd.style.textShadow='none';}
-  }
-  // Tell the 3D clock to switch night mode
-  if(window._clockSetNight) window._clockSetNight(pageNight);
-  // Lume halo on dial picker
-  const d=DIALS[dialIdx];
-  const hero=document.getElementById('dialHero');
-  if(pageNight){
-    const lume=DIAL_LUMES[d]||'#c8e8a0';
-    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25';
-  }else{
-    hero.style.boxShadow='none';
-  }
-  // Update ambient section
-  const amb=document.querySelector('.ambient-section');
-  if(amb)amb.style.background=pageNight?'#0a0a0a':'#0a0a10';
-  // Prayer card
+  document.querySelector('.clock-sticky').style.background=on?'#0c0c12':'var(--bg)';
   const pc=document.getElementById('prayerCard');
-  if(pc){pc.style.background=pageNight?'#141418':'#fff';pc.style.borderColor=pageNight?'rgba(255,255,255,.08)':'var(--border)';}
+  if(pc){pc.style.background=on?'#141418':'#fff';pc.style.borderColor=on?'rgba(255,255,255,.08)':'var(--border)';}
+  if(window._clockSetNight) window._clockSetNight(on);
+  updateLumeHalo();
 }
-function updateDial(){
-  const d=DIALS[dialIdx];
-  document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
-  const dots=document.querySelectorAll('#dialDots span');
-  dots.forEach((dot,i)=>dot.style.opacity=i===dialIdx?'.6':'.15');
-  // Stop any playing surah audio
-  dialPlaying=false;
-  if(dialAudio&&!dialAudio.paused){dialAudio.pause();}
-  document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
-  // Switch the actual 3D clock
-  if(window._clockSwitchDial) window._clockSwitchDial(d);
-  // Lume halo in night mode
-  const hero=document.getElementById('dialHero');
-  if(pageNight){
-    const lume=DIAL_LUMES[d]||'#c8e8a0';
-    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25';
-  }else{
-    hero.style.boxShadow='none';
+
+// ══════════════════════════════════════════
+// ADHAN
+// ══════════════════════════════════════════
+function playAdhan(btn){
+  if(!adhanAudio){
+    adhanAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/1.mp3');
+    adhanAudio.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Play Adhan Preview'};
   }
+  if(adhanAudio.paused){adhanAudio.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy'}
+  else{adhanAudio.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Play Adhan Preview'}
 }
-function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
-function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
-// No iframe — zero WebGL on landing page
-// Touch swipe on dial hero — horizontal only, block vertical
+
+// ══════════════════════════════════════════
+// SCROLL OBSERVERS
+// ══════════════════════════════════════════
+function setupScrollObservers(){
+  const opts={threshold:0.4};
+
+  // Section → clock state mapping
+  const observe=(id,fn)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    new IntersectionObserver((entries)=>{
+      if(entries[0].isIntersecting) fn();
+    },opts).observe(el);
+  };
+
+  // Hook: slate, day
+  observe('sec-hook',()=>{
+    if(window._clockSwitchDial&&DIALS[dialIdx]!=='slate'){dialIdx=3;updateDial();}
+    setNightMode(false);
+  });
+
+  // Qibla: keep slate, day
+  observe('sec-qibla',()=>{
+    setNightMode(false);
+  });
+
+  // Prayer: keep current, day
+  observe('sec-prayer',()=>{
+    setNightMode(false);
+  });
+
+  // Dials: start cycling
+  observe('sec-dials',()=>{
+    setNightMode(false);
+    startDialCycle();
+  });
+
+  // Night: activate night mode
+  observe('sec-night',()=>{
+    setNightMode(true);
+  });
+
+  // Adhan: keep night
+  observe('sec-adhan',()=>{
+    setNightMode(true);
+  });
+
+  // Install: back to day
+  observe('sec-install',()=>{
+    setNightMode(false);
+  });
+
+  // Stop dial cycle when leaving dials section
+  new IntersectionObserver((entries)=>{
+    if(!entries[0].isIntersecting) stopDialCycle();
+  },{threshold:0.1}).observe(document.getElementById('sec-dials'));
+}
+
+function startDialCycle(){
+  if(dialCycleTimer)return;
+  dialCycleTimer=setInterval(()=>{dialNext()},2500);
+}
+function stopDialCycle(){
+  if(dialCycleTimer){clearInterval(dialCycleTimer);dialCycleTimer=null;}
+}
+
+// ══════════════════════════════════════════
+// REVEAL OBSERVER
+// ══════════════════════════════════════════
+const revealObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');revealObs.unobserve(e.target)}});
+},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+
+// ══════════════════════════════════════════
+// NAV SCROLL
+// ══════════════════════════════════════════
+const nav=document.querySelector('nav');
+window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>40)},{passive:true});
+
+// ══════════════════════════════════════════
+// PRAYER TIMES
+// ══════════════════════════════════════════
+(async()=>{
+  let city='Los Angeles',country='US',apiUrl;
+  try{
+    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}):j());
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    apiUrl=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`;
+    try{const geoR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const geo=await geoR.json();
+    city=geo.address?.city||geo.address?.town||geo.address?.village||city;
+    country=geo.address?.country_code?.toUpperCase()||country;}catch(e){}
+  }catch(e){
+    try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    city=tz.split('/').pop().replace(/_/g,' ');}catch(e2){}
+    apiUrl=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=US&method=2`;
+  }
+  try{
+    const r=await fetch(apiUrl);const j=await r.json();if(j.code!==200)return;
+    const t=j.data.timings,d=j.data.date;
+    document.getElementById('pcHijri').textContent=`${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH`;
+    document.getElementById('pcGreg').textContent=`${d.gregorian.weekday.en}, ${d.gregorian.day} ${d.gregorian.month.en} ${d.gregorian.year}`;
+    document.getElementById('pcLoc').textContent=`${city}${country?' · '+country:''}`;
+    const prayers=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+    const colors={Fajr:'#5b7fa5',Sunrise:'#e6a23c',Dhuhr:'#c8a44e',Asr:'#d4845e',Maghrib:'#c0392b',Isha:'#6366f1'};
+    const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
+    const toMin=s=>{const[h,m]=s.split(':').map(Number);return h*60+m;};
+    const to12=s=>{const[h,m]=s.split(':');const hr=parseInt(h);return(hr%12||12)+':'+m+(hr>=12?' PM':' AM');};
+    let nextP='';
+    prayers.forEach(p=>{const pm=toMin(t[p]);if(!nextP&&pm>nowM)nextP=p;});
+    document.getElementById('pcTimes').innerHTML=prayers.map(p=>{
+      const isNext=p===nextP;
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;${isNext?'font-weight:500;':'font-weight:300;color:var(--text-muted);'}">
+        <span style="display:flex;align-items:center;gap:.5rem"><span style="width:6px;height:6px;border-radius:50%;background:${colors[p]};display:inline-block"></span>${p}</span>
+        <span style="font-variant-numeric:tabular-nums;font-size:.9rem">${to12(t[p])}</span></div>`;
+    }).join('');
+    if(nextP)document.getElementById('pcNext').textContent=`Next: ${nextP} at ${to12(t[nextP])}`;
+  }catch(e){document.getElementById('pcHijri').textContent='Prayer times unavailable';}
+})();
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+buildDots();
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+// Touch swipe on dial hero
 (function(){
-  const el=document.getElementById('dialHero');let sx=0,sy=0,locked=false;
-  el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;locked=false;},{passive:true});
+  const el=document.getElementById('dialHero');let sx=0,locked=false;
+  el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;locked=false},{passive:true});
   el.addEventListener('touchmove',e=>{
-    if(locked)return;
-    const dx=Math.abs(e.touches[0].clientX-sx),dy=Math.abs(e.touches[0].clientY-sy);
-    if(dx>dy&&dx>10){locked=true;e.preventDefault();}
+    const dx=Math.abs(e.touches[0].clientX-sx);
+    if(dx>10&&!locked){locked=true;e.preventDefault();}
   },{passive:false});
   el.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-sx;
     if(Math.abs(dx)>40){dx<0?dialNext():dialPrev();}
   },{passive:true});
 })();
-</script>
-</section>
 
-<!-- Add to Home Screen -->
-<section class="install reveal">
-<p class="section-label">Install</p>
-<h2 class="section-title">Add to your home screen.</h2>
-<div class="steps">
-<div class="step">
-<i class="ph-thin ph-globe step-icon"></i>
-<p class="step-num">Step 1</p>
-<h3>Open in Safari</h3>
-<p>Visit the clock in your mobile browser.</p>
-</div>
-<div class="step">
-<i class="ph-thin ph-share-network step-icon"></i>
-<p class="step-num">Step 2</p>
-<h3>Tap Share</h3>
-<p>Select "Add to Home Screen" from the share menu.</p>
-</div>
-<div class="step">
-<i class="ph-thin ph-house step-icon"></i>
-<p class="step-num">Step 3</p>
-<h3>Launch anytime</h3>
-<p>Opens full-screen, just like a native app.</p>
-</div>
-</div>
-</section>
+// Load 3D clock immediately
+window._clockContainer=document.getElementById('dialHero');
+const _cs=document.createElement('script');
+_cs.type='module';_cs.src='clock.js?v=7';
+document.head.appendChild(_cs);
 
-<!-- Waitlist -->
-<section style="text-align:center;padding:4rem 2rem;background:var(--bg-alt)" class="reveal">
-<p class="section-label">Coming Soon</p>
-<h2 class="section-title">iOS app on the way.</h2>
-<p class="section-body" style="margin:0 auto">Be the first to know when it launches.</p>
-<form class="waitlist-form" onsubmit="event.preventDefault();this.innerHTML='<p style=color:var(--gold);font-weight:400>Thank you. We\'ll be in touch.</p>'">
-<input type="email" placeholder="Your email" required aria-label="Email address">
-<button type="submit" class="btn btn-primary">Notify Me</button>
-</form>
-</section>
-
-<!-- Footer -->
-<footer>
-<p style="margin-bottom:.5rem">By <a href="https://tawfeeqmartin.com" target="_blank" rel="noopener">Tawfeeq Martin</a></p>
-<p><a href="mailto:feedback@agiftoftime.app">Feedback</a><span class="footer-sep">·</span><a href="mailto:support@agiftoftime.app">Support</a><span class="footer-sep">·</span><a href="#credits" onclick="document.getElementById('credits').style.display=document.getElementById('credits').style.display==='none'?'block':'none';return false">Credits</a></p>
-<div id="credits" style="display:none;max-width:520px;margin:1.5rem auto 0;text-align:left;font-size:.85rem;font-weight:300;color:var(--text-muted);line-height:1.8">
-<p style="font-weight:500;font-size:.75rem;letter-spacing:.08em;margin-bottom:.75rem">ACKNOWLEDGMENTS</p>
-<p><strong style="font-weight:500">Mishary Rashid al-Afasy</strong> — Quran recitation</p>
-<p><a href="https://quran.com" target="_blank" rel="noopener">QuranCDN / Quran.com</a> — Quran audio hosting</p>
-<p><a href="https://aladhan.com" target="_blank" rel="noopener">Aladhan API</a> — Prayer time calculations</p>
-<p><a href="https://archive.org" target="_blank" rel="noopener">Internet Archive</a> — Adhan recordings</p>
-</div>
-</footer>
-
-<script>
-// Nav scroll
-const nav=document.querySelector('nav');
-window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>40)},{passive:true});
-
-// Scroll reveal
-const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-</script>
-<!-- Native Three.js clock in dial picker — single WebGL context, no iframe -->
-<script>
-// Lazy-load the 3D clock when dial section scrolls into view
-const _dialHero=document.getElementById('dialHero');
-let _clockLoaded=false;
-const _clockObs=new IntersectionObserver((entries)=>{
-  if(entries[0].isIntersecting&&!_clockLoaded){
-    _clockLoaded=true;
-    window._clockContainer=_dialHero;
-    const s=document.createElement('script');
-    s.type='module';
-    s.src='clock.js?v=7';
-    document.body.appendChild(s);
-    _clockObs.disconnect();
-  }
-},{rootMargin:'300px 0px 300px 0px'});
-_clockObs.observe(_dialHero);
+// Setup scroll observers after a brief delay to let clock init
+setTimeout(setupScrollObservers,500);
 </script>
 </body>
 </html>

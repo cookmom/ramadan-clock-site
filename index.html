@@ -355,7 +355,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
       const f=document.createElement('iframe');
       f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=116&embed&dial='+DIALS[dialIdx]+'&nomarkers';
       f.title='Dial picker';
-      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.50);border:none;pointer-events:auto';
+      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.50);border:none;pointer-events:none';
       el.appendChild(f);
       dialIframe=f;
     }
@@ -364,7 +364,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
 })();
 // Touch swipe on dial hero — horizontal only, block vertical
 (function(){
-  const el=document.getElementById('dialHero');let sx=0,sy=0,locked=false;
+  const el=document.getElementById('dialHero').parentElement;let sx=0,sy=0,locked=false;
   el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;locked=false;},{passive:true});
   el.addEventListener('touchmove',e=>{
     if(locked)return;

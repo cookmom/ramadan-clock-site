@@ -321,6 +321,7 @@ footer a:hover{color:var(--text)}
 <div id="dialEmbed" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
 </div>
 <span id="dialLabel" style="font-weight:400;font-size:.9rem;letter-spacing:.04em">Al-Layl</span>
+<button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem;margin-top:.5rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
 <div id="dialDots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
 <script>document.getElementById('dialDots').innerHTML=Array.from({length:11},(_, i)=>`<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:${i===3?'.6':'.15'}"></span>`).join('');</script>
 </div>
@@ -336,6 +337,19 @@ const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','q
 const DIAL_NAMES=['Ar-Raḥmān','An-Nūr','Ash-Shams','Al-Layl','Al-Burūj','Al-Kawthar','Aḍ-Ḍuḥā','An-Najm','Al-Qamar','Al-Wāqiʿah','Al-Mulk'];
 const DIAL_COLORS={'tennis':'#68b890','white':'#e8e4dc','salmon':'#d8988c','slate':'#585860','sky':'#82b8d8','kawthar':'#f2dce0','dhuha':'#f08040','najm':'#384870','qamar':'#c0c4cc','ward':'#d89098','lilas':'#8878a8'};
 let dialIdx=3; // default slate
+// Surah number for each dial's first ayah (QuranCDN format: SSS001)
+const DIAL_SURAHS={'tennis':'055','white':'024','salmon':'091','slate':'092','sky':'085','kawthar':'108','dhuha':'093','najm':'053','qamar':'054','ward':'056','lilas':'067'};
+let dialAudio=null;
+function playDialSurah(){
+  const surah=DIAL_SURAHS[DIALS[dialIdx]];
+  if(!surah)return;
+  const btn=document.getElementById('dialListen');
+  if(dialAudio&&!dialAudio.paused){dialAudio.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;}
+  dialAudio=new Audio('https://audio.qurancdn.com/Alafasy/mp3/'+surah+'001.mp3');
+  dialAudio.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
+  dialAudio.play();
+  btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+}
 let dialIframe=null;
 function updateDial(){
   const d=DIALS[dialIdx];
@@ -343,6 +357,9 @@ function updateDial(){
   document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
   const dots=document.querySelectorAll('#dialDots span');
   dots.forEach((dot,i)=>dot.style.opacity=i===dialIdx?'.6':'.15');
+  // Stop any playing surah audio
+  if(dialAudio&&!dialAudio.paused){dialAudio.pause();}
+  document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
   // Switch dial via postMessage — no iframe reload
   if(dialIframe){try{dialIframe.contentWindow.postMessage({type:'switchDial',dial:d},'*');}catch(e){}}
 }

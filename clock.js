@@ -7,6 +7,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 // If window._clockContainer is set, render into that element instead of fullscreen
 const CONTAINER = window._clockContainer || null;
 const CONTAINED = !!CONTAINER;
+if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.clientWidth, 'x', CONTAINER.clientHeight);
 
 // ══════════════════════════════════════════
 // CONFIG
@@ -69,7 +70,10 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.4;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
-if(CONTAINED) renderer.domElement.style.cssText='width:100%;height:100%;display:block';
+if(CONTAINED) {
+  renderer.domElement.style.cssText='width:100%;height:100%;display:block';
+  console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
+}
 
 const scene = new THREE.Scene();
 
@@ -1108,6 +1112,7 @@ function buildBezel() {
 }
 
 function buildAll(){
+  if(CONTAINED) console.log('[clock] buildAll, dial:', currentDial, 'scale:', clockGroup.scale.x);
   // Clear clockGroup
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   bgPlaneMat.color.set(0x1a1a22);
@@ -1303,9 +1308,11 @@ if(CONTAINED){new ResizeObserver(onResize).observe(CONTAINER);}
 // RENDER LOOP
 // ══════════════════════════════════════════
 const vignetteEl = CONTAINED ? null : document.getElementById('vignette');
+let _animCount=0;
 function animate(){
   requestAnimationFrame(animate);
-  
+  if(CONTAINED && _animCount===0) console.log('[clock] animate running, modeBlend:', modeBlend);
+  _animCount++;
   // Night blend
   if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.015;
   else modeBlend=modeTarget;

@@ -422,7 +422,7 @@ function setNightMode(on){
 // ══════════════════════════════════════════
 function playAdhan(btn){
   if(!adhanAudio){
-    adhanAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/1.mp3');
+    adhanAudio=new Audio('https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3');
     adhanAudio.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Play Adhan Preview'};
   }
   if(adhanAudio.paused){adhanAudio.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy'}

@@ -379,7 +379,8 @@ function buildScrollIndicator() {
   if(scrollIndicator) { clockGroup.remove(scrollIndicator); scrollIndicator=null; }
   if(!CONTAINED) return; // only on landing page
   const c = DIALS[currentDial];
-  const dotR = R * 0.03;
+  const dotR = R * 0.045;
+  console.log('[clock] buildScrollIndicator, target:', scrollIndicatorTarget, 'CONTAINED:', CONTAINED);
   const geo = new THREE.CircleGeometry(dotR, 16);
   const mat = new THREE.MeshStandardMaterial({
     color: c.hand, roughness: 0.3, metalness: 0.4,

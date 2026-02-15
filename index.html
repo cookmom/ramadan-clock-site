@@ -468,35 +468,60 @@ window.addEventListener('message',e=>{
 });
 </script>
 <script>
-// Lazy-load/destroy WebGL iframes — max 2 alive at once
+// Lazy-load WebGL iframes — stagger creation, defer destruction
 (function(){
-  // Only allow 1 WebGL iframe at a time to prevent iOS crash
-  let activeEmbed = null;
+  const alive = new Map(); // el -> iframe
+  const MAX_ALIVE = 2;
+  let destroyTimer = null;
+
+  function destroyFarthest(except){
+    // Find the iframe farthest from viewport center and destroy it
+    if(alive.size <= MAX_ALIVE) return;
+    const vpMid = window.innerHeight / 2;
+    let farthestEl = null, farthestDist = 0;
+    alive.forEach((iframe, el) => {
+      if(el === except) return;
+      const r = el.getBoundingClientRect();
+      const mid = r.top + r.height/2;
+      const dist = Math.abs(mid - vpMid);
+      if(dist > farthestDist){ farthestDist = dist; farthestEl = el; }
+    });
+    if(farthestEl){
+      const f = alive.get(farthestEl);
+      // Tell the iframe to dispose WebGL before removing
+      try{ f.contentWindow.postMessage({type:'dispose'},'*'); }catch(e){}
+      // Delay actual removal to let dispose run
+      setTimeout(()=>{ f.src='about:blank'; f.remove(); }, 100);
+      alive.delete(farthestEl);
+    }
+  }
+
   const lazyObs=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
       const el=e.target;
       if(e.isIntersecting){
-        if(!el.querySelector('iframe')){
-          // Destroy previous active embed first
-          if(activeEmbed && activeEmbed !== el) {
-            const old=activeEmbed.querySelector('iframe');
-            if(old){old.src='about:blank';old.remove();}
-          }
+        if(!alive.has(el)){
           const f=document.createElement('iframe');
           f.src=el.dataset.src;
           f.title=el.dataset.title||'';
+          f.loading='lazy';
           f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:none';
           if(el.closest('.dials')||el.closest('.ambient-section'))f.style.pointerEvents='auto';
           el.appendChild(f);
-          activeEmbed = el;
+          alive.set(el, f);
+          // After a short delay, clean up excess
+          clearTimeout(destroyTimer);
+          destroyTimer = setTimeout(()=> destroyFarthest(el), 300);
         }
       }else{
-        const f=el.querySelector('iframe');
-        if(f){f.src='about:blank';f.remove();}
-        if(activeEmbed===el) activeEmbed=null;
+        // Don't destroy immediately — only destroy when we exceed MAX_ALIVE
+        clearTimeout(destroyTimer);
+        destroyTimer = setTimeout(()=>{
+          if(alive.size > MAX_ALIVE) destroyFarthest(null);
+        }, 500);
       }
     });
-  },{rootMargin:'50px 0px 50px 0px'});
+  },{rootMargin:'200px 0px 200px 0px'});
   document.querySelectorAll('.lazy-embed').forEach(el=>lazyObs.observe(el));
 })();
 </script>

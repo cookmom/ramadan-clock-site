@@ -422,8 +422,13 @@ function updateDial(){
   dialPlaying=false;
   if(dialAudio&&!dialAudio.paused){dialAudio.pause();}
   document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
-  // Switch dial via postMessage — no iframe reload
-  if(dialIframe){try{dialIframe.contentWindow.postMessage({type:'switchDial',dial:d},'*');}catch(e){}}
+  // Switch dial via postMessage — no iframe reload, also resend night state
+  if(dialIframe){
+    try{
+      dialIframe.contentWindow.postMessage({type:'switchDial',dial:d},'*');
+      if(pageNight) dialIframe.contentWindow.postMessage({type:'nightOn'},'*');
+    }catch(e){}
+  }
 }
 function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
 function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
@@ -433,7 +438,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
   const io=new IntersectionObserver((entries)=>{
     if(entries[0].isIntersecting&&!dialIframe){
       const f=document.createElement('iframe');
-      f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=117&embed&dial='+DIALS[dialIdx]+'&nomarkers';
+      f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=122&embed&dial='+DIALS[dialIdx]+'&nomarkers'+(pageNight?'&night':'');
       f.title='Dial picker';
       f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.50);border:none;pointer-events:none';
       el.appendChild(f);

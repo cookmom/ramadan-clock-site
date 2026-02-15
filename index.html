@@ -592,13 +592,12 @@ setTimeout(()=>{
   function updateScrollIndicator(){
     const scrollTop=window.scrollY;
     // Find the last section whose top has scrolled past the clock bottom
-    // Find which section is currently "active" = its content is visible below the clock
-    // Use the FIRST section whose bottom is still below viewport midpoint
-    const mid=window.innerHeight*0.55;
-    let activeIdx=0;
+    // Find which section is snapped — closest top to the snap line (just below clock)
+    const snapLine=document.querySelector('.clock-sticky')?.getBoundingClientRect().bottom || 0;
+    let activeIdx=0, bestDist=Infinity;
     for(let i=0;i<secEls.length;i++){
-      const rect=secEls[i].getBoundingClientRect();
-      if(rect.bottom > mid){ activeIdx=i; break; }
+      const dist=Math.abs(secEls[i].getBoundingClientRect().top - snapLine);
+      if(dist<bestDist){ bestDist=dist; activeIdx=i; }
     }
     if(activeIdx!==lastIdx){
       lastIdx=activeIdx;

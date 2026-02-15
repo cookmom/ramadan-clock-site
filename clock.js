@@ -503,14 +503,14 @@ function buildNumerals() {
     // Measure actual text width
     const measCv = document.createElement('canvas');
     const measCtx = measCv.getContext('2d');
-    measCtx.font = `500 ${fontSize*dpr}px "Noto Sans Arabic","Lateef",sans-serif`;
+    measCtx.font = `400 ${fontSize*dpr}px "Lateef",sans-serif`;
     const measured = measCtx.measureText(ARABIC[i]);
-    const tw = (measured.width / dpr) + fontSize*0.3; // padding
-    const th = fontSize*1.4;
+    const tw = (measured.width / dpr) + fontSize*0.4; // padding
+    const th = fontSize*1.6;
     const cv = document.createElement('canvas');
     cv.width = Math.ceil(tw*dpr); cv.height = Math.ceil(th*dpr);
     const ctx = cv.getContext('2d');
-    ctx.font = `500 ${fontSize*dpr}px "Noto Sans Arabic","Lateef",sans-serif`;
+    ctx.font = `400 ${fontSize*dpr}px "Lateef",sans-serif`;
     ctx.fillStyle = c.text||'#ffffff';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(ARABIC[i], cv.width/2, cv.height/2);

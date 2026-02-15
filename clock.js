@@ -1126,6 +1126,8 @@ function buildAll(){
   buildStars();
   updateSurah();
 }
+// Debug — expose internals
+window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane };
 // Expose controls for landing page
 window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
 window._clockSetNight = function(on){ modeTarget=on?1:0; };

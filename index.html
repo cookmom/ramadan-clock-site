@@ -569,6 +569,10 @@ document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
   },{passive:true});
 })();
 
+// Always start at top on refresh
+history.scrollRestoration='manual';
+window.scrollTo(0,0);
+
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');

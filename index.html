@@ -592,12 +592,13 @@ setTimeout(()=>{
   function updateScrollIndicator(){
     const scrollTop=window.scrollY;
     // Find the last section whose top has scrolled past the clock bottom
-    const offset=window.innerHeight*0.4; // trigger point ~40% down viewport
+    // Find which section is currently "active" = its content is visible below the clock
+    // Use the FIRST section whose bottom is still below viewport midpoint
+    const mid=window.innerHeight*0.55;
     let activeIdx=0;
-    for(let i=secEls.length-1;i>=0;i--){
-      if(secEls[i].getBoundingClientRect().top < offset){
-        activeIdx=i; break;
-      }
+    for(let i=0;i<secEls.length;i++){
+      const rect=secEls[i].getBoundingClientRect();
+      if(rect.bottom > mid){ activeIdx=i; break; }
     }
     if(activeIdx!==lastIdx){
       lastIdx=activeIdx;

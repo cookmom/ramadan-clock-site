@@ -337,18 +337,43 @@ const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','q
 const DIAL_NAMES=['Ar-Raḥmān','An-Nūr','Ash-Shams','Al-Layl','Al-Burūj','Al-Kawthar','Aḍ-Ḍuḥā','An-Najm','Al-Qamar','Al-Wāqiʿah','Al-Mulk'];
 const DIAL_COLORS={'tennis':'#68b890','white':'#e8e4dc','salmon':'#d8988c','slate':'#585860','sky':'#82b8d8','kawthar':'#f2dce0','dhuha':'#f08040','najm':'#384870','qamar':'#c0c4cc','ward':'#d89098','lilas':'#8878a8'};
 let dialIdx=3; // default slate
-// Surah number for each dial's first ayah (QuranCDN format: SSS001)
-const DIAL_SURAHS={'tennis':'055','white':'024','salmon':'091','slate':'092','sky':'085','kawthar':'108','dhuha':'093','najm':'053','qamar':'054','ward':'056','lilas':'067'};
-let dialAudio=null;
+// Surah number + ayah count for full recitation
+const DIAL_SURAHS={
+  'tennis':{num:'055',ayahs:78},  // Ar-Rahman
+  'white': {num:'024',ayahs:64},  // An-Nur
+  'salmon':{num:'091',ayahs:15},  // Ash-Shams
+  'slate': {num:'092',ayahs:21},  // Al-Layl
+  'sky':   {num:'085',ayahs:22},  // Al-Buruj
+  'kawthar':{num:'108',ayahs:3},  // Al-Kawthar
+  'dhuha': {num:'093',ayahs:11},  // Ad-Duha
+  'najm':  {num:'053',ayahs:62},  // An-Najm
+  'qamar': {num:'054',ayahs:55},  // Al-Qamar
+  'ward':  {num:'056',ayahs:96},  // Al-Waqiah
+  'lilas': {num:'067',ayahs:30}   // Al-Mulk
+};
+let dialAudio=null, dialAyahIdx=0, dialPlaying=false;
 function playDialSurah(){
-  const surah=DIAL_SURAHS[DIALS[dialIdx]];
-  if(!surah)return;
+  const s=DIAL_SURAHS[DIALS[dialIdx]];
+  if(!s)return;
   const btn=document.getElementById('dialListen');
-  if(dialAudio&&!dialAudio.paused){dialAudio.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;}
-  dialAudio=new Audio('https://audio.qurancdn.com/Alafasy/mp3/'+surah+'001.mp3');
-  dialAudio.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
-  dialAudio.play();
-  btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+  if(dialPlaying&&dialAudio&&!dialAudio.paused){
+    dialAudio.pause();dialPlaying=false;
+    btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
+  }
+  dialAyahIdx=1;dialPlaying=true;
+  function playNext(){
+    if(!dialPlaying||dialAyahIdx>s.ayahs){
+      dialPlaying=false;dialAyahIdx=0;
+      btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
+    }
+    const pad=String(dialAyahIdx).padStart(3,'0');
+    dialAudio=new Audio('https://audio.qurancdn.com/Alafasy/mp3/'+s.num+pad+'.mp3');
+    dialAudio.onended=()=>{dialAyahIdx++;playNext();};
+    dialAudio.onerror=()=>{dialAyahIdx++;playNext();};
+    dialAudio.play().catch(()=>{});
+    btn.innerHTML='<i class="ph-thin ph-pause"></i> Ayah '+dialAyahIdx+'/'+s.ayahs+' — al-Afasy';
+  }
+  playNext();
 }
 let dialIframe=null;
 function updateDial(){
@@ -358,6 +383,7 @@ function updateDial(){
   const dots=document.querySelectorAll('#dialDots span');
   dots.forEach((dot,i)=>dot.style.opacity=i===dialIdx?'.6':'.15');
   // Stop any playing surah audio
+  dialPlaying=false;
   if(dialAudio&&!dialAudio.paused){dialAudio.pause();}
   document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
   // Switch dial via postMessage — no iframe reload

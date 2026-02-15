@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ramadan Clock — From Suhoor to Iftar</title>
-<meta name="description" content="The prayer-aware clock designed to keep you present through Ramadan. Prayer alarms, fasting countdown, Qibla compass, and beautiful dial themes.">
+<title>A Gift of Time — Prayer Clock for Muslim Families</title>
+<meta name="description" content="A beautiful, prayer-aware clock for Muslim families. Prayer alarms, fasting countdown, Qibla compass, and 11 handcrafted dial themes.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Lateef:wght@400&display=swap" rel="stylesheet">
@@ -104,17 +104,24 @@ footer a:hover{color:var(--text)}
 
 <!-- Nav -->
 <nav>
-<div class="nav-logo">Ramadan Clock</div>
+<div class="nav-logo">A Gift of Time</div>
 <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary">Open Clock</a>
 </nav>
 
 <!-- Hero -->
 <section class="hero">
-<h1 class="reveal">From Suhoor<br>to Iftar.</h1>
-<p class="subtitle reveal">A beautiful, prayer-aware clock for your screen to help you get the most out of your time this Ramadan.</p>
+<h1 class="reveal">A Gift<br>of Time.</h1>
+<p class="subtitle reveal">A beautiful, prayer-aware clock for Muslim families everywhere.</p>
 <div class="hero-cta reveal">
 <a href="https://cookmom.github.io/ramadan-clock/" class="btn btn-primary">Open Clock</a>
 </div>
+</section>
+
+<!-- Ramadan Launch -->
+<section style="text-align:center;padding:4rem 2rem 2rem;max-width:620px;margin:0 auto" class="reveal">
+<p class="section-label" style="margin-bottom:.75rem">Ramadan 2026</p>
+<h2 style="font-weight:200;font-size:clamp(1.5rem,3vw,2.2rem);line-height:1.3;letter-spacing:-.02em;margin-bottom:1.25rem">From Suhoor to Iftar.</h2>
+<p style="font-weight:300;font-size:1rem;color:var(--text-muted);line-height:1.7;max-width:520px;margin:0 auto">We are excited to launch during Ramadan with features to help you ponder, observe your prayers on time, and make sure you never miss Iftar.</p>
 </section>
 
 <!-- Al-Asr -->
@@ -401,7 +408,7 @@ function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
 <!-- Footer -->
 <footer>
 <p style="margin-bottom:.5rem">By <a href="https://tawfeeqmartin.com" target="_blank" rel="noopener">Tawfeeq Martin</a></p>
-<p><a href="mailto:feedback@ramadanclock.app">Feedback</a><span class="footer-sep">·</span><a href="mailto:support@ramadanclock.app">Support</a><span class="footer-sep">·</span><a href="#credits" onclick="document.getElementById('credits').style.display=document.getElementById('credits').style.display==='none'?'block':'none';return false">Credits</a></p>
+<p><a href="mailto:feedback@agiftoftime.app">Feedback</a><span class="footer-sep">·</span><a href="mailto:support@agiftoftime.app">Support</a><span class="footer-sep">·</span><a href="#credits" onclick="document.getElementById('credits').style.display=document.getElementById('credits').style.display==='none'?'block':'none';return false">Credits</a></p>
 <div id="credits" style="display:none;max-width:520px;margin:1.5rem auto 0;text-align:left;font-size:.85rem;font-weight:300;color:var(--text-muted);line-height:1.8">
 <p style="font-weight:500;font-size:.75rem;letter-spacing:.08em;margin-bottom:.75rem">ACKNOWLEDGMENTS</p>
 <p><strong style="font-weight:500">Mishary Rashid al-Afasy</strong> — Quran recitation</p>
@@ -463,24 +470,33 @@ window.addEventListener('message',e=>{
 <script>
 // Lazy-load/destroy WebGL iframes — max 2 alive at once
 (function(){
+  // Only allow 1 WebGL iframe at a time to prevent iOS crash
+  let activeEmbed = null;
   const lazyObs=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
       const el=e.target;
       if(e.isIntersecting){
         if(!el.querySelector('iframe')){
+          // Destroy previous active embed first
+          if(activeEmbed && activeEmbed !== el) {
+            const old=activeEmbed.querySelector('iframe');
+            if(old){old.src='about:blank';old.remove();}
+          }
           const f=document.createElement('iframe');
           f.src=el.dataset.src;
           f.title=el.dataset.title||'';
           f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:none';
           if(el.closest('.dials')||el.closest('.ambient-section'))f.style.pointerEvents='auto';
           el.appendChild(f);
+          activeEmbed = el;
         }
       }else{
         const f=el.querySelector('iframe');
         if(f){f.src='about:blank';f.remove();}
+        if(activeEmbed===el) activeEmbed=null;
       }
     });
-  },{rootMargin:'200px 0px 200px 0px'});
+  },{rootMargin:'50px 0px 50px 0px'});
   document.querySelectorAll('.lazy-embed').forEach(el=>lazyObs.observe(el));
 })();
 </script>

@@ -17,8 +17,10 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;font-size:16px}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background 1s ease,color 1s ease}
 a{color:inherit;text-decoration:none}
+section,nav,.feature-text,.section-title,.section-body,.section-label,.step,.step p,.step h3,footer,footer p,#prayerCard{transition:color 1s ease,background-color 1s ease,border-color 1s ease}
+.btn-outline{transition:color .5s ease,background-color .5s ease,border-color .5s ease}
 img{max-width:100%;display:block}
 
 /* Scroll reveal */
@@ -28,7 +30,7 @@ img{max-width:100%;display:block}
 
 /* Nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;transition:background .3s,box-shadow .3s}
-nav.scrolled{background:var(--bg);opacity:.95;backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--border)}
+nav.scrolled{background:var(--bg);opacity:.95;backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--border);transition:background 1s ease}
 .nav-logo{font-weight:500;font-size:1rem;letter-spacing:.02em}
 .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-radius:100px;font-family:var(--font);font-size:.875rem;font-weight:500;cursor:pointer;border:none;transition:all .2s}
 .btn-primary{background:var(--text);color:var(--bg)}
@@ -321,7 +323,10 @@ footer a:hover{color:var(--text)}
 <div id="dialEmbed" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
 </div>
 <span id="dialLabel" style="font-weight:400;font-size:.9rem;letter-spacing:.04em">Al-Layl</span>
-<button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem;margin-top:.5rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
+<div style="display:flex;align-items:center;gap:.75rem;margin-top:.5rem">
+<button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
+<button id="nightToggle" onclick="togglePageNight()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem .75rem;gap:.4rem" aria-label="Toggle day/night"><i class="ph-thin ph-moon"></i></button>
+</div>
 <div id="dialDots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
 <script>document.getElementById('dialDots').innerHTML=Array.from({length:11},(_, i)=>`<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:${i===3?'.6':'.15'}"></span>`).join('');</script>
 </div>
@@ -354,6 +359,36 @@ function playDialSurah(){
   dialAudio.onerror=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';};
   dialAudio.play().catch(()=>{});
   btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+}
+// ── Page-wide day/night ──
+let pageNight=false;
+function togglePageNight(){
+  pageNight=!pageNight;
+  const r=document.documentElement;
+  if(pageNight){
+    r.style.setProperty('--bg','#0a0a0a');
+    r.style.setProperty('--bg-alt','#111114');
+    r.style.setProperty('--text','#e8e4dc');
+    r.style.setProperty('--text-muted','#8a8a8a');
+    r.style.setProperty('--border','rgba(255,255,255,.08)');
+  }else{
+    r.style.setProperty('--bg','#f8f7f4');
+    r.style.setProperty('--bg-alt','#f0efe9');
+    r.style.setProperty('--text','#1a1a1a');
+    r.style.setProperty('--text-muted','#6b6b6b');
+    r.style.setProperty('--border','#e5e3dd');
+  }
+  // Update toggle icon
+  const btn=document.getElementById('nightToggle');
+  btn.innerHTML=pageNight?'<i class="ph-thin ph-sun"></i>':'<i class="ph-thin ph-moon"></i>';
+  // Tell clock iframe to match
+  if(dialIframe){try{dialIframe.contentWindow.postMessage({type:pageNight?'nightOn':'nightOff'},'*');}catch(e){}}
+  // Update ambient section
+  const amb=document.querySelector('.ambient-section');
+  if(amb)amb.style.background=pageNight?'#0a0a0a':'#0a0a10';
+  // Prayer card
+  const pc=document.getElementById('prayerCard');
+  if(pc){pc.style.background=pageNight?'#141418':'#fff';pc.style.borderColor=pageNight?'rgba(255,255,255,.08)':'var(--border)';}
 }
 let dialIframe=null;
 function updateDial(){

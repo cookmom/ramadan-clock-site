@@ -222,8 +222,8 @@ footer a:hover{color:var(--text)}
 </div>
 </div>
 <div class="feature-visual">
-<div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&feature=countdown&dial=white&mode=auto&ramadan=true&time=660&nomarkers" data-title="Fasting countdown"></div>
+<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#e8e4dc;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<i class="ph-thin ph-hourglass-medium" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
 </div>
 </div>
 </div>
@@ -235,8 +235,8 @@ footer a:hover{color:var(--text)}
 <p class="section-body">At sunset, the clock hand traces a gentle tawaf — seven circuits around the dial. A quiet, meditative moment as the fast breaks.</p>
 </div>
 <div class="feature-visual">
-<div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=salmon&mode=auto&tawaf=true&nomarkers" data-title="Tawaf animation"></div>
+<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#d4a08c;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<i class="ph-thin ph-arrows-counter-clockwise" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
 </div>
 </div>
 </div>
@@ -254,8 +254,8 @@ footer a:hover{color:var(--text)}
 </div>
 </div>
 <div class="feature-visual">
-<div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=sky&mode=auto&nomarkers" data-title="Qibla compass"></div>
+<div class="feature-icon-circle" style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:#b8d4e8;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<i class="ph-thin ph-compass" style="font-size:min(6rem,18vw);color:#1a1a1a;opacity:.25"></i>
 </div>
 </div>
 </div>
@@ -285,11 +285,13 @@ footer a:hover{color:var(--text)}
 <p class="section-body" style="max-width:520px;margin:0 auto 2.5rem">At night, the movement goes silent — a smooth digital sweep that preserves your peace. Exactly eleven stars appear above the dial, arranged in a prostration arc. In Surah Yusuf (12:4), the young prophet dreamed of eleven stars, the sun, and the moon prostrating before him — the stars his eleven brothers, the sun his father Ya'qub, the moon his mother. Our stars bow the way the Quran describes them: in sujud, arcing toward the moon. Every detail is intentional.</p>
 </section>
 
-<section class="ambient-section" style="background:#0a0a10;padding:3rem 0 2rem;margin:0">
-<div class="ambient-box" style="margin:0 auto">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=slate&night&embed" data-title="Night mode with stars"></div>
+<section class="ambient-section" style="background:#0a0a10;padding:4rem 0 3rem;margin:0;text-align:center">
+<div style="margin:0 auto;max-width:320px">
+<div style="width:min(280px,65vw);height:min(280px,65vw);border-radius:50%;background:radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a10 100%);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;box-shadow:0 0 60px rgba(136,255,48,0.08)">
+<i class="ph-thin ph-moon-stars" style="font-size:min(6rem,18vw);color:rgba(200,232,160,0.35)"></i>
 </div>
-<p style="font-size:.8rem;font-weight:300;color:rgba(255,255,255,.45);margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
+</div>
+<p style="font-size:.8rem;font-weight:300;color:rgba(255,255,255,.45);margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
 <i class="ph-thin ph-arrows-down-up" style="font-size:1.1rem"></i> Swipe up and down in the app to shift between day and night
 </p>
 </section>
@@ -316,17 +318,11 @@ footer a:hover{color:var(--text)}
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
 <div class="feature-visual-box" id="dialHero">
-<div class="lazy-embed" id="dialEmbed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=white&mode=auto&nomarkers" data-title="Dial picker"></div>
+<div id="dialEmbed" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
 </div>
 <span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
-<div id="dialDots" style="display:flex;gap:6px">
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.6"></span>
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
-<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.15"></span>
-</div>
+<div id="dialDots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
+<script>document.getElementById('dialDots').innerHTML=Array.from({length:11},(_, i)=>`<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:${i===3?'.6':'.15'}"></span>`).join('');</script>
 </div>
 <button onclick="dialNext()" aria-label="Next dial" style="background:none;border:none;cursor:pointer;padding:.5rem">
 <i class="ph-thin ph-caret-right" style="font-size:2rem;color:var(--text);opacity:.3"></i>
@@ -336,21 +332,36 @@ footer a:hover{color:var(--text)}
 <i class="ph-thin ph-arrows-left-right" style="font-size:1.1rem"></i> Swipe left and right in the app to change dials
 </p>
 <script>
-const DIALS=['white','tennis','salmon','slate','sky','cream'];
-const DIAL_NAMES=['White','Tennis','Salmon','Slate','Sky','Cream'];
-const DIAL_COLORS={'white':'#e8e4dc','tennis':'#2e8b57','salmon':'#c47a60','slate':'#3a3a44','sky':'#5a9ac0','cream':'#d8ccb4'};
-let dialIdx=0;
+const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','qamar','ward','lilas'];
+const DIAL_NAMES=['Tennis','White','Salmon','Slate','Sky','Kawthar','Dhuha','Najm','Qamar','Ward','Lilas'];
+const DIAL_COLORS={'tennis':'#c8d84c','white':'#e8e4dc','salmon':'#d4a08c','slate':'#3a3a44','sky':'#87bce0','kawthar':'#e8a0b8','dhuha':'#c8963c','najm':'#1a1a2e','qamar':'#c0c8d0','ward':'#d88090','lilas':'#a880c0'};
+let dialIdx=3; // default slate
+let dialIframe=null;
 function updateDial(){
   const d=DIALS[dialIdx];
   document.getElementById('dialHero').style.background=DIAL_COLORS[d]||'transparent';
-  const de=document.getElementById('dialEmbed');
-  de.dataset.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial='+d+'&mode=auto&nomarkers';
-  const oldIf=de.querySelector('iframe');if(oldIf)oldIf.src=de.dataset.src;
+  if(dialIframe)dialIframe.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=116&embed&dial='+d+'&nomarkers';
   document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
-  document.querySelectorAll('#dialDots span').forEach((d,i)=>d.style.opacity=i===dialIdx?'.6':'.15');
+  const dots=document.querySelectorAll('#dialDots span');
+  dots.forEach((d,i)=>d.style.opacity=i===dialIdx?'.6':'.15');
 }
 function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
 function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
+// Lazy-load the single dial iframe when visible
+(function(){
+  const el=document.getElementById('dialEmbed');
+  const io=new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting&&!dialIframe){
+      const f=document.createElement('iframe');
+      f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=116&embed&dial='+DIALS[dialIdx]+'&nomarkers';
+      f.title='Dial picker';
+      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:auto';
+      el.appendChild(f);
+      dialIframe=f;
+    }
+  },{rootMargin:'200px 0px 200px 0px'});
+  io.observe(el);
+})();
 // Touch swipe on dial hero — horizontal only, block vertical
 (function(){
   const el=document.getElementById('dialHero');let sx=0,sy=0,locked=false;
@@ -467,63 +478,6 @@ window.addEventListener('message',e=>{
   }
 });
 </script>
-<script>
-// Lazy-load WebGL iframes — stagger creation, defer destruction
-(function(){
-  const alive = new Map(); // el -> iframe
-  const MAX_ALIVE = 2;
-  let destroyTimer = null;
-
-  function destroyFarthest(except){
-    // Find the iframe farthest from viewport center and destroy it
-    if(alive.size <= MAX_ALIVE) return;
-    const vpMid = window.innerHeight / 2;
-    let farthestEl = null, farthestDist = 0;
-    alive.forEach((iframe, el) => {
-      if(el === except) return;
-      const r = el.getBoundingClientRect();
-      const mid = r.top + r.height/2;
-      const dist = Math.abs(mid - vpMid);
-      if(dist > farthestDist){ farthestDist = dist; farthestEl = el; }
-    });
-    if(farthestEl){
-      const f = alive.get(farthestEl);
-      // Tell the iframe to dispose WebGL before removing
-      try{ f.contentWindow.postMessage({type:'dispose'},'*'); }catch(e){}
-      // Delay actual removal to let dispose run
-      setTimeout(()=>{ f.src='about:blank'; f.remove(); }, 100);
-      alive.delete(farthestEl);
-    }
-  }
-
-  const lazyObs=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      const el=e.target;
-      if(e.isIntersecting){
-        if(!alive.has(el)){
-          const f=document.createElement('iframe');
-          f.src=el.dataset.src;
-          f.title=el.dataset.title||'';
-          f.loading='lazy';
-          f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.38);border:none;pointer-events:none';
-          if(el.closest('.dials')||el.closest('.ambient-section'))f.style.pointerEvents='auto';
-          el.appendChild(f);
-          alive.set(el, f);
-          // After a short delay, clean up excess
-          clearTimeout(destroyTimer);
-          destroyTimer = setTimeout(()=> destroyFarthest(el), 300);
-        }
-      }else{
-        // Don't destroy immediately — only destroy when we exceed MAX_ALIVE
-        clearTimeout(destroyTimer);
-        destroyTimer = setTimeout(()=>{
-          if(alive.size > MAX_ALIVE) destroyFarthest(null);
-        }, 500);
-      }
-    });
-  },{rootMargin:'200px 0px 200px 0px'});
-  document.querySelectorAll('.lazy-embed').forEach(el=>lazyObs.observe(el));
-})();
-</script>
+<!-- No more multi-iframe WebGL — single iframe in dial picker only -->
 </body>
 </html>

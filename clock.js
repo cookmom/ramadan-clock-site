@@ -61,7 +61,7 @@ let W = CONTAINED ? CONTAINER.clientWidth : window.innerWidth;
 let H = CONTAINED ? CONTAINER.clientHeight : window.innerHeight;
 const R = 80; // world-space radius
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
 renderer.samples = 4;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 renderer.setSize(W, H);

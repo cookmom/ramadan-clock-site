@@ -82,7 +82,7 @@ const scene = new THREE.Scene();
 const aspect = W/H;
 const camZ = 280;
 const cam = new THREE.PerspectiveCamera(32, aspect, 1, 2000);
-cam.position.set(0, CONTAINED ? -3 : -3, camZ);
+cam.position.set(0, CONTAINED ? 0 : -3, camZ);
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════
@@ -1115,7 +1115,8 @@ function buildAll(){
   if(CONTAINED) console.log('[clock] buildAll, dial:', currentDial, 'scale:', clockGroup.scale.x);
   // Clear clockGroup
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
-  bgPlaneMat.color.set(0x1a1a22);
+  bgPlaneMat.color.set(DIALS[currentDial].bg);
+  if(!EMBED || CONTAINED) scene.background = new THREE.Color(DIALS[currentDial].bg);
   buildDial();
   buildBezel();
   buildMarkers();
@@ -1477,7 +1478,7 @@ function animate(){
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
   cam.position.x = CONTAINED ? 0 : gx*15;
-  cam.position.y = CONTAINED ? -3 : (-30 + -gy*12);
+  cam.position.y = CONTAINED ? 0 : (-30 + -gy*12);
   cam.lookAt(0,0,0);
   
   // Spec point follows tilt — highlight glides across dial like turning a watch under a lamp

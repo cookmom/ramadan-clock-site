@@ -941,10 +941,12 @@ function updateQibla() {
   const compassRad = -(compassHeading * Math.PI/180);
   qiblaRotor.rotation.z = compassRad;
   
-  // Inner rotor: counter-rotates to always point at Qibla
-  // It sits on the outer rotor, so we offset by compass + qibla bearing
-  const qiblaRad = (qiblaBearing * Math.PI/180);
-  qiblaInnerRotor.rotation.z = qiblaRad - compassRad;
+  // Inner rotor: triangle points toward Qibla relative to user's facing direction
+  // When facing Qibla (compassHeading ≈ qiblaBearing), triangle points straight up (12 o'clock)
+  // Desired world rotation = -(qiblaBearing - compassHeading) in radians
+  // worldRot = parentRot + ownRot → ownRot = desiredWorld - parentRot
+  const desiredWorld = -(qiblaBearing - compassHeading) * Math.PI / 180;
+  qiblaInnerRotor.rotation.z = desiredWorld - compassRad;
 }
 
 // Split-flap at 12 o'clock

@@ -73,9 +73,9 @@ a{color:inherit;text-decoration:none}
 /* ── Sections ── */
 .scroll-section{
   min-height:80vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   text-align:center;
-  padding:6rem 2rem;
+  padding:2rem 2rem 6rem;
   position:relative;
   transition:background 1s ease,color 1s ease;
 }
@@ -170,7 +170,7 @@ a{color:inherit;text-decoration:none}
 .side-nav a:hover::after{opacity:.5}
 
 /* ── Scroll Snap ── */
-.scroll-content{scroll-snap-type:y proximity}
+html{scroll-snap-type:y mandatory;scroll-padding-top:calc(var(--clock-size) + 5.5rem)}
 .scroll-section{scroll-snap-align:start}
 
 /* ── Footer ── */
@@ -189,7 +189,7 @@ footer a:hover{color:var(--text)}
 }
 
 @media(max-width:768px){
-  .scroll-section{padding:4rem 1.5rem;min-height:60vh}
+  .scroll-section{padding:1.5rem 1.5rem 4rem;min-height:60vh}
 }
 </style>
 </head>

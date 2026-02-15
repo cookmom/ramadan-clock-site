@@ -223,7 +223,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&feature=countdown&dial=white&mode=auto&ramadan=true&time=660&nomarkers" data-title="Fasting countdown"></div>
+<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&feature=countdown&dial=white&mode=auto&ramadan=true&time=660&nomarkers" data-title="Fasting countdown"></div>
 </div>
 </div>
 </div>
@@ -236,7 +236,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&dial=salmon&mode=auto&tawaf=true&nomarkers" data-title="Tawaf animation"></div>
+<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=salmon&mode=auto&tawaf=true&nomarkers" data-title="Tawaf animation"></div>
 </div>
 </div>
 </div>
@@ -255,7 +255,7 @@ footer a:hover{color:var(--text)}
 </div>
 <div class="feature-visual">
 <div class="feature-visual-box">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&dial=sky&mode=auto&nomarkers" data-title="Qibla compass"></div>
+<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=sky&mode=auto&nomarkers" data-title="Qibla compass"></div>
 </div>
 </div>
 </div>
@@ -287,7 +287,7 @@ footer a:hover{color:var(--text)}
 
 <section class="ambient-section" style="background:#0a0a10;padding:3rem 0 2rem;margin:0">
 <div class="ambient-box" style="margin:0 auto">
-<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&dial=slate&night&embed" data-title="Night mode with stars"></div>
+<div class="lazy-embed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=slate&night&embed" data-title="Night mode with stars"></div>
 </div>
 <p style="font-size:.8rem;font-weight:300;color:rgba(255,255,255,.45);margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
 <i class="ph-thin ph-arrows-down-up" style="font-size:1.1rem"></i> Swipe up and down in the app to shift between day and night
@@ -316,7 +316,7 @@ footer a:hover{color:var(--text)}
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
 <div class="feature-visual-box" id="dialHero">
-<div class="lazy-embed" id="dialEmbed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&dial=white&mode=auto&nomarkers" data-title="Dial picker"></div>
+<div class="lazy-embed" id="dialEmbed" data-src="https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial=white&mode=auto&nomarkers" data-title="Dial picker"></div>
 </div>
 <span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
 <div id="dialDots" style="display:flex;gap:6px">
@@ -344,7 +344,7 @@ function updateDial(){
   const d=DIALS[dialIdx];
   document.getElementById('dialHero').style.background=DIAL_COLORS[d]||'transparent';
   const de=document.getElementById('dialEmbed');
-  de.dataset.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=76&embed&dial='+d+'&mode=auto&nomarkers';
+  de.dataset.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=115&embed&dial='+d+'&mode=auto&nomarkers';
   const oldIf=de.querySelector('iframe');if(oldIf)oldIf.src=de.dataset.src;
   document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
   document.querySelectorAll('#dialDots span').forEach((d,i)=>d.style.opacity=i===dialIdx?'.6':'.15');

@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Lateef:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/thin/style.css">
+<script type="importmap">
+{"imports":{"three":"https://esm.sh/three@0.170.0","three/addons/":"https://esm.sh/three@0.170.0/examples/jsm/"}}
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -319,7 +322,7 @@ footer a:hover{color:var(--text)}
 <i class="ph-thin ph-caret-left" style="font-size:2rem;color:var(--text);opacity:.3"></i>
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-<div id="dialHero" style="width:min(300px,70vw);height:min(300px,70vw);border-radius:50%;background:#585860;margin:0 auto;transition:background 1.5s ease,box-shadow 1.5s ease"></div>
+<div id="dialHero" style="width:min(380px,85vw);height:min(380px,85vw);border-radius:50%;background:#585860;margin:0 auto;overflow:hidden;transition:box-shadow 1.5s ease"></div>
 <span id="dialLabel" style="font-weight:400;font-size:.9rem;letter-spacing:.04em">Al-Layl</span>
 <div style="display:flex;align-items:center;gap:.75rem;margin-top:.5rem">
 <button id="dialListen" onclick="playDialSurah()" class="btn btn-outline" style="font-size:.8rem;padding:.5rem 1rem;gap:.4rem"><i class="ph-thin ph-play"></i> Listen to this Surah</button>
@@ -401,15 +404,15 @@ function togglePageNight(){
     if(pageNight){snd.style.color='#c8e8a0';snd.style.opacity='0.6';snd.style.textShadow='0 0 40px #c8e8a080';}
     else{snd.style.color='var(--text)';snd.style.opacity='0.15';snd.style.textShadow='none';}
   }
-  // Update dial picker circle
+  // Tell the 3D clock to switch night mode
+  if(window._clockSetNight) window._clockSetNight(pageNight);
+  // Lume halo on dial picker
   const d=DIALS[dialIdx];
   const hero=document.getElementById('dialHero');
   if(pageNight){
-    hero.style.background='#0c0c12';
     const lume=DIAL_LUMES[d]||'#c8e8a0';
-    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25, inset 0 0 60px '+lume+'20';
+    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25';
   }else{
-    hero.style.background=DIAL_COLORS[d]||'#585860';
     hero.style.boxShadow='none';
   }
   // Update ambient section
@@ -421,7 +424,6 @@ function togglePageNight(){
 }
 function updateDial(){
   const d=DIALS[dialIdx];
-  document.getElementById('dialHero').style.background=DIAL_COLORS[d]||'transparent';
   document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
   const dots=document.querySelectorAll('#dialDots span');
   dots.forEach((dot,i)=>dot.style.opacity=i===dialIdx?'.6':'.15');
@@ -429,14 +431,14 @@ function updateDial(){
   dialPlaying=false;
   if(dialAudio&&!dialAudio.paused){dialAudio.pause();}
   document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
-  // Update dial circle for night mode
+  // Switch the actual 3D clock
+  if(window._clockSwitchDial) window._clockSwitchDial(d);
+  // Lume halo in night mode
   const hero=document.getElementById('dialHero');
   if(pageNight){
-    hero.style.background='#0c0c12';
     const lume=DIAL_LUMES[d]||'#c8e8a0';
-    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25, inset 0 0 60px '+lume+'20';
+    hero.style.boxShadow='0 0 60px '+lume+'50, 0 0 120px '+lume+'25';
   }else{
-    hero.style.background=DIAL_COLORS[d]||'#585860';
     hero.style.boxShadow='none';
   }
 }
@@ -519,6 +521,23 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
 const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 </script>
-<!-- Zero WebGL — pure CSS dial picker with lume effects -->
+<!-- Native Three.js clock in dial picker — single WebGL context, no iframe -->
+<script>
+// Lazy-load the 3D clock when dial section scrolls into view
+const _dialHero=document.getElementById('dialHero');
+let _clockLoaded=false;
+const _clockObs=new IntersectionObserver((entries)=>{
+  if(entries[0].isIntersecting&&!_clockLoaded){
+    _clockLoaded=true;
+    window._clockContainer=_dialHero;
+    const s=document.createElement('script');
+    s.type='module';
+    s.src='clock.js?v=1';
+    document.body.appendChild(s);
+    _clockObs.disconnect();
+  }
+},{rootMargin:'300px 0px 300px 0px'});
+_clockObs.observe(_dialHero);
+</script>
 </body>
 </html>

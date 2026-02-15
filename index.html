@@ -317,7 +317,9 @@ footer a:hover{color:var(--text)}
 <i class="ph-thin ph-caret-left" style="font-size:2rem;color:var(--text);opacity:.3"></i>
 </button>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-<div id="dialHero" style="width:min(300px,70vw);height:min(300px,70vw);border-radius:50%;background:#3a3a44;margin:0 auto;transition:background .4s ease"></div>
+<div class="feature-visual-box" id="dialHero" style="background:#3a3a44">
+<div id="dialEmbed" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+</div>
 <span id="dialLabel" style="font-weight:500;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase">Slate</span>
 <div id="dialDots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
 <script>document.getElementById('dialDots').innerHTML=Array.from({length:11},(_, i)=>`<span style="width:6px;height:6px;border-radius:50%;background:var(--text);opacity:${i===3?'.6':'.15'}"></span>`).join('');</script>
@@ -334,15 +336,33 @@ const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','q
 const DIAL_NAMES=['Tennis','White','Salmon','Slate','Sky','Kawthar','Dhuha','Najm','Qamar','Ward','Lilas'];
 const DIAL_COLORS={'tennis':'#c8d84c','white':'#e8e4dc','salmon':'#d4a08c','slate':'#3a3a44','sky':'#87bce0','kawthar':'#e8a0b8','dhuha':'#c8963c','najm':'#1a1a2e','qamar':'#c0c8d0','ward':'#d88090','lilas':'#a880c0'};
 let dialIdx=3; // default slate
+let dialIframe=null;
 function updateDial(){
   const d=DIALS[dialIdx];
   document.getElementById('dialHero').style.background=DIAL_COLORS[d]||'transparent';
   document.getElementById('dialLabel').textContent=DIAL_NAMES[dialIdx];
   const dots=document.querySelectorAll('#dialDots span');
-  dots.forEach((d,i)=>d.style.opacity=i===dialIdx?'.6':'.15');
+  dots.forEach((dot,i)=>dot.style.opacity=i===dialIdx?'.6':'.15');
+  // Switch dial via postMessage — no iframe reload
+  if(dialIframe){try{dialIframe.contentWindow.postMessage({type:'switchDial',dial:d},'*');}catch(e){}}
 }
 function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
 function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
+// Lazy-load single iframe when dial section visible
+(function(){
+  const el=document.getElementById('dialEmbed');
+  const io=new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting&&!dialIframe){
+      const f=document.createElement('iframe');
+      f.src='https://cookmom.github.io/ramadan-clock/index-threejs.html?v=117&embed&dial='+DIALS[dialIdx]+'&nomarkers';
+      f.title='Dial picker';
+      f.style.cssText='position:absolute;top:50%;left:50%;width:1000px;height:1000px;transform:translate(-50%,-50%) scale(0.50);border:none;pointer-events:none';
+      el.appendChild(f);
+      dialIframe=f;
+    }
+  },{rootMargin:'200px 0px 200px 0px'});
+  io.observe(el);
+})();
 // Touch swipe on dial hero — horizontal only, block vertical
 (function(){
   const el=document.getElementById('dialHero');let sx=0,sy=0,locked=false;
@@ -419,7 +439,14 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
 const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 </script>
-<!-- No iframes on page — zero WebGL contexts -->
+<script>
+window.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='rc-bg'){
+    const hero=document.getElementById('dialHero');
+    if(hero)hero.style.background=e.data.bg;
+  }
+});
+</script>
 <!-- No more multi-iframe WebGL — single iframe in dial picker only -->
 </body>
 </html>

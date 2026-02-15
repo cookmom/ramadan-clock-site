@@ -582,23 +582,30 @@ _cs.type='module';_cs.src='clock.js?v=11';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
-// SCROLL → CLOCK INDICATOR (delayed to avoid false trigger on reload)
+// SCROLL → CLOCK INDICATOR (scroll-position based, not IntersectionObserver)
 // ══════════════════════════════════════════
 setTimeout(()=>{
-  const secs=['sec-hook','sec-qibla','sec-prayer','sec-dials','sec-night','sec-adhan','sec-install'];
-  let activeIdx=0;
-  // Force initial state
-  if(window._clockSetScrollSection) window._clockSetScrollSection(0);
-  const obs=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        const i=secs.indexOf(e.target.id);
-        if(i>=0) activeIdx=i;
+  const secIds=['sec-hook','sec-qibla','sec-prayer','sec-dials','sec-night','sec-adhan','sec-install'];
+  const secEls=secIds.map(id=>document.getElementById(id)).filter(Boolean);
+  // Offset = sticky clock height (clock-size + 5.5rem ≈ top of content area)
+  let lastIdx=-1;
+  function updateScrollIndicator(){
+    const scrollTop=window.scrollY;
+    // Find the last section whose top has scrolled past the clock bottom
+    const offset=window.innerHeight*0.4; // trigger point ~40% down viewport
+    let activeIdx=0;
+    for(let i=secEls.length-1;i>=0;i--){
+      if(secEls[i].getBoundingClientRect().top < offset){
+        activeIdx=i; break;
       }
-    });
-    if(window._clockSetScrollSection) window._clockSetScrollSection(activeIdx);
-  },{threshold:0.15});
-  secs.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el);});
+    }
+    if(activeIdx!==lastIdx){
+      lastIdx=activeIdx;
+      if(window._clockSetScrollSection) window._clockSetScrollSection(activeIdx);
+    }
+  }
+  window.addEventListener('scroll',updateScrollIndicator,{passive:true});
+  updateScrollIndicator(); // set initial
 },600);
 
 // Setup scroll observers after a brief delay to let clock init

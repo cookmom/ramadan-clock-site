@@ -1213,13 +1213,17 @@ window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getA
 window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
 window._clockSetNight = function(on){ modeTarget=on?1:0; };
 window._clockGetDial = function(){ return currentDial; };
+
+// Lock compass at 12 o'clock (resting state) — for dial showcase
+let _compassLocked = false;
+window._clockLockCompass = function(on){ _compassLocked = on; if(on) hasCompassData = false; };
 window._clockSetScrollSection = function(idx){ scrollIndicatorTarget = idx; }; // -1=hide, 0-6=section index
 
 // Qibla compass demo — simulates a slow turn ending at alignment
 let _qiblaDemoActive = false, _qiblaDemoStart = 0;
 window._clockQiblaDemo = function(on){
   _qiblaDemoActive = on;
-  if(on){
+  if(on && !_compassLocked){
     qiblaBearing = 45;
     hasCompassData = true;
     _qiblaDemoStart = Date.now();
@@ -1230,7 +1234,7 @@ window._clockQiblaDemo = function(on){
 };
 // Called from animate loop — no competing interval
 function updateQiblaDemo(){
-  if(!_qiblaDemoActive) return;
+  if(!_qiblaDemoActive || _compassLocked) return;
   const elapsed = Date.now() - _qiblaDemoStart;
   const sweepDur = 5000;
   const holdDur = 2500;

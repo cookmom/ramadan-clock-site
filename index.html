@@ -678,7 +678,7 @@ setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=15';
+_cs.type='module';_cs.src='clock.js?v=16';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -770,9 +770,12 @@ setTimeout(setupScrollObservers,500);
     if(sec.id==='sec-night') setNightMode(true);
     else if(sec.id==='sec-adhan') setNightMode(true);
     else setNightMode(false);
-    // Qibla compass demo
+    // Qibla compass demo — only on direction section
     if(sec.id==='sec-qibla'&&window._clockQiblaDemo) window._clockQiblaDemo(true);
     else if(window._clockQiblaDemo) window._clockQiblaDemo(false);
+    // Lock compass at noon during dial showcase
+    if(sec.id==='sec-dials'&&window._clockLockCompass) window._clockLockCompass(true);
+    else if(window._clockLockCompass) window._clockLockCompass(false);
 
     tourIdx++;
     tourTimer=setTimeout(()=>advanceTour(), sec.dwell);

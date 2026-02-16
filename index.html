@@ -653,11 +653,13 @@ document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
   },{passive:true});
 })();
 
-// Always start at top on refresh — MUST be before anything else
+// Always start at top on refresh
 history.scrollRestoration='manual';
 window.scrollTo({top:0,behavior:'instant'});
 document.documentElement.scrollTop=0;
 document.body.scrollTop=0;
+// Belt and suspenders — force again after snap settles
+setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},100);
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');

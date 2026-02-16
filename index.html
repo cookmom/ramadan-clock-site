@@ -537,11 +537,13 @@ function setupScrollObservers(){
   // Qibla: keep slate, day
   observe('sec-qibla',()=>{
     setNightMode(false);
+    if(window._clockQiblaDemo) window._clockQiblaDemo(true);
   });
 
-  // Prayer: keep current, day
+  // Prayer: keep current, day — stop qibla demo
   observe('sec-prayer',()=>{
     setNightMode(false);
+    if(window._clockQiblaDemo) window._clockQiblaDemo(false);
   });
 
   // Dials: start cycling
@@ -666,7 +668,7 @@ setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=13';
+_cs.type='module';_cs.src='clock.js?v=14';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -758,6 +760,9 @@ setTimeout(setupScrollObservers,500);
     if(sec.id==='sec-night') setNightMode(true);
     else if(sec.id==='sec-adhan') setNightMode(true);
     else setNightMode(false);
+    // Qibla compass demo
+    if(sec.id==='sec-qibla'&&window._clockQiblaDemo) window._clockQiblaDemo(true);
+    else if(window._clockQiblaDemo) window._clockQiblaDemo(false);
 
     tourIdx++;
     tourTimer=setTimeout(()=>advanceTour(), sec.dwell);

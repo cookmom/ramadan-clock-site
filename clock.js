@@ -1215,6 +1215,43 @@ window._clockSetNight = function(on){ modeTarget=on?1:0; };
 window._clockGetDial = function(){ return currentDial; };
 window._clockSetScrollSection = function(idx){ scrollIndicatorTarget = idx; }; // -1=hide, 0-6=section index
 
+// Qibla compass demo — simulates a slow turn ending at alignment
+let _qiblaDemoInterval = null;
+window._clockQiblaDemo = function(on){
+  if(!on){
+    if(_qiblaDemoInterval){clearInterval(_qiblaDemoInterval);_qiblaDemoInterval=null;}
+    hasCompassData=false; // return to rest state
+    return;
+  }
+  // Set a fake qibla bearing so alignment happens at a nice angle
+  qiblaBearing = 45;
+  hasCompassData = true;
+  // Start from opposite side of Qibla (max chaos), sweep 360° to alignment
+  let demoAngle = qiblaBearing + 180; // start opposite
+  const startTime = Date.now();
+  const duration = 6000; // 6 seconds for full sweep
+  _qiblaDemoInterval = setInterval(()=>{
+    const t = Math.min((Date.now()-startTime)/duration, 1);
+    // Ease-in-out cubic
+    const ease = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+    // Sweep from opposite (180° offset) to aligned (0° offset)
+    targetCompassHeading = qiblaBearing + 180*(1-ease);
+    if(t>=1){
+      // Hold at alignment
+      targetCompassHeading = qiblaBearing;
+    }
+  },16);
+  // After full cycle, restart for continuous demo
+  setTimeout(()=>{
+    if(!_qiblaDemoInterval) return;
+    clearInterval(_qiblaDemoInterval);
+    // Pause at alignment for 2s, then restart
+    setTimeout(()=>{
+      if(on) window._clockQiblaDemo(true);
+    },2000);
+  },duration+1000);
+};
+
 // Wait for fonts then build (Lateef for Arabic numerals)
 document.fonts.ready.then(()=>{
   buildAll();

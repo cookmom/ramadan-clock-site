@@ -659,7 +659,9 @@ window.scrollTo({top:0,behavior:'instant'});
 document.documentElement.scrollTop=0;
 document.body.scrollTop=0;
 // Belt and suspenders — force again after snap settles
-setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},100);
+setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},50);
+setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},200);
+setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');

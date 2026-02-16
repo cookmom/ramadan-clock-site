@@ -1259,13 +1259,7 @@ document.fonts.ready.then(()=>{
   const initBg = new THREE.Color(DIALS[currentDial].bg);
   scene.background = initBg;
   bgPlaneMat.color.copy(initBg);
-  // Signal loaded — fade out the loader overlay
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      const loader = document.getElementById('dialLoader');
-      if(loader) { loader.classList.add('hide'); setTimeout(()=>loader.remove(),1200); }
-    });
-  });
+  // Clock loaded
 });
 
 // ══════════════════════════════════════════

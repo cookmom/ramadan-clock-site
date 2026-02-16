@@ -43,24 +43,6 @@ body{
   background:#585860;
   flex-shrink:0;
   transition:box-shadow 1.5s ease;
-  position:relative;
-}
-.dial-loader{
-  position:absolute;inset:0;z-index:10;border-radius:50%;
-  background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.1) 0%,transparent 50%),
-             radial-gradient(circle at 50% 50%,#62626a 0%,#505058 40%,#585860 100%);
-  display:flex;align-items:center;justify-content:center;
-  animation:loaderPulse 2s ease-in-out infinite;
-  transition:opacity 1s ease;
-}
-.dial-loader.hide{opacity:0;pointer-events:none}
-.dial-loader svg{width:20%;height:20%;opacity:.12;animation:loaderSpin 8s linear infinite}
-@keyframes loaderPulse{
-  0%,100%{opacity:1}
-  50%{opacity:.75}
-}
-@keyframes loaderSpin{
-  to{transform:rotate(360deg)}
 }
 
 /* ── Nav ── */
@@ -206,19 +188,7 @@ footer a:hover{color:var(--text)}
 
 <!-- Sticky Clock -->
 <div class="clock-sticky">
-  <div id="dialHero">
-    <div class="dial-loader" id="dialLoader">
-      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1" opacity=".4">
-        <circle cx="50" cy="50" r="45"/>
-        <line x1="50" y1="10" x2="50" y2="20"/>
-        <line x1="50" y1="80" x2="50" y2="90"/>
-        <line x1="10" y1="50" x2="20" y2="50"/>
-        <line x1="80" y1="50" x2="90" y2="50"/>
-        <line x1="50" y1="50" x2="50" y2="25" stroke-width="1.5"/>
-        <line x1="50" y1="50" x2="65" y2="50" stroke-width="1"/>
-      </svg>
-    </div>
-  </div>
+  <div id="dialHero"></div>
 </div>
 
 <!-- 1. THE HOOK -->
@@ -708,7 +678,7 @@ setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=18';
+_cs.type='module';_cs.src='clock.js?v=19';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

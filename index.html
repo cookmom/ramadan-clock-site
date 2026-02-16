@@ -750,9 +750,15 @@ setTimeout(setupScrollObservers,500);
     if(el){
       tourScrolling=true;
       el.scrollIntoView({behavior:'smooth',block:'start'});
-      // Allow scroll to finish before accepting user input again
       setTimeout(()=>{tourScrolling=false;},1500);
     }
+    // Trigger section-specific actions
+    if(sec.id==='sec-dials') startDialCycle();
+    else stopDialCycle();
+    if(sec.id==='sec-night') setNightMode(true);
+    else if(sec.id==='sec-adhan') setNightMode(true);
+    else setNightMode(false);
+
     tourIdx++;
     tourTimer=setTimeout(()=>advanceTour(), sec.dwell);
   }

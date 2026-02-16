@@ -108,35 +108,19 @@ scene.add(ambLight);
 const { RectAreaLightUniformsLib } = await import('three/addons/lights/RectAreaLightUniformsLib.js');
 RectAreaLightUniformsLib.init();
 
-// ── Procedural studio environment map ──
+// ── Studio HDRI environment map ──
+// Poly Haven "studio_small_08" — real studio softboxes for convincing reflections
 {
+  const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
   const pmrem = new THREE.PMREMGenerator(renderer);
-  pmrem.compileCubemapShader();
-  const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x1a1a1a);
-  const keyGeo = new THREE.PlaneGeometry(200, 80);
-  const keyMat = new THREE.MeshBasicMaterial({ color: 0xfff8f0, side: THREE.DoubleSide });
-  const keyPlane = new THREE.Mesh(keyGeo, keyMat);
-  keyPlane.position.set(-60, 100, 150); keyPlane.lookAt(0, 0, 0);
-  envScene.add(keyPlane);
-  const fillGeo = new THREE.PlaneGeometry(250, 60);
-  const fillMat = new THREE.MeshBasicMaterial({ color: 0xd8e0f0, side: THREE.DoubleSide });
-  const fillPlane = new THREE.Mesh(fillGeo, fillMat);
-  fillPlane.position.set(100, 30, 120); fillPlane.lookAt(0, 0, 0);
-  envScene.add(fillPlane);
-  const rimGeo = new THREE.PlaneGeometry(300, 30);
-  const rimMat = new THREE.MeshBasicMaterial({ color: 0xfff0e0, side: THREE.DoubleSide });
-  const rimPlane = new THREE.Mesh(rimGeo, rimMat);
-  rimPlane.position.set(0, -80, 100); rimPlane.lookAt(0, 0, 0);
-  envScene.add(rimPlane);
-  const topGeo = new THREE.PlaneGeometry(400, 400);
-  const topMat = new THREE.MeshBasicMaterial({ color: 0x303030, side: THREE.DoubleSide });
-  const topPlane = new THREE.Mesh(topGeo, topMat);
-  topPlane.position.set(0, 0, 250); topPlane.lookAt(0, 0, 0);
-  envScene.add(topPlane);
-  const envRT = pmrem.fromScene(envScene, 0.04);
+  pmrem.compileEquirectangularShader();
+  const hdrTex = await new Promise((resolve, reject) => {
+    new RGBELoader().load('studio.hdr', resolve, undefined, reject);
+  });
+  const envRT = pmrem.fromEquirectangular(hdrTex);
   scene.environment = envRT.texture;
-  pmrem.dispose(); envScene.clear();
+  hdrTex.dispose();
+  pmrem.dispose();
 }
 
 const rectLight = new THREE.RectAreaLight(0xffffff, 0, 447, 447);

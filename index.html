@@ -694,6 +694,72 @@ setTimeout(()=>{
 
 // Setup scroll observers after a brief delay to let clock init
 setTimeout(setupScrollObservers,500);
+
+// ══════════════════════════════════════════
+// GUIDED TOUR — auto-scroll showroom mode
+// ══════════════════════════════════════════
+(function(){
+  const TOUR_SECTIONS = [
+    { id:'sec-hook',    dwell:5000 },
+    { id:'sec-qibla',   dwell:7000 },
+    { id:'sec-prayer',  dwell:8000 },
+    { id:'sec-dials',   dwell:30000 }, // 11 dials × 2.5s + buffer
+    { id:'sec-night',   dwell:7000 },
+    { id:'sec-adhan',   dwell:8000 },  // linger, no auto-play
+    { id:'sec-install', dwell:6000 },
+  ];
+
+  let tourIdx=0, tourTimer=null, tourActive=false;
+  let idleTimer=null;
+  const IDLE_START=10000; // start tour after 10s idle
+
+  function startTour(){
+    if(tourActive) return;
+    tourActive=true;
+    tourIdx=0;
+    advanceTour();
+  }
+
+  function stopTour(){
+    tourActive=false;
+    if(tourTimer){clearTimeout(tourTimer);tourTimer=null;}
+    if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}
+  }
+
+  function advanceTour(){
+    if(!tourActive) return;
+    if(tourIdx >= TOUR_SECTIONS.length){
+      // Loop back to start
+      tourIdx=0;
+      // Scroll to top first, then restart
+      window.scrollTo({top:0,behavior:'smooth'});
+      tourTimer=setTimeout(()=>advanceTour(), 2000);
+      return;
+    }
+    const sec=TOUR_SECTIONS[tourIdx];
+    const el=document.getElementById(sec.id);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    tourIdx++;
+    tourTimer=setTimeout(()=>advanceTour(), sec.dwell);
+  }
+
+  function resetIdle(){
+    if(idleTimer) clearTimeout(idleTimer);
+    if(tourActive) stopTour();
+    idleTimer=setTimeout(startTour, IDLE_START);
+  }
+
+  // Any user interaction pauses tour and resets idle timer
+  ['scroll','touchstart','mousedown','keydown'].forEach(evt=>{
+    window.addEventListener(evt,()=>{
+      if(tourActive) stopTour();
+      resetIdle();
+    },{passive:true});
+  });
+
+  // Don't start idle timer until page is loaded and settled
+  setTimeout(resetIdle, 3000);
+})();
 </script>
 </body>
 </html>

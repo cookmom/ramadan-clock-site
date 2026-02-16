@@ -108,7 +108,36 @@ scene.add(ambLight);
 const { RectAreaLightUniformsLib } = await import('three/addons/lights/RectAreaLightUniformsLib.js');
 RectAreaLightUniformsLib.init();
 
-// No env map — clean direct lighting only
+// ── Procedural studio environment map ──
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileCubemapShader();
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0x1a1a1a);
+  const keyGeo = new THREE.PlaneGeometry(200, 80);
+  const keyMat = new THREE.MeshBasicMaterial({ color: 0xfff8f0, side: THREE.DoubleSide });
+  const keyPlane = new THREE.Mesh(keyGeo, keyMat);
+  keyPlane.position.set(-60, 100, 150); keyPlane.lookAt(0, 0, 0);
+  envScene.add(keyPlane);
+  const fillGeo = new THREE.PlaneGeometry(250, 60);
+  const fillMat = new THREE.MeshBasicMaterial({ color: 0xd8e0f0, side: THREE.DoubleSide });
+  const fillPlane = new THREE.Mesh(fillGeo, fillMat);
+  fillPlane.position.set(100, 30, 120); fillPlane.lookAt(0, 0, 0);
+  envScene.add(fillPlane);
+  const rimGeo = new THREE.PlaneGeometry(300, 30);
+  const rimMat = new THREE.MeshBasicMaterial({ color: 0xfff0e0, side: THREE.DoubleSide });
+  const rimPlane = new THREE.Mesh(rimGeo, rimMat);
+  rimPlane.position.set(0, -80, 100); rimPlane.lookAt(0, 0, 0);
+  envScene.add(rimPlane);
+  const topGeo = new THREE.PlaneGeometry(400, 400);
+  const topMat = new THREE.MeshBasicMaterial({ color: 0x303030, side: THREE.DoubleSide });
+  const topPlane = new THREE.Mesh(topGeo, topMat);
+  topPlane.position.set(0, 0, 250); topPlane.lookAt(0, 0, 0);
+  envScene.add(topPlane);
+  const envRT = pmrem.fromScene(envScene, 0.04);
+  scene.environment = envRT.texture;
+  pmrem.dispose(); envScene.clear();
+}
 
 const rectLight = new THREE.RectAreaLight(0xffffff, 0, 447, 447);
 rectLight.position.set(0, 0, 300);
@@ -159,11 +188,11 @@ scene.add(subSpot.target);
 function dialMat(color) {
   const cd = currentDial;
   const special = {
-    kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.4, clearcoatRoughness:0.3 }, // rose gold sheen
-    qamar:   { roughness:0.7, metalness:0.15, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 }, // subtle silver metallic
-    rainbow: { roughness:0.85, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 }, // flat black
+    kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.6, clearcoatRoughness:0.3 },
+    qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
+    rainbow: { roughness:0.85, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 },
   };
-  const s = special[cd] || { roughness:1.0, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
+  const s = special[cd] || { roughness:0.85, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
   const isFlat = !special[cd]; // non-special dials get emissive fill for flat look
   const m = new THREE.MeshPhysicalMaterial({
     color, roughness:s.roughness, metalness:s.metalness,
@@ -171,25 +200,27 @@ function dialMat(color) {
     clearcoat:s.clearcoat, clearcoatRoughness:s.clearcoatRoughness,
     emissive: isFlat ? color : 0x000000, emissiveIntensity: isFlat ? 0.15 : 0
   });
-  m.envMapIntensity = 0;
+  m.envMapIntensity = s.metalness > 0.1 ? 0.3 : 0.08;
   return m;
 }
 function metalMat(color) {
   const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
-  return new THREE.MeshPhysicalMaterial({
+  const m = new THREE.MeshPhysicalMaterial({
     color,
     roughness: precious ? 0.1 : 0.15,
-    metalness: precious ? 0.8 : 0.5,
+    metalness: precious ? 0.8 : 0.6,
     clearcoat: 1.0,
     clearcoatRoughness: 0.05,
     reflectivity: precious ? 1.0 : 0.9
   });
+  m.envMapIntensity = precious ? 0.6 : 0.4;
+  return m;
 }
 function lumeMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.1, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0; return m;
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0.05; return m;
 }
 function secMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.15, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0; return m;
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.3, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0.35; return m;
 }
 
 // ══════════════════════════════════════════
@@ -340,7 +371,7 @@ function buildDial() {
   // Lower disc — solid, darker, recessed
   const lowerGeo = new THREE.CylinderGeometry(caseR, caseR, DIAL_THICKNESS, 128);
   const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-  const lowerMat = new THREE.MeshStandardMaterial({color:lowerColor, roughness:0.9, metalness:0}); lowerMat.envMapIntensity = 0;
+  const lowerMat = new THREE.MeshStandardMaterial({color:lowerColor, roughness:0.9, metalness:0}); lowerMat.envMapIntensity = 0.05;
   dialLowerMesh = new THREE.Mesh(lowerGeo, lowerMat);
   dialLowerMesh.rotation.x = Math.PI/2;
   dialLowerMesh.position.z = -(DIAL_THICKNESS/2 + DIAL_GAP + DIAL_THICKNESS);
@@ -387,7 +418,7 @@ function buildScrollIndicator() {
     emissive: c.hand, emissiveIntensity: 0.3,
     transparent: true, opacity: 1
   });
-  mat.envMapIntensity = 0;
+  mat.envMapIntensity = 0.2;
   scrollIndicator = new THREE.Mesh(geo, mat);
   scrollIndicator.position.z = 4; // above markers
   // Restore position from current state (don't reset on dial switch)
@@ -469,7 +500,7 @@ function buildMarkers() {
         const mat = new THREE.MeshStandardMaterial({
           color: c.lume, roughness: 0.3, metalness: 0.3,
           emissive: c.lume, emissiveIntensity: 0
-        }); mat.envMapIntensity = 0;
+        }); mat.envMapIntensity = 0.2;
         const mesh = new THREE.Mesh(geo, mat);
         const midR = R * 0.95;
         mesh.position.x = Math.cos(ang)*midR;
@@ -506,7 +537,7 @@ function buildMarkers() {
       {
         const tH=R*0.036, tW=0.675, depth=1.5;
         const geo = new THREE.BoxGeometry(tW, tH, depth);
-        const mat = new THREE.MeshStandardMaterial({color:c.lume, roughness:0.5, metalness:0.2}); mat.envMapIntensity = 0;
+        const mat = new THREE.MeshStandardMaterial({color:c.lume, roughness:0.5, metalness:0.2}); mat.envMapIntensity = 0.15;
         const mesh = new THREE.Mesh(geo, mat);
         const midR = (R - R*0.04 - tH/2) * 1.03;
         mesh.position.x = Math.cos(ang)*midR;
@@ -708,7 +739,7 @@ function buildQibla() {
   const baseMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(d.bg).multiplyScalar(0.7),
     roughness: 0.5, metalness: 0.4,
-    clearcoat: 0.2, envMapIntensity: 0
+    clearcoat: 0.2, envMapIntensity: 0.25
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
   qiblaGroup.add(baseDisc);
@@ -727,7 +758,7 @@ function buildQibla() {
   const moonMat = new THREE.MeshPhysicalMaterial({
     color: 0xf8f4e8, roughness: 0.6, metalness: 0.05,
     emissive: 0xf8f4e8, emissiveIntensity: 0.05,
-    envMapIntensity: 0
+    envMapIntensity: 0.1
   });
   const moonDisc = new THREE.Mesh(new THREE.CircleGeometry(moonR, 64), moonMat);
   moonDisc.position.z = 0.1;
@@ -812,7 +843,7 @@ function buildQibla() {
   const rotorMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(d.bg).multiplyScalar(0.85),
     roughness: 0.45, metalness: 0.3,
-    clearcoat: 0.3, envMapIntensity: 0
+    clearcoat: 0.3, envMapIntensity: 0.3
   });
   const rotorDisc = new THREE.Mesh(new THREE.CircleGeometry(rotorR, 64), rotorMat);
   qiblaRotor.add(rotorDisc);
@@ -826,7 +857,7 @@ function buildQibla() {
     const tGeo = new THREE.BoxGeometry(tickW, isNorth ? tickLen*1.4 : tickLen, 0.3);
     const tColor = isNorth ? 0xf0f0f0 : new THREE.Color(d.lume).multiplyScalar(0.6);
     const tMat = new THREE.MeshPhysicalMaterial({
-      color: tColor, roughness: 0.3, metalness: 0.1, envMapIntensity: 0,
+      color: tColor, roughness: 0.3, metalness: 0.1, envMapIntensity: 0.15,
       emissive: tColor, emissiveIntensity: 0
     });
     const tick = new THREE.Mesh(tGeo, tMat);
@@ -843,7 +874,7 @@ function buildQibla() {
     const mtGeo = new THREE.BoxGeometry(0.3, tickLen*0.5, 0.2);
     const mtMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(d.lume).multiplyScalar(0.4),
-      roughness: 0.4, metalness: 0.1, envMapIntensity: 0
+      roughness: 0.4, metalness: 0.1, envMapIntensity: 0.1
     });
     const mt = new THREE.Mesh(mtGeo, mtMat);
     const mtr = rotorR - tickLen*0.3;
@@ -898,7 +929,7 @@ function buildQibla() {
         clearcoat: 0.3,
         emissive: fullColor,
         emissiveIntensity: 0,
-        envMapIntensity: 0
+        envMapIntensity: 0.2
       });
       segMat.userData = { fullColor, dimColor };
       const segMesh = new THREE.Mesh(new THREE.ShapeGeometry(segShape), segMat);
@@ -1455,7 +1486,7 @@ function animate(){
   lumeMeshes.forEach(m=>{
     m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     // Kawthar candy buttons: cap glow to prevent blowout
-    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.35 : lumeIntensity;
+    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.7 : lumeIntensity;
   });
   if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity; }
   if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity; }
@@ -1517,9 +1548,9 @@ function animate(){
   }
   
   // Bloom ramps up in night mode — soft, dreamy glow
-  bloomPass.strength = modeBlend * 1.2;
-  bloomPass.radius = 0.5 + modeBlend * 0.4;
-  bloomPass.threshold = 0.85 - modeBlend * 0.35; // lower threshold at night = more bloom
+  bloomPass.strength = modeBlend * 0.8;
+  bloomPass.radius = 0.4 + modeBlend * 0.3;
+  bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
   // Dim scene lights for night — let lume own the scene
   ambLight.intensity = 0.3 * (1 - modeBlend * 0.85);
@@ -1590,7 +1621,7 @@ function animate(){
   }
   
   // BG color blend
-  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x060608), modeBlend);
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend); // deep midnight — not void black
   if(!EMBED || CONTAINED) scene.background = nightBg;
   bgPlaneMat.color.copy(nightBg);
   

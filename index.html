@@ -719,6 +719,8 @@ setTimeout(setupScrollObservers,500);
     if(tourActive) return;
     tourActive=true;
     tourIdx=0;
+    // Disable scroll-snap so tour can scroll freely
+    document.documentElement.style.scrollSnapType='none';
     advanceTour();
   }
 
@@ -727,6 +729,8 @@ setTimeout(setupScrollObservers,500);
     tourScrolling=false;
     if(tourTimer){clearTimeout(tourTimer);tourTimer=null;}
     if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}
+    // Re-enable scroll-snap
+    document.documentElement.style.scrollSnapType='y mandatory';
   }
 
   function advanceTour(){

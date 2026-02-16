@@ -757,18 +757,13 @@ setTimeout(setupScrollObservers,500);
     idleTimer=setTimeout(startTour, IDLE_START);
   }
 
-  // User interaction pauses tour — but ignore tour-generated scrolls
-  ['touchstart','mousedown','keydown'].forEach(evt=>{
+  // User interaction pauses tour — touch/mouse/key only (scroll events unreliable with snap)
+  ['touchstart','mousedown','wheel','keydown'].forEach(evt=>{
     window.addEventListener(evt,()=>{
       if(tourActive) stopTour();
       resetIdle();
     },{passive:true});
   });
-  window.addEventListener('scroll',()=>{
-    if(tourScrolling) return; // ignore our own scrolls
-    if(tourActive) stopTour();
-    resetIdle();
-  },{passive:true});
 
   // Don't start idle timer until page is loaded and settled
   setTimeout(resetIdle, 3000);

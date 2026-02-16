@@ -735,6 +735,12 @@ setTimeout(setupScrollObservers,500);
     tourIdx=0;
     // Disable scroll-snap so tour can scroll freely
     document.documentElement.style.scrollSnapType='none';
+    // Request fullscreen on mobile for immersive demo
+    try{
+      const el=document.documentElement;
+      if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }catch(e){}
     advanceTour();
   }
 
@@ -745,6 +751,8 @@ setTimeout(setupScrollObservers,500);
     if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}
     // Re-enable scroll-snap
     document.documentElement.style.scrollSnapType='y mandatory';
+    // Exit fullscreen
+    try{if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});}catch(e){}
   }
 
   function advanceTour(){

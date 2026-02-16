@@ -711,7 +711,7 @@ setTimeout(setupScrollObservers,500);
     { id:'sec-install', dwell:6000 },
   ];
 
-  let tourIdx=0, tourTimer=null, tourActive=false;
+  let tourIdx=0, tourTimer=null, tourActive=false, tourScrolling=false;
   let idleTimer=null;
   const IDLE_START=10000; // start tour after 10s idle
 
@@ -724,6 +724,7 @@ setTimeout(setupScrollObservers,500);
 
   function stopTour(){
     tourActive=false;
+    tourScrolling=false;
     if(tourTimer){clearTimeout(tourTimer);tourTimer=null;}
     if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}
   }
@@ -731,16 +732,21 @@ setTimeout(setupScrollObservers,500);
   function advanceTour(){
     if(!tourActive) return;
     if(tourIdx >= TOUR_SECTIONS.length){
-      // Loop back to start
       tourIdx=0;
-      // Scroll to top first, then restart
+      tourScrolling=true;
       window.scrollTo({top:0,behavior:'smooth'});
+      setTimeout(()=>{tourScrolling=false;},1500);
       tourTimer=setTimeout(()=>advanceTour(), 2000);
       return;
     }
     const sec=TOUR_SECTIONS[tourIdx];
     const el=document.getElementById(sec.id);
-    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(el){
+      tourScrolling=true;
+      el.scrollIntoView({behavior:'smooth',block:'start'});
+      // Allow scroll to finish before accepting user input again
+      setTimeout(()=>{tourScrolling=false;},1500);
+    }
     tourIdx++;
     tourTimer=setTimeout(()=>advanceTour(), sec.dwell);
   }
@@ -751,13 +757,18 @@ setTimeout(setupScrollObservers,500);
     idleTimer=setTimeout(startTour, IDLE_START);
   }
 
-  // Any user interaction pauses tour and resets idle timer
-  ['scroll','touchstart','mousedown','keydown'].forEach(evt=>{
+  // User interaction pauses tour — but ignore tour-generated scrolls
+  ['touchstart','mousedown','keydown'].forEach(evt=>{
     window.addEventListener(evt,()=>{
       if(tourActive) stopTour();
       resetIdle();
     },{passive:true});
   });
+  window.addEventListener('scroll',()=>{
+    if(tourScrolling) return; // ignore our own scrolls
+    if(tourActive) stopTour();
+    resetIdle();
+  },{passive:true});
 
   // Don't start idle timer until page is loaded and settled
   setTimeout(resetIdle, 3000);

@@ -1259,6 +1259,12 @@ document.fonts.ready.then(()=>{
   const initBg = new THREE.Color(DIALS[currentDial].bg);
   scene.background = initBg;
   bgPlaneMat.color.copy(initBg);
+  // Signal loaded — fade out the placeholder
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      if(CONTAINER) CONTAINER.classList.add('loaded');
+    });
+  });
 });
 
 // ══════════════════════════════════════════

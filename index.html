@@ -43,6 +43,20 @@ body{
   background:#585860;
   flex-shrink:0;
   transition:box-shadow 1.5s ease;
+  position:relative;
+}
+#dialHero::before{
+  content:'';position:absolute;inset:0;border-radius:50%;z-index:1;
+  background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.08) 0%,transparent 60%),
+             radial-gradient(circle at 50% 50%,#585860 0%,#484850 100%);
+  animation:dialPulse 2.5s ease-in-out infinite;
+  opacity:1;transition:opacity .8s ease;
+  pointer-events:none;
+}
+#dialHero.loaded::before{opacity:0}
+@keyframes dialPulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.01);opacity:.7}
 }
 
 /* ── Nav ── */
@@ -678,7 +692,7 @@ setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=16';
+_cs.type='module';_cs.src='clock.js?v=17';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

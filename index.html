@@ -319,15 +319,15 @@ footer a:hover{color:var(--text)}
 /* Hide landing page content instantly when loading #clock */
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
 .clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
-.clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
+.clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px;transition:opacity .5s ease}
+.fs-chrome-hidden .clock-fs-close,.fs-chrome-hidden .fs-header,.fs-chrome-hidden .fs-mode-toggle,.fs-chrome-hidden .fs-dial-picker{opacity:0;pointer-events:none}
 .fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 88px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65);transition:opacity .5s ease}
-.fs-header.hidden{opacity:0}
 .fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
 .fs-header .fs-location{display:none}
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
-.fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6)}
+.fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6);transition:opacity .5s ease}
 .fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
-.fs-dial-picker{position:fixed;bottom:calc(env(safe-area-inset-bottom,12px) + 16px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7)}
+.fs-dial-picker{position:fixed;bottom:calc(env(safe-area-inset-bottom,12px) + 16px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7);transition:opacity .5s ease}
 .fs-dial-bar{display:flex;justify-content:center;gap:7px}
 .fs-dial-bar .dial-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;transition:all .3s;background:none;padding:0}
 .fs-dial-bar .dial-dot.active{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.4)}
@@ -612,22 +612,21 @@ function setNightMode(on){
   if(pc){pc.style.background=on?'#141418':'#fff';pc.style.borderColor=on?'rgba(255,255,255,.08)':'var(--border)';}
   if(window._clockSetNight) window._clockSetNight(on);
   updateLumeHalo();
-  // Hide header text when night mode starts (stars/moon scene)
-  const fsH=document.getElementById('fsHeader');
-  if(fsH){
-    if(on) fsH.classList.add('hidden');
-    else fsH.classList.remove('hidden');
+  // Hide all fullscreen chrome when night mode starts
+  const fsClock=document.getElementById('clockFullscreen');
+  if(fsClock){
+    if(on) fsClock.classList.add('fs-chrome-hidden');
+    else fsClock.classList.remove('fs-chrome-hidden');
   }
 }
-// Tap to show header in fullscreen, auto-hide after 4s
-let _fsHeaderTimer=null;
+// Tap to show chrome in fullscreen, auto-hide after 4s
+let _fsChromeTimer=null;
 document.addEventListener('touchstart',function(){
-  const fsH=document.getElementById('fsHeader');
   const fsClock=document.getElementById('clockFullscreen');
-  if(!fsH||!fsClock||!fsClock.classList.contains('active'))return;
-  fsH.classList.remove('hidden');
-  clearTimeout(_fsHeaderTimer);
-  _fsHeaderTimer=setTimeout(()=>{if(pageNight)fsH.classList.add('hidden');},4000);
+  if(!fsClock||!fsClock.classList.contains('active'))return;
+  fsClock.classList.remove('fs-chrome-hidden');
+  clearTimeout(_fsChromeTimer);
+  _fsChromeTimer=setTimeout(()=>{if(pageNight)fsClock.classList.add('fs-chrome-hidden');},4000);
 },{passive:true});
 
 // ══════════════════════════════════════════
@@ -1476,7 +1475,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=108';
+_cs.type='module';_cs.src='clock.js?v=109';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

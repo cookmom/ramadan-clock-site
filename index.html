@@ -304,7 +304,7 @@ footer a:hover{color:var(--text)}
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
 .clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
 .clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
-.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 14px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65)}
+.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 48px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65)}
 .fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
 .fs-header .fs-location{font-size:.6rem;font-weight:200;letter-spacing:.08em;margin-top:2px;opacity:.5}
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
@@ -904,33 +904,55 @@ function fsStopClock() {
   if(_fsClockTimer) { clearInterval(_fsClockTimer); _fsClockTimer = null; }
 }
 
+function fsSetPrayerTimes(t) {
+  document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
+  document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+function fsSetLocation(text) {
+  const el = document.getElementById('fsLocation');
+  if(el && text) el.textContent = text;
+}
 async function fsFetchPrayer() {
+  let lat, lon, gotGPS = false;
+  // Try GPS first
   try {
-    const pos = await new Promise((r,j) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}) : j());
-    const lat=pos.coords.latitude, lon=pos.coords.longitude;
-    const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
-    const j = await res.json();
-    if(j.code===200) {
-      const t = j.data.timings;
-      document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
-      document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-      // Reverse geocode for location name
-      try {
-        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-        const geoJ = await geoRes.json();
-        const city = geoJ.city || geoJ.locality || '';
-        const region = geoJ.principalSubdivisionCode ? geoJ.principalSubdivisionCode.split('-').pop() : '';
-        if(city) document.getElementById('fsLocation').textContent = region ? `${city}, ${region}` : city;
-      } catch(ge){}
-    }
-  } catch(e) {
+    const pos = await new Promise((r,j) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(r,j,{maximumAge:600000,timeout:8000}) : j());
+    lat = pos.coords.latitude; lon = pos.coords.longitude; gotGPS = true;
+  } catch(e) {}
+
+  if(gotGPS) {
     try {
-      const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=LosAngeles&country=US&method=2`);
+      const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
       const j = await res.json();
       if(j.code===200) {
-        const t = j.data.timings;
-        document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
-        document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+        fsSetPrayerTimes(j.data.timings);
+        // Use Aladhan meta for location if available
+        const meta = j.data.meta;
+        if(meta && meta.timezone) {
+          // Extract city-like name from timezone (e.g. "America/Los_Angeles" → "Los Angeles")
+          const tzCity = meta.timezone.split('/').pop().replace(/_/g,' ');
+          fsSetLocation(tzCity);
+        }
+      }
+    } catch(e) {}
+    // Also try reverse geocode for better location name (non-blocking)
+    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
+      .then(r=>r.json()).then(g=>{
+        const city = g.city || g.locality || '';
+        const region = g.principalSubdivisionCode ? g.principalSubdivisionCode.split('-').pop() : '';
+        if(city) fsSetLocation(region ? `${city}, ${region}` : city);
+      }).catch(()=>{});
+  } else {
+    // Fallback: IP-based location via Aladhan auto
+    try {
+      const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=auto&country=auto&method=2`);
+      const j = await res.json();
+      if(j.code===200) {
+        fsSetPrayerTimes(j.data.timings);
+        const meta = j.data.meta;
+        if(meta && meta.timezone) {
+          fsSetLocation(meta.timezone.split('/').pop().replace(/_/g,' '));
+        }
       }
     } catch(e2) {}
   }
@@ -1033,7 +1055,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=32';
+_cs.type='module';_cs.src='clock.js?v=33';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

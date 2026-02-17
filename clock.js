@@ -1335,7 +1335,7 @@ function buildStars(){
   if(moonGroup) scene.remove(moonGroup);
   moonGroup = new THREE.Group();
   
-  const moonR = 7;
+  const moonR = 4.5;
   
   // ── Procedural moon texture with craters + Hijri phase shadow ──
   const moonCvN = document.createElement('canvas');

@@ -1878,7 +1878,7 @@ function animate(){
   try {
   
   // Night blend
-  if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.015;
+  if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.024;
   else modeBlend=modeTarget;
   
   // Night mode: lume glow with per-dial color

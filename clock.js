@@ -427,32 +427,31 @@ function extrudedLeaf(len, maxW, tailLen, depth, baseScale=1.0) {
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled:true, bevelThickness:0.4, bevelSize:0.3, bevelSegments:3 });
 }
 
-// NOMOS Club Campus hands — gradual linear taper from base to fine point, polished steel
+// NOMOS Club Campus hands — straight parallel baton, tiny pointed tip
 function nomosHand(len, baseW, tailLen, depth) {
   const s = new THREE.Shape();
   const hw = baseW / 2;
-  // Continuous taper: widest at base, linearly narrows to point
-  s.moveTo(-hw * 0.5, -tailLen);     // narrow tail
-  s.lineTo(-hw, 0);                   // full width at pivot
-  s.lineTo(-hw * 0.15, len * 0.95);  // gradual taper — nearly to tip
-  s.lineTo(0, len);                    // sharp point
-  s.lineTo(hw * 0.15, len * 0.95);
-  s.lineTo(hw, 0);                     // full width at pivot
-  s.lineTo(hw * 0.5, -tailLen);
+  const tipStart = len * 0.96;  // parallel for 96%, point only at very end
+  s.moveTo(-hw * 0.55, -tailLen);
+  s.lineTo(-hw, 0);
+  s.lineTo(-hw, tipStart);       // perfectly straight parallel sides
+  s.lineTo(0, len);              // short sharp point
+  s.lineTo(hw, tipStart);
+  s.lineTo(hw, 0);
+  s.lineTo(hw * 0.55, -tailLen);
   s.closePath();
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.15, bevelSegments: 2 });
 }
 
-// Lume channel — very thin recessed strip, barely visible in daylight
+// Lume channel — thin recessed center strip, parallel like the hand
 function nomosLume(len, baseW, depth) {
   const s = new THREE.Shape();
-  const hw = baseW * 0.2;  // 40% of hand width — thin center channel
+  const hw = baseW * 0.22;
   const startY = len * 0.12;
-  // Taper matches hand profile
+  const endY = len * 0.93;
   s.moveTo(-hw, startY);
-  s.lineTo(-hw * 0.1, len * 0.9);
-  s.lineTo(0, len * 0.93);
-  s.lineTo(hw * 0.1, len * 0.9);
+  s.lineTo(-hw, endY);
+  s.lineTo(hw, endY);
   s.lineTo(hw, startY);
   s.closePath();
   return new THREE.ExtrudeGeometry(s, { depth: 1.2, bevelEnabled: false });

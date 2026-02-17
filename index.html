@@ -1080,6 +1080,29 @@ document.addEventListener('click',requestNotifPermission,{once:true});
 // ── Auto-adhan at prayer times ──
 let _lastAdhanFired='';
 let _adhanCheckTimer=null;
+// ── Prayer time tap-to-play banner (iOS fallback) ──
+function _showAdhanBanner(prayer){
+  let b=document.getElementById('adhanBanner');
+  if(!b){
+    b=document.createElement('div');b.id='adhanBanner';
+    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(26,71,42,.95);color:#fff;text-align:center;padding:1rem;font-family:var(--font);font-size:.95rem;font-weight:400;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity .3s';
+    document.body.appendChild(b);
+  }
+  b.innerHTML='🕌 '+prayer+' — tap to hear the adhan';
+  b.style.opacity='1';b.style.pointerEvents='auto';
+  b.onclick=function(){
+    const btn=document.getElementById('adhanBtn');
+    if(btn) playAdhan(btn);
+    _hideAdhanBanner();
+  };
+  // Auto-hide after 60s
+  setTimeout(()=>_hideAdhanBanner(),60000);
+}
+function _hideAdhanBanner(){
+  const b=document.getElementById('adhanBanner');
+  if(b){b.style.opacity='0';b.style.pointerEvents='none';}
+}
+
 function startAdhanCheck(){
   if(_adhanCheckTimer)return;
   _adhanCheckTimer=setInterval(checkPrayerAdhan,15000); // check every 15s
@@ -1095,8 +1118,8 @@ function checkPrayerAdhan(){
     if(pTime===nowHM && _lastAdhanFired!==p+nowHM){
       _lastAdhanFired=p+nowHM;
       console.log('[adhan] Auto-triggering for '+p+' at '+nowHM);
-      // iOS blocks audio without user gesture — use pre-unlocked Audio (plain) for auto-trigger
-      // Then show banner so user can tap to upgrade to spatial HRTF
+      // Try auto-play first (works on Android, desktop, or if user interacted)
+      let autoPlayed=false;
       if(_preUnlockedAudio&&_preUnlockedAudio._isBackup){
         adhanAudio=_preUnlockedAudio;_preUnlockedAudio=null;
         adhanAudio.currentTime=0;
@@ -1104,19 +1127,23 @@ function checkPrayerAdhan(){
         setupAdhanAudioEvents(adhanAudio);
         adhanAudio.play().then(()=>{
           adhanDbg('Auto-adhan plain playing for '+p);
+          autoPlayed=true;
           if(window._pauseTour)window._pauseTour();
           if(window._stopTour)window._stopTour();
           _adhanUpdateBtn();
+          _hideAdhanBanner();
         }).catch(e=>{
           adhanDbg('Auto-adhan play failed (no gesture): '+e);
           adhanPlaying=false;
-          // Fall through to notification only
+          _showAdhanBanner(p);
         });
       }else{
-        // No pre-unlocked audio — try anyway (works on Android, desktop)
+        // Try playAdhan directly (works on Android, desktop)
         const btn=document.getElementById('adhanBtn');
-        if(btn) playAdhan(btn);
+        if(btn) { try{playAdhan(btn);}catch(e){} }
       }
+      // Always show tap banner on iOS as fallback — user can tap to play
+      if(!autoPlayed) _showAdhanBanner(p);
       // Browser notification
       if('Notification' in window&&Notification.permission==='granted'){
         if(swReg){
@@ -1432,7 +1459,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=104';
+_cs.type='module';_cs.src='clock.js?v=105';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

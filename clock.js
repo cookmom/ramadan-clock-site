@@ -2069,11 +2069,9 @@ function animate(){
   }
   
   if(!CONTAINED || isFullscreen) {
-    // Sample actual rendered pixel from canvas corner — matches what you see (PBR-lit)
-    const gl = renderer.getContext();
-    const px = new Uint8Array(4);
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    const bgHex = '#'+((1<<24)|(px[0]<<16)|(px[1]<<8)|px[2]).toString(16).slice(1);
+    // Use scene background color directly — readPixels caused mismatch with PBR lighting/tonemapping
+    const bgColor = scene.background || new THREE.Color(DIALS[currentDial].bg);
+    const bgHex = '#' + bgColor.getHexString();
     const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
     if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
     if(isFullscreen) {

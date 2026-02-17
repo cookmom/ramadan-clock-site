@@ -1432,7 +1432,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=88';
+_cs.type='module';_cs.src='clock.js?v=89';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1600,12 +1600,13 @@ setTimeout(setupScrollObservers,500);
     sticky.classList.add('visible');
   }
   function hide(){ sticky.classList.remove('visible'); shown=false; }
-  // Trigger: scroll past 3rd section
+  // Trigger: scroll past 2nd section or any scroll beyond 1.5 viewports
   const observer=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{ if(e.isIntersecting) show(); });
-  },{threshold:0.3});
-  const sec3=document.getElementById('sec-prayer')||document.querySelectorAll('.scroll-section')[2];
+  },{threshold:0.1});
+  const sec3=document.getElementById('sec-qibla')||document.querySelectorAll('.scroll-section')[1];
   if(sec3) observer.observe(sec3);
+  window.addEventListener('scroll',()=>{ if(window.scrollY > window.innerHeight * 1.2) show(); },{passive:true});
   // Trigger: surah play or fullscreen open
   const origListenClick=document.getElementById('listenBtn');
   document.addEventListener('click',(e)=>{

@@ -393,7 +393,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <h2 class="section-title" style="margin-bottom:0">Come to prayer.</h2>
     <p style="font-size:.75rem;font-weight:300;letter-spacing:.1em;color:var(--text-muted);opacity:.45;margin-bottom:1rem">Hayya 'ala as-salah</p>
     <p class="section-body">Automatic prayer times for your location. From Fajr to Isha, never miss a moment.</p>
-    <p id="pcTimes" style="font-size:.65rem;font-weight:300;letter-spacing:.08em;color:var(--text-muted);opacity:.6;margin-top:1rem"></p>
+    <p id="pcTimes" style="font-size:.65rem;font-weight:300;letter-spacing:.08em;color:var(--text);opacity:.85;margin-top:1rem"></p>
     <div class="verse">
       <p class="verse-ar">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
       <p class="verse-en">"Indeed, prayer has been decreed upon the believers at specified times."</p>
@@ -807,7 +807,7 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
     let nextP='';t5.forEach(p=>{if(!nextP&&toMin(t[p])>nowM)nextP=p;});
     document.getElementById('pcTimes').innerHTML=t5.map(p=>{
       const hi=p===nextP;
-      return`<span style="${hi?'font-weight:500;color:#c0392b;opacity:1':''}">` +p+' '+t[p]+'</span>';
+      return`<span style="${hi?'font-weight:700;color:#c0392b':''}">` +p+' '+t[p]+'</span>';
     }).join(' · ');
   }catch(e){}
 })();
@@ -1107,7 +1107,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=58';
+_cs.type='module';_cs.src='clock.js?v=59';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

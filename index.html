@@ -125,6 +125,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Lateef:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/thin/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
 <script type="importmap">
 {"imports":{"three":"https://esm.sh/three@0.170.0","three/addons/":"https://esm.sh/three@0.170.0/examples/jsm/"}}
 </script>
@@ -188,8 +189,8 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
   transition:color .5s ease,background-color .5s ease,border-color .5s ease;
 }
 .btn-outline:hover{border-color:var(--text)}
-.support-heart{animation:heartPulse 2s ease-in-out infinite}
-@keyframes heartPulse{0%,100%{color:inherit}50%{color:#e74c4c}}
+.support-heart{transition:color .6s ease}
+.support-heart.filled{color:#e74c4c}
 a{color:inherit;text-decoration:none}
 
 /* ── Sections ── */
@@ -1097,7 +1098,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=46';
+_cs.type='module';_cs.src='clock.js?v=47';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1244,6 +1245,21 @@ setTimeout(setupScrollObservers,500);
 
   // Don't start idle timer until page is loaded and settled
   setTimeout(resetIdle, 3000);
+})();
+
+// Heart pulse: alternate thin outline ↔ filled red
+(function(){
+  const h=document.querySelector('.support-heart');
+  if(!h) return;
+  setInterval(()=>{
+    if(h.classList.contains('filled')){
+      h.classList.remove('ph-fill','ph-heart','filled');
+      h.classList.add('ph-thin','ph-heart');
+    }else{
+      h.classList.remove('ph-thin');
+      h.classList.add('ph-fill','ph-heart','filled');
+    }
+  },2000);
 })();
 </script>
 </body>

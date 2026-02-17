@@ -1195,6 +1195,23 @@ function addSwipe(el){
 addSwipe(document.getElementById('dialHero'));
 addSwipe(document.getElementById('clockFullscreen'));
 
+// Vertical swipe in fullscreen toggles day/night
+(function(){
+  const fs=document.getElementById('clockFullscreen');
+  if(!fs)return;
+  let sy=0,sx=0;
+  fs.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;sx=e.touches[0].clientX;},{passive:true});
+  fs.addEventListener('touchend',e=>{
+    if(!fs.classList.contains('active'))return;
+    const dy=e.changedTouches[0].clientY-sy;
+    const dx=Math.abs(e.changedTouches[0].clientX-sx);
+    // Vertical swipe: >50px Y, and more vertical than horizontal
+    if(Math.abs(dy)>50 && Math.abs(dy)>dx){
+      setNightMode(!pageNight);
+    }
+  },{passive:true});
+})();
+
 // Auto-open fullscreen if URL has #clock
 if(location.hash === '#clock') {
   const _waitClock = setInterval(()=>{
@@ -1472,7 +1489,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=113';
+_cs.type='module';_cs.src='clock.js?v=114';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

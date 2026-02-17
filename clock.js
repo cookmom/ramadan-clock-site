@@ -400,7 +400,7 @@ function metalMat(color) {
 function brushedHandMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(color).lerp(new THREE.Color(0xD6D6D6), 0.3), // aluminum tint
-    roughness: 0.38,        // brushed aluminum: softer sheen
+    roughness: 0.33,        // brushed aluminum: split the difference
     metalness: 1.0,
     anisotropy: 0.8,        // strong directional brushing
     anisotropyRotation: 0,  // brushing along hand length (Y axis)
@@ -408,7 +408,7 @@ function brushedHandMat(color) {
     clearcoatRoughness: 0.1,
     reflectivity: 0.9,
   });
-  m.envMapIntensity = 1.8;
+  m.envMapIntensity = 2.15;
   return m;
 }
 function lumeMat(color) {
@@ -966,7 +966,7 @@ function buildHands() {
   
   // Center cap (3D cylinder) — must sit ON TOP of all hands including second hand
   const capGeo = new THREE.CylinderGeometry(R*0.04, R*0.04, 8, 32);
-  const capMesh = new THREE.Mesh(capGeo, metalMat(c.hand));
+  const capMesh = new THREE.Mesh(capGeo, brushedHandMat(c.hand));
   capMesh.rotation.x = Math.PI/2;
   capMesh.position.z = 26;  // above second hand (z=23 + depth 2 = z=25)
   capMesh.castShadow = true;

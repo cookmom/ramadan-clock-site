@@ -1857,6 +1857,7 @@ function onResize(){
   }
 }
 window.addEventListener('resize',onResize);
+window._clockOnResize = onResize;
 if(CONTAINED){new ResizeObserver(onResize).observe(CONTAINER);}
 
 // ══════════════════════════════════════════

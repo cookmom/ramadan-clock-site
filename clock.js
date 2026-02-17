@@ -3,6 +3,12 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
+// ── CONTAINER MODE ──
+// If window._clockContainer is set, render into that element instead of fullscreen
+const CONTAINER = window._clockContainer || null;
+const CONTAINED = !!CONTAINER;
+if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.clientWidth, 'x', CONTAINER.clientHeight);
+
 // ══════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════
@@ -116,7 +122,7 @@ function pathToShapes(pathData, scale) {
 
 // URL params
 const _P = new URLSearchParams(location.search);
-const EMBED = _P.has('embed');
+const EMBED = _P.has('embed') || CONTAINED;
 let currentDial = (_P.get('dial') && DIALS[_P.get('dial')]) ? _P.get('dial') : 'slate';
 const NIGHT_START = _P.has('night');
 let modeBlend = NIGHT_START ? 1 : 0, modeTarget = NIGHT_START ? 1 : 0;
@@ -126,18 +132,23 @@ function pM(s){if(!s)return 0;const[h,m]=s.split(':').map(Number);return h*60+m;
 // ══════════════════════════════════════════
 // RENDERER — direct render, no post-processing
 // ══════════════════════════════════════════
-let W = window.innerWidth, H = window.innerHeight;
+let W = CONTAINED ? CONTAINER.clientWidth : window.innerWidth;
+let H = CONTAINED ? CONTAINER.clientHeight : window.innerHeight;
 const R = 80; // world-space radius
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
 renderer.samples = 4;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
+renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 3));
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.825;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-document.body.appendChild(renderer.domElement);
+(CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
+if(CONTAINED) {
+  renderer.domElement.style.cssText='width:100%;height:100%;display:block';
+  console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
+}
 
 const scene = new THREE.Scene();
 
@@ -183,7 +194,7 @@ let studioEnvMap;
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
   scene.environmentIntensity = 0.5; // dial is BasicMaterial (unaffected), moderate for PBR subdial visibility
-  scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // wooden_studio_08 optimal — hand streaks + glass glint
+  scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
 }
@@ -192,13 +203,13 @@ let studioEnvMap;
 const ambLight = new THREE.AmbientLight(0xffffff, 0.12);
 scene.add(ambLight);
 
-// Key light — warm rect from upper-left, stronger for visible dial gradient
+// Key light — soft rect from upper-left (warm, even illumination)
 const keyLight = new THREE.RectAreaLight(0xfff8f0, 2.5, 300, 300);
 keyLight.position.set(-80, 180, 250);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Strip light — narrow rect positioned to rake across hands (watch photography essential)
+// Strip light — narrow rect for hand specular streaks
 const stripLight = new THREE.RectAreaLight(0xffffff, 4.0, 20, 200);
 stripLight.position.set(40, 80, 200);
 stripLight.lookAt(0, 0, 0);
@@ -209,12 +220,12 @@ const specPoint = new THREE.PointLight(0xffffff, 6, 350, 2);
 specPoint.position.set(30, 60, 180);
 scene.add(specPoint);
 
-// Counter spec — opposite warmth for depth, subtler
+// Counter spec — opposite warmth for depth
 const counterSpec = new THREE.PointLight(0xfff0e0, 1.5, 400, 2);
 counterSpec.position.set(-40, -30, 200);
 scene.add(counterSpec);
 
-// Subdial spot — wider cone to illuminate subdial face + glass sparkle, boosted
+// Subdial spot — wider cone for glass sparkle, boosted
 const subSpot = new THREE.SpotLight(0xffffff, 20, 400, Math.PI/8, 0.5, 1.5);
 subSpot.position.set(5, -R*0.5 + 20, 150);
 subSpot.target.position.set(0, -R*0.5, 0);
@@ -303,18 +314,13 @@ const numeralBumpTex = makeNumeralBumpMap();
 
 // ── Procedural NOMOS-style sandblasted dial texture ──
 // Reference: NOMOS Campus closeup shows uniform fine-grain matte finish.
-// NOT sunray, NOT radial brushing. It's a sandblasted/galvanized surface —
-// tiny random micro-bumps that scatter light evenly, giving that velvety
-// matte quality with just enough texture to catch HDRI at shallow angles.
+// Sandblasted/galvanized surface — tiny random micro-bumps that scatter
+// light evenly, giving that velvety matte quality.
 function makeDialTextures() {
-  const sz = 1024; // high res for fine grain density
-  
-  // Normal map — fine uniform sandblast grain
+  const sz = 1024;
   const nCvs = document.createElement('canvas'); nCvs.width = nCvs.height = sz;
   const nCtx = nCvs.getContext('2d');
   const nData = nCtx.createImageData(sz, sz);
-  
-  // Roughness map — tight uniform range (silky matte)
   const rCvs = document.createElement('canvas'); rCvs.width = rCvs.height = sz;
   const rCtx = rCvs.getContext('2d');
   const rData = rCtx.createImageData(sz, sz);
@@ -324,16 +330,13 @@ function makeDialTextures() {
   
   for (let i = 0; i < sz * sz; i++) {
     const idx = i * 4;
-    // Fine isotropic sandblast — random micro-normal perturbation
-    // Smaller amplitude than before = smoother, more uniform scatter
     const nx = (rand() - 0.5) * 0.10;
     const ny = (rand() - 0.5) * 0.10;
     nData.data[idx]     = Math.floor((nx + 0.5) * 255);
     nData.data[idx + 1] = Math.floor((ny + 0.5) * 255);
-    nData.data[idx + 2] = 255; // Z up
+    nData.data[idx + 2] = 255;
     nData.data[idx + 3] = 255;
     
-    // Roughness: tight range (0.88-0.94) — silky matte, not coarse
     const rv = 0.88 + rand() * 0.06;
     const rvByte = Math.floor(rv * 255);
     rData.data[idx] = rvByte;
@@ -347,7 +350,7 @@ function makeDialTextures() {
   
   const normalMap = new THREE.CanvasTexture(nCvs);
   normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(4, 4); // tile for finer grain density
+  normalMap.repeat.set(4, 4);
   
   const roughnessMap = new THREE.CanvasTexture(rCvs);
   roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
@@ -383,14 +386,14 @@ function metalMat(color) {
   const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    roughness: precious ? 0.02 : 0.04, // polished steel
-    metalness: 1.0, // true metal
+    roughness: precious ? 0.02 : 0.04, // near-mirror polish — catches HDRI as bright streaks
+    metalness: 1.0,
     clearcoat: 0.4,
     clearcoatRoughness: 0.02,
     reflectivity: 1.0,
     ior: 2.33,
   });
-  m.envMapIntensity = precious ? 4.0 : 3.5; // strong env response for visible HDRI reflections
+  m.envMapIntensity = precious ? 4.0 : 3.5;
   return m;
 }
 function lumeMat(color) {
@@ -564,7 +567,8 @@ initGyro();
 // ══════════════════════════════════════════
 // Background plane (fills screen, matches dial color)
 // Background surround plane — flush with dial face, hole cut for gap
-const CLOCK_SCALE = EMBED ? 0.65 : 0.50;
+let isFullscreen = false;
+let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background = PBR with fine leather/matte texture
 // bgPlane uses same PBR as dial so they look identical
@@ -577,8 +581,27 @@ bgShape.holes.push(bgHole);
 const bgPlaneGeo = new THREE.ShapeGeometry(bgShape, 64);
 const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
 bgPlane.position.z = -3 * CLOCK_SCALE; // flush with dial front face in world space
-if(!EMBED || NIGHT_START) scene.add(bgPlane);
-if(EMBED && !NIGHT_START) { renderer.setClearColor(0x000000, 0); }
+if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
+if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
+
+// Fullscreen API for landing page
+window._clockSetFullscreen = function(on) {
+  isFullscreen = on;
+  if(on) {
+    CLOCK_SCALE = 0.50;
+    if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
+    renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
+  } else {
+    CLOCK_SCALE = 0.95;
+    renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
+  }
+  // Update bgPlane cutout
+  const newCutoutR = R * 1.12 * CLOCK_SCALE;
+  bgPlane.position.z = -3 * CLOCK_SCALE;
+  clockGroup.scale.setScalar(CLOCK_SCALE);
+  onResize();
+  buildAll();
+};
 
 const clockGroup = new THREE.Group(); // everything lives here for parallax
 clockGroup.scale.setScalar(CLOCK_SCALE);
@@ -622,43 +645,91 @@ function buildDial() {
   clockGroup.add(dialMesh);
   
   // ── Main sapphire crystal — full dial dome for glass interaction ──
-  // Real watches: sapphire crystal sits over the entire dial face,
-  // catching light, reflections, and subtle distortion. This is what
-  // makes a watch feel "alive" — the glass interacting with the environment.
-  const crystalR = caseR + 0.5; // slightly wider than dial edge for visible rim catch
+  const crystalR = caseR + 0.5;
   const crystalDome = new THREE.SphereGeometry(
-    crystalR, 96, 48,
-    0, Math.PI * 2,
-    0, Math.PI * 0.12  // ~22° dome — enough curvature to catch reflections across surface
+    crystalR, 96, 48, 0, Math.PI * 2, 0, Math.PI * 0.12
   );
   const crystalMat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.0,        // perfect polish
+    roughness: 0.0,
     metalness: 0.0,
-    transmission: 0.92,    // slightly less than perfect — visible glass presence
-    thickness: 1.2,        // enough for refraction
-    ior: 1.77,             // real sapphire crystal IOR
-    dispersion: 2.5,       // chromatic edge shimmer on tilt
+    transmission: 0.92,
+    thickness: 1.2,
+    ior: 1.77,
+    dispersion: 2.5,
     clearcoat: 1.0,
     clearcoatRoughness: 0.01,
     transparent: true,
-    opacity: 0.1,          // fallback
-    iridescence: 0.25,     // subtle thin-film — hints of color sweeping on tilt
+    opacity: 0.1,
+    iridescence: 0.25,
     iridescenceIOR: 1.3,
     iridescenceThicknessRange: [100, 400],
-    envMapIntensity: 4.0,  // strong environment reflections — the key to glass interaction
+    envMapIntensity: 4.0,
     specularIntensity: 2.5,
     specularColor: new THREE.Color(0xffffff),
   });
   mainCrystalMesh = new THREE.Mesh(crystalDome, crystalMat);
-  mainCrystalMesh.position.z = 2.0; // sits just above hands — closer to dial for visible interaction
-  mainCrystalMesh.renderOrder = 20;  // render last for correct transparency
+  mainCrystalMesh.position.z = 2.0;
+  mainCrystalMesh.renderOrder = 20;
   mainCrystalMesh.material.depthWrite = false;
   clockGroup.add(mainCrystalMesh);
 }
 
 // Case ring removed — using dial circle edge only
 const caseR = R * 1.12;
+
+// ── Scroll indicator disc (landing page only) ──
+let scrollIndicator = null;
+let scrollIndicatorTarget = 0; // 0=home (12 o'clock), -1=hidden
+let scrollIndicatorCurrent = {x:0, y:0, opacity:0};
+const SCROLL_HOUR_MAP = [0, 1, 2, 3, 4, 5, 7]; // sections → hour positions (skip 6=subdial)
+
+function buildScrollIndicator() {
+  if(scrollIndicator) { clockGroup.remove(scrollIndicator); scrollIndicator=null; }
+  if(!CONTAINED) return; // only on landing page
+  const c = DIALS[currentDial];
+  const dotR = R * 0.022;
+  console.log('[clock] buildScrollIndicator, target:', scrollIndicatorTarget, 'CONTAINED:', CONTAINED);
+  const geo = new THREE.CircleGeometry(dotR, 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color: c.hand, roughness: 0.3, metalness: 0.4,
+    emissive: c.hand, emissiveIntensity: 0.3,
+    transparent: true, opacity: 1
+  });
+  mat.envMapIntensity = 0.2;
+  scrollIndicator = new THREE.Mesh(geo, mat);
+  scrollIndicator.position.z = 4; // above markers
+  const trackR = R * 0.72;
+  const hourPos = SCROLL_HOUR_MAP[scrollIndicatorTarget] ?? 0;
+  const ang = Math.PI/2 - (hourPos/12) * Math.PI * 2;
+  const sx = scrollIndicatorCurrent.x || Math.cos(ang) * trackR;
+  const sy = scrollIndicatorCurrent.y || Math.sin(ang) * trackR;
+  scrollIndicator.position.x = sx;
+  scrollIndicator.position.y = sy;
+  scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity ?? 1;
+  clockGroup.add(scrollIndicator);
+}
+
+function updateScrollIndicator() {
+  if(!scrollIndicator) return;
+  const trackR = R * 0.72;
+  let targetOpacity = 0;
+  let tx = scrollIndicatorCurrent.x, ty = scrollIndicatorCurrent.y;
+  if(scrollIndicatorTarget >= 0) {
+    const hourPos = SCROLL_HOUR_MAP[scrollIndicatorTarget] ?? scrollIndicatorTarget;
+    const ang = Math.PI/2 - (hourPos/12) * Math.PI * 2;
+    tx = Math.cos(ang) * trackR;
+    ty = Math.sin(ang) * trackR;
+    targetOpacity = 1;
+  }
+  scrollIndicatorCurrent.x = tx;
+  scrollIndicatorCurrent.y = ty;
+  scrollIndicatorCurrent.opacity = targetOpacity;
+  scrollIndicator.position.x = scrollIndicatorCurrent.x;
+  scrollIndicator.position.y = scrollIndicatorCurrent.y;
+  scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;
+  scrollIndicator.material.emissiveIntensity = 0.3 + Math.sin(Date.now()*0.003)*0.15;
+}
 
 // Hour markers (extruded pills — actual 3D)
 let markerMeshes = [], lumeMeshes = [];
@@ -1448,6 +1519,7 @@ function buildStars(){
 // BUILD ALL
 // ══════════════════════════════════════════
 function updateSurah() {
+  if(CONTAINED) return;
   const el = document.getElementById('surah');
   if(el) {
     const d = DIALS[currentDial];
@@ -1536,27 +1608,78 @@ function buildBezel() {
 }
 
 function buildAll(){
+  if(CONTAINED) console.log('[clock] buildAll, dial:', currentDial, 'scale:', clockGroup.scale.x);
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED) scene.background = dialBg.clone();
-  document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString(); // extend to notch/Dynamic Island
-  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['surah',updateSurah]];
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
+  if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
+  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
-  // Update dial info panel
-  const c = DIALS[currentDial];
-  const dn = document.getElementById('dialName');
-  const ds = document.getElementById('dialSurah');
-  const lb = document.getElementById('listenBtn');
-  if(dn) { dn.textContent = currentDial.charAt(0).toUpperCase() + currentDial.slice(1); dn.style.color = c.text; }
-  if(ds) { ds.textContent = c.surah || ''; ds.style.color = c.text; }
-  if(lb) { lb.style.color = c.text; }
-  // Update prayer times color
-  const pt = document.getElementById('prayerTimes');
-  if(pt) pt.style.color = c.text;
+  if(!CONTAINED) {
+    // Update dial info panel
+    const c = DIALS[currentDial];
+    const dn = document.getElementById('dialName');
+    const ds = document.getElementById('dialSurah');
+    const lb = document.getElementById('listenBtn');
+    if(dn) { dn.textContent = currentDial.charAt(0).toUpperCase() + currentDial.slice(1); dn.style.color = c.text; }
+    if(ds) { ds.textContent = c.surah || ''; ds.style.color = c.text; }
+    if(lb) { lb.style.color = c.text; }
+    // Update prayer times color
+    const pt = document.getElementById('prayerTimes');
+    if(pt) pt.style.color = c.text;
+  }
 }
+// Debug — expose internals
+window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getAnimCount: () => _animCount };
+// Expose controls for landing page
+window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
+window._clockSetNight = function(on){ modeTarget=on?1:0; };
+window._clockGetDial = function(){ return currentDial; };
+
+// Lock compass at 12 o'clock (resting state) — for dial showcase
+let _compassLocked = false;
+window._clockLockCompass = function(on){ _compassLocked = on; if(on) hasCompassData = false; };
+window._clockSetScrollSection = function(idx){ scrollIndicatorTarget = idx; }; // -1=hide, 0-6=section index
+
+// Qibla compass demo — simulates a slow turn ending at alignment
+let _qiblaDemoActive = false, _qiblaDemoStart = 0;
+window._clockQiblaDemo = function(on){
+  _qiblaDemoActive = on;
+  if(on && !_compassLocked){
+    qiblaBearing = 45;
+    hasCompassData = true;
+    _qiblaDemoStart = Date.now();
+    targetCompassHeading = qiblaBearing + 180;
+  } else {
+    hasCompassData = false;
+  }
+};
+function updateQiblaDemo(){
+  if(!_qiblaDemoActive || _compassLocked) return;
+  const elapsed = Date.now() - _qiblaDemoStart;
+  const sweepDur = 5000;
+  const holdDur = 2500;
+  const cycleDur = sweepDur + holdDur;
+  const cycleT = elapsed % cycleDur;
+  if(cycleT < sweepDur){
+    const t = cycleT / sweepDur;
+    const ease = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+    targetCompassHeading = qiblaBearing + 180*(1-ease);
+  } else {
+    targetCompassHeading = qiblaBearing;
+  }
+}
+
 // Wait for fonts then build (Lateef for Arabic numerals)
-document.fonts.ready.then(()=>buildAll());
+document.fonts.ready.then(()=>{
+  buildAll();
+  if(CONTAINED) {
+    const initBg = new THREE.Color(DIALS[currentDial].bg);
+    scene.background = initBg;
+    bgPlaneMat.color.copy(initBg);
+  }
+});
 
 // ══════════════════════════════════════════
 // UPDATES
@@ -1644,6 +1767,7 @@ async function fetchPrayer(){
   const d=new Date(), dd=`${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
   const r=await fetch(`https://api.aladhan.com/v1/timingsByCity/${dd}?city=LosAngeles&country=US&method=2`);
   const j=await r.json();if(j.code===200){PD=j.data.timings;
+  if(!CONTAINED){
   // Prayer times → top bar
   document.getElementById('prayerTimes').textContent=`Fajr ${PD.Fajr} · Dhuhr ${PD.Dhuhr} · Asr ${PD.Asr} · Maghrib ${PD.Maghrib} · Isha ${PD.Isha}`;
   document.getElementById('prayerTimes').style.color=DIALS[currentDial].text;
@@ -1652,13 +1776,15 @@ async function fetchPrayer(){
   document.getElementById('hijri').style.color=DIALS[currentDial].text;
   document.getElementById('greg').textContent='';
   document.getElementById('greg').style.color=DIALS[currentDial].text;
+  }
   }}catch(e){}
 }
 fetchPrayer();
 
 // ══════════════════════════════════════════
-// INTERACTIONS
+// INTERACTIONS (standalone only)
 // ══════════════════════════════════════════
+if(!CONTAINED){
 // ── Surah audio (Alafasy via QuranCDN) ──
 const SURAH_MAP = {
   'Ar-Raḥmān': 55, 'An-Nūr': 24, 'Ash-Shams': 91, 'Al-Layl': 92,
@@ -1720,6 +1846,7 @@ renderer.domElement.addEventListener('touchend',e=>{
   }
 });
 document.querySelectorAll('.dial-dot').forEach(d=>{d.addEventListener('click',e=>{e.stopPropagation();currentDial=d.dataset.dial;buildAll();document.querySelectorAll('.dial-dot').forEach(x=>x.classList.toggle('active',x.dataset.dial===currentDial));});});
+} // end !CONTAINED
 
 // ══════════════════════════════════════════
 // RESIZE
@@ -1736,8 +1863,9 @@ window.addEventListener('message',(e)=>{
   if(e.data&&e.data.type==='nightOn'){modeTarget=1;}
   if(e.data&&e.data.type==='nightOff'){modeTarget=0;}
 });
-window.addEventListener('resize',()=>{
-  W=window.innerWidth;H=window.innerHeight;
+function onResize(){
+  W=(CONTAINED && !isFullscreen)?CONTAINER.clientWidth:window.innerWidth;
+  H=(CONTAINED && !isFullscreen)?CONTAINER.clientHeight:window.innerHeight;
   renderer.setSize(W,H);
   const a=W/H;
   cam.aspect=a;
@@ -1745,14 +1873,20 @@ window.addEventListener('resize',()=>{
   cam.updateProjectionMatrix();
   composer.setSize(W, H);
   bloomPass.resolution.set(W, H);
-});
+}
+window.addEventListener('resize',onResize);
+if(CONTAINED){new ResizeObserver(onResize).observe(CONTAINER);}
 
 // ══════════════════════════════════════════
 // RENDER LOOP
 // ══════════════════════════════════════════
-const vignetteEl = document.getElementById('vignette');
+const vignetteEl = CONTAINED ? null : document.getElementById('vignette');
+let _animCount=0;
 function animate(){
   requestAnimationFrame(animate);
+  if(CONTAINED && _animCount<3) console.log('[clock] animate frame', _animCount);
+  _animCount++;
+  try {
   
   // Night blend
   if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.015;
@@ -1832,10 +1966,10 @@ function animate(){
   subSpot.intensity = 20 * (1 - modeBlend * 0.5);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = 0.75 - modeBlend * 0.25;
+  renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night
-  vignetteEl.style.opacity = modeBlend * 0.8;
+  if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
   
   // Second hand subtle glow at night
   if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;
@@ -1894,15 +2028,15 @@ function animate(){
   
   // BG color blend
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend); // deep midnight — not void black
-  if(!EMBED) scene.background = nightBg;
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = nightBg;
   bgPlaneMat.color.copy(nightBg);
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
   // gyro debug dot removed
-  // Camera stays fixed — no parallax (Tawfeeq preference)
-  cam.position.x = 0;
-  cam.position.y = -3;
+  // Camera parallax — skip when contained (unless fullscreen)
+  if(!CONTAINED || isFullscreen) { cam.position.x = 0; }
+  cam.position.y = (CONTAINED && !isFullscreen) ? -2 : -3;
   cam.lookAt(0,0,0);
   
   // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
@@ -1922,7 +2056,9 @@ function animate(){
   
   updateHands();
   updateFlap();
+  updateQiblaDemo();
   updateQibla();
+  updateScrollIndicator();
   // Qibla triangle pulses when aligned
   if(window._qiblaTriMat && qiblaRotor) {
     const qiblaOffset = ((qiblaBearing - compassHeading) % 360 + 360) % 360;
@@ -1932,13 +2068,18 @@ function animate(){
     window._qiblaTriMat.emissiveIntensity += (targetTri - window._qiblaTriMat.emissiveIntensity) * 0.1;
   }
   
-  // Sample actual rendered pixel from canvas corner — matches PBR-lit appearance
-  const _gl = renderer.getContext();
-  const _px = new Uint8Array(4);
-  _gl.readPixels(0, 0, 1, 1, _gl.RGBA, _gl.UNSIGNED_BYTE, _px);
-  const bgHex = '#'+((1<<24)|(_px[0]<<16)|(_px[1]<<8)|_px[2]).toString(16).slice(1);
-  document.querySelector('meta[name="theme-color"]').content=bgHex;
-  document.documentElement.style.background = document.body.style.background = bgHex; // keep notch/Dynamic Island synced
+  if(!CONTAINED || isFullscreen) {
+    // Sample actual rendered pixel from canvas corner — matches what you see (PBR-lit)
+    const gl = renderer.getContext();
+    const px = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    const bgHex = '#'+((1<<24)|(px[0]<<16)|(px[1]<<8)|px[2]).toString(16).slice(1);
+    const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
+    if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
+    if(isFullscreen) {
+      const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=bgHex;
+    }
+  }
   
   // Use composer for bloom; in embed+night, render dark bg (no alpha)
   if(modeBlend > 0.01) {
@@ -1946,12 +2087,15 @@ function animate(){
   } else {
     renderer.render(scene, cam);
   }
+  } catch(e) { if(_animCount < 5) console.error('[clock] animate error:', e.message, e.stack); }
 }
 animate();
-if(EMBED){
-  document.getElementById('info').style.display='none';
-  document.getElementById('dialBar').style.display='none';
-} else {
-  showInfo();
+if(!CONTAINED){
+  if(EMBED){
+    const infoEl=document.getElementById('info');if(infoEl)infoEl.style.display='none';
+    const dialBarEl=document.getElementById('dialBar');if(dialBarEl)dialBarEl.style.display='none';
+  } else {
+    showInfo();
+  }
 }
 

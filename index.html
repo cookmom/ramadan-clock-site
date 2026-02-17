@@ -943,16 +943,15 @@ async function fsFetchPrayer() {
         if(city) fsSetLocation(region ? `${city}, ${region}` : city);
       }).catch(()=>{});
   } else {
-    // Fallback: IP-based location via Aladhan auto
+    // Fallback: IP geolocation → Aladhan
     try {
-      const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=auto&country=auto&method=2`);
-      const j = await res.json();
-      if(j.code===200) {
-        fsSetPrayerTimes(j.data.timings);
-        const meta = j.data.meta;
-        if(meta && meta.timezone) {
-          fsSetLocation(meta.timezone.split('/').pop().replace(/_/g,' '));
-        }
+      const ipRes = await fetch('https://ipapi.co/json/');
+      const ip = await ipRes.json();
+      if(ip.latitude && ip.longitude) {
+        const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${ip.latitude}&longitude=${ip.longitude}&method=2`);
+        const j = await res.json();
+        if(j.code===200) fsSetPrayerTimes(j.data.timings);
+        fsSetLocation(ip.city ? (ip.region_code ? `${ip.city}, ${ip.region_code}` : ip.city) : '');
       }
     } catch(e2) {}
   }
@@ -1055,7 +1054,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=33';
+_cs.type='module';_cs.src='clock.js?v=34';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

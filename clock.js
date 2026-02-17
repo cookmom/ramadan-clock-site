@@ -1614,6 +1614,8 @@ function buildAll(){
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
   if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
+  // Ensure bgPlane is hidden in fullscreen
+  if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
   if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];

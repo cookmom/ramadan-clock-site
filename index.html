@@ -796,7 +796,7 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
     let nextP='';t5.forEach(p=>{if(!nextP&&toMin(t[p])>nowM)nextP=p;});
     document.getElementById('pcTimes').innerHTML=t5.map(p=>{
       const hi=p===nextP;
-      return`<span style="${hi?'font-weight:500;color:var(--text);opacity:1':''}">` +p+' '+t[p]+'</span>';
+      return`<span style="${hi?'font-weight:500;color:#c0392b;opacity:1':''}">` +p+' '+t[p]+'</span>';
     }).join(' · ');
   }catch(e){}
 })();
@@ -1096,7 +1096,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=56';
+_cs.type='module';_cs.src='clock.js?v=57';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

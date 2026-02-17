@@ -645,35 +645,7 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // ── Main sapphire crystal — full dial dome for glass interaction ──
-  const crystalR = caseR - 1.0; // inset from dial edge — crystal sits inside the case
-  const crystalDome = new THREE.SphereGeometry(
-    crystalR, 96, 48, 0, Math.PI * 2, 0, Math.PI * 0.06  // very shallow ~11° — barely curved
-  );
-  const crystalMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    roughness: 0.0,
-    metalness: 0.0,
-    transmission: 0.98,    // nearly invisible — glass shows through reflections only
-    thickness: 0.4,        // thin — minimal refraction
-    ior: 1.77,
-    dispersion: 1.0,       // subtle
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.01,
-    transparent: true,
-    opacity: 0.03,         // near-invisible fallback
-    iridescence: 0.1,      // barely there
-    iridescenceIOR: 1.3,
-    iridescenceThicknessRange: [100, 300],
-    envMapIntensity: 3.0,  // reflections are how you see the glass
-    specularIntensity: 2.0,
-    specularColor: new THREE.Color(0xffffff),
-  });
-  mainCrystalMesh = new THREE.Mesh(crystalDome, crystalMat);
-  mainCrystalMesh.position.z = 1.5;
-  mainCrystalMesh.renderOrder = 20;
-  mainCrystalMesh.material.depthWrite = false;
-  clockGroup.add(mainCrystalMesh);
+  // Main crystal removed — caused visible edge ring on mobile
 }
 
 // Case ring removed — using dial circle edge only

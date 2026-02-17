@@ -892,24 +892,29 @@ document.addEventListener('visibilitychange',()=>{
       adhanDbg('HIDE: no unlocked Audio, silence in background');
     }
   }else{
-    // FOREGROUND: get position from plain Audio, pause it, restart HRTF
+    // FOREGROUND: try to upgrade to HRTF, but keep plain audio alive as fallback
     const pos=(adhanAudio&&!adhanAudio.paused)?adhanAudio.currentTime:adhanPosition();
-    adhanDbg('SHOW: pos='+pos.toFixed(2)+' switching to HRTF');
-    if(adhanAudio&&!adhanAudio.paused){
-      adhanAudio._swapping=true;
-      adhanAudio.pause();
-      setTimeout(()=>{if(adhanAudio)adhanAudio._swapping=false;},50);
-    }
+    adhanDbg('SHOW: pos='+pos.toFixed(2)+' attempting HRTF upgrade');
     if(adhanDecodedBuf&&adhanCtx){
       if(!adhanPannerInterval)adhanPannerInterval=setInterval(updateAdhanPannerPosition,200);
       startHrtfBuffer(pos).then(()=>{
+        // HRTF succeeded — now safe to kill plain audio
+        if(adhanAudio&&!adhanAudio.paused){
+          adhanAudio._swapping=true;
+          adhanAudio.pause();
+          setTimeout(()=>{if(adhanAudio)adhanAudio._swapping=false;},50);
+        }
         adhanPlaying=true;
         if(!adhanPannerInterval)adhanPannerInterval=setInterval(updateAdhanPannerPosition,200);
         adhanDbg('SHOW: HRTF restored at pos='+pos.toFixed(2));
       }).catch(e=>{
-        adhanDbg('SHOW: HRTF failed, resuming plain: '+e);
-        if(adhanAudio){adhanAudio.currentTime=pos;adhanAudio.play().catch(()=>{});}
+        // HRTF failed — keep plain audio running, don't touch it
+        adhanDbg('SHOW: HRTF failed, keeping plain audio: '+e);
+        adhanPlaying=true;
       });
+    }else{
+      // No decoded buffer — just let plain audio keep playing
+      adhanDbg('SHOW: no HRTF buffer, plain audio continues');
     }
   }
 });
@@ -1431,7 +1436,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=75';
+_cs.type='module';_cs.src='clock.js?v=76';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

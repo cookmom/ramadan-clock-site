@@ -619,14 +619,13 @@ function setNightMode(on){
     else fsClock.classList.remove('fs-chrome-hidden');
   }
 }
-// Tap to show chrome in fullscreen, auto-hide after 4s
-let _fsChromeTimer=null;
-document.addEventListener('touchstart',function(){
+// Tap to toggle chrome visibility in fullscreen
+document.addEventListener('touchstart',function(e){
   const fsClock=document.getElementById('clockFullscreen');
   if(!fsClock||!fsClock.classList.contains('active'))return;
-  fsClock.classList.remove('fs-chrome-hidden');
-  clearTimeout(_fsChromeTimer);
-  _fsChromeTimer=setTimeout(()=>{if(pageNight)fsClock.classList.add('fs-chrome-hidden');},4000);
+  // Don't toggle if tapping a button/control
+  if(e.target.closest('button,a,.fs-dial-bar'))return;
+  fsClock.classList.toggle('fs-chrome-hidden');
 },{passive:true});
 
 // ══════════════════════════════════════════
@@ -1475,7 +1474,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=109';
+_cs.type='module';_cs.src='clock.js?v=110';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

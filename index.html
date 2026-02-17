@@ -320,7 +320,7 @@ footer a:hover{color:var(--text)}
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
 .clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
 .clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
-.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 72px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65);transition:opacity .5s ease}
+.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 88px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65);transition:opacity .5s ease}
 .fs-header.hidden{opacity:0}
 .fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
 .fs-header .fs-location{font-size:.6rem;font-weight:200;letter-spacing:.08em;margin-top:2px;opacity:.5}
@@ -1476,7 +1476,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=106';
+_cs.type='module';_cs.src='clock.js?v=107';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

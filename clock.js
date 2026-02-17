@@ -45,6 +45,81 @@ const NIGHT_LUME = {
 const DIAL_NAMES = Object.keys(DIALS);
 const ARABIC = ['١٢','١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١'];
 
+// ── Lateef Arabic numeral glyph paths (extracted via opentype.js, centered at origin) ──
+// Keys: twelve(12), two(2), four_roman(4/IV), eight_roman(8/VIII), ten(10) — NOMOS Campus layout with Roman at 4 & 8
+const NUMERAL_PATHS = {"four_roman":{"a":"IV","w":75.55,"h":52.49,"c":[["M",-37.78,26.24],["L",-37.78,-26.24],["L",-24.24,-26.24],["L",-24.24,26.24],["L",-37.78,26.24],["Z"],["M",2.2,26.24],["L",-17.24,-26.24],["L",-3.64,-26.24],["L",10.28,12.5],["L",24.17,-26.24],["L",37.78,-26.24],["L",18.33,26.24],["L",2.2,26.24],["Z"]]},"eight_roman":{"a":"VIII","w":129.09,"h":52.49,"c":[["M",-45.11,26.24],["L",-64.55,-26.24],["L",-50.94,-26.24],["L",-37.02,12.5],["L",-23.13,-26.24],["L",-9.53,-26.24],["L",-28.97,26.24],["L",-45.11,26.24],["Z"],["M",-2.57,26.24],["L",-2.57,-26.24],["L",10.97,-26.24],["L",10.97,26.24],["L",-2.57,26.24],["Z"],["M",24.22,26.24],["L",24.22,-26.24],["L",37.76,-26.24],["L",37.76,26.24],["L",24.22,26.24],["Z"],["M",51.01,26.24],["L",51.01,-26.24],["L",64.55,-26.24],["L",64.55,26.24],["L",51.01,26.24],["Z"]]},"twelve":{"a":"١٢","w":35.37,"h":39.76,"c":[["M",-17.68,-10.42],["L",-17.68,-10.42],["L",-15.54,-19.88],["Q",-9.35,-11.87,-7.1,-1.86],["Q",-4.85,8.14,-7.56,19.88],["L",-7.56,19.88],["L",-8.09,19.88],["Q",-8.37,11.76,-10.51,3.9],["Q",-12.66,-3.96,-17.68,-10.42],["Z"],["M",17.16,-19.35],["L",17.68,-19.35],["Q",17.68,-15.56,16.66,-12.43],["Q",15.64,-9.3,13.83,-7.44],["Q",12.02,-5.57,9.67,-5.57],["L",9.67,-5.57],["Q",7.84,-5.57,5.84,-6.84],["L",5.84,-6.84],["L",4.04,-15.35],["Q",5.06,-13.66,6.5,-12.78],["Q",7.95,-11.9,9.53,-11.9],["L",9.53,-11.9],["Q",11.74,-11.9,13.85,-13.71],["Q",15.96,-15.52,17.16,-19.35],["L",17.16,-19.35],["Z"],["M",-1.2,-10.42],["L",-1.2,-10.42],["L",0.95,-19.88],["Q",7.14,-11.87,9.39,-1.86],["Q",11.64,8.14,8.93,19.88],["L",8.93,19.88],["L",8.4,19.88],["Q",8.12,11.76,5.98,3.9],["Q",3.83,-3.96,-1.2,-10.42],["Z"]]},"two":{"a":"٢","w":18.88,"h":39.76,"c":[["M",8.91,-19.35],["L",9.44,-19.35],["Q",9.44,-15.56,8.42,-12.43],["Q",7.4,-9.3,5.59,-7.44],["Q",3.78,-5.57,1.42,-5.57],["L",1.42,-5.57],["Q",-0.4,-5.57,-2.41,-6.84],["L",-2.41,-6.84],["L",-4.2,-15.35],["Q",-3.18,-13.66,-1.74,-12.78],["Q",-0.3,-11.9,1.28,-11.9],["L",1.28,-11.9],["Q",3.5,-11.9,5.61,-13.71],["Q",7.72,-15.52,8.91,-19.35],["L",8.91,-19.35],["Z"],["M",-9.44,-10.42],["L",-9.44,-10.42],["L",-7.29,-19.88],["Q",-1.11,-11.87,1.14,-1.86],["Q",3.39,8.14,0.69,19.88],["L",0.69,19.88],["L",0.16,19.88],["Q",-0.12,11.76,-2.27,3.9],["Q",-4.41,-3.96,-9.44,-10.42],["Z"]]},"four":{"a":"٤","w":19.23,"h":38.43,"c":[["M",9.62,13.34],["L",9.62,13.34],["L",7.86,19.21],["Q",6.98,19.11,5.08,18.67],["Q",3.18,18.23,0.9,17.54],["Q",-1.39,16.86,-3.5,16.01],["Q",-5.61,15.17,-6.96,14.24],["Q",-8.31,13.31,-8.31,12.39],["L",-8.31,12.39],["Q",-8.31,11.23,-7.28,9.58],["Q",-6.24,7.93,-4.9,6.29],["Q",-3.57,4.66,-2.53,3.45],["Q",-1.49,2.23,-1.49,1.92],["L",-1.49,1.92],["Q",-1.49,1.49,-2.72,1],["Q",-3.96,0.51,-5.55,-0.14],["Q",-7.15,-0.79,-8.38,-1.6],["Q",-9.62,-2.41,-9.62,-3.46],["L",-9.62,-3.46],["Q",-9.62,-4.59,-8.6,-6.5],["Q",-7.58,-8.42,-5.94,-10.6],["Q",-4.31,-12.78,-2.5,-14.75],["Q",-0.69,-16.72,0.95,-17.96],["Q",2.58,-19.21,3.6,-19.21],["L",3.6,-19.21],["L",1.85,-11.87],["Q",0.02,-11.72,-1.83,-10.86],["Q",-3.67,-10,-4.9,-9.02],["Q",-6.13,-8.03,-6.13,-7.54],["L",-6.13,-7.54],["Q",-6.13,-7.01,-4.68,-6.42],["Q",-3.22,-5.82,-1.3,-5.1],["Q",0.62,-4.38,2.07,-3.5],["Q",3.53,-2.62,3.53,-1.49],["L",3.53,-1.49],["Q",3.53,-0.83,2.44,0.47],["Q",1.35,1.78,-0.07,3.29],["Q",-1.49,4.8,-2.58,6.12],["Q",-3.67,7.44,-3.67,8.17],["L",-3.67,8.17],["Q",-3.67,8.91,-2.2,9.7],["Q",-0.72,10.49,1.49,11.23],["Q",3.71,11.97,5.92,12.52],["Q",8.14,13.06,9.62,13.34],["Z"]]},"eight":{"a":"٨","w":25.42,"h":38.95,"c":[["M",-0.47,-19.48],["L",-0.47,-19.48],["L",0.05,-19.48],["Q",1.39,-8.05,4.9,-0.12],["Q",8.42,7.8,12.71,11.99],["L",12.71,11.99],["L",11.65,19.48],["Q",8.31,16.14,6.06,12.55],["Q",3.81,8.96,2.27,4.38],["Q",0.72,-0.21,-0.58,-6.47],["L",-0.58,-6.47],["L",-0.4,-6.54],["Q",-1.53,-0.11,-2.9,4.68],["Q",-4.27,9.46,-6.54,13.03],["Q",-8.81,16.59,-12.71,19.48],["L",-12.71,19.48],["L",-11.65,11.99],["Q",-8.35,9.18,-6.01,4.17],["Q",-3.67,-0.84,-2.27,-7.01],["Q",-0.86,-13.18,-0.47,-19.48],["Z"]]},"ten":{"a":"١٠","w":25.91,"h":39.76,"c":[["M",-12.96,-10.42],["L",-12.96,-10.42],["L",-10.81,-19.88],["Q",-4.62,-11.87,-2.37,-1.86],["Q",-0.12,8.14,-2.83,19.88],["L",-2.83,19.88],["L",-3.36,19.88],["Q",-3.64,11.76,-5.78,3.9],["Q",-7.93,-3.96,-12.96,-10.42],["Z"],["M",8.28,-3.74],["L",8.28,-3.74],["Q",8.56,-3.74,9.32,-3.11],["Q",10.07,-2.48,10.92,-1.58],["Q",11.76,-0.69,12.36,0.11],["Q",12.96,0.9,12.96,1.21],["L",12.96,1.21],["Q",12.96,1.53,12.38,2.36],["Q",11.79,3.18,10.97,4.11],["Q",10.14,5.04,9.39,5.7],["Q",8.63,6.35,8.28,6.35],["L",8.28,6.35],["Q",8,6.35,7.24,5.7],["Q",6.49,5.04,5.63,4.15],["Q",4.76,3.25,4.15,2.43],["Q",3.53,1.6,3.53,1.28],["L",3.53,1.28],["Q",3.53,0.9,4.15,0.09],["Q",4.76,-0.72,5.63,-1.62],["Q",6.49,-2.51,7.24,-3.13],["Q",8,-3.74,8.28,-3.74],["Z"]]}};
+
+// Convert opentype path commands → Three.js Shapes
+// Arabic glyphs have multiple separate strokes — each is its own shape, NOT holes.
+// Holes only exist when one contour is CW inside a CCW contour (or vice versa).
+function pathToShapes(pathData, scale) {
+  const contours = [];
+  let pts = [];
+  for (const cmd of pathData.c) {
+    switch(cmd[0]) {
+      case 'M':
+        if (pts.length > 2) contours.push(pts);
+        pts = [{x: cmd[1]*scale, y: -cmd[2]*scale}];
+        break;
+      case 'L':
+        pts.push({x: cmd[1]*scale, y: -cmd[2]*scale});
+        break;
+      case 'Q': {
+        // Approximate quadratic bezier with line segments
+        const prev = pts[pts.length-1];
+        for (let t = 0.25; t <= 1; t += 0.25) {
+          const mt = 1-t;
+          pts.push({
+            x: mt*mt*prev.x + 2*mt*t*(cmd[1]*scale) + t*t*(cmd[3]*scale),
+            y: mt*mt*prev.y + 2*mt*t*(-cmd[2]*scale) + t*t*(-cmd[4]*scale)
+          });
+        }
+        break;
+      }
+      case 'C': {
+        const prev = pts[pts.length-1];
+        for (let t = 0.2; t <= 1; t += 0.2) {
+          const mt = 1-t;
+          pts.push({
+            x: mt*mt*mt*prev.x + 3*mt*mt*t*(cmd[1]*scale) + 3*mt*t*t*(cmd[3]*scale) + t*t*t*(cmd[5]*scale),
+            y: mt*mt*mt*prev.y + 3*mt*mt*t*(-cmd[2]*scale) + 3*mt*t*t*(-cmd[4]*scale) + t*t*t*(-cmd[6]*scale)
+          });
+        }
+        break;
+      }
+      case 'Z':
+        if (pts.length > 2) contours.push(pts);
+        pts = [];
+        break;
+    }
+  }
+  if (pts.length > 2) contours.push(pts);
+  
+  // Compute signed area for each contour (positive = CCW, negative = CW)
+  const measured = contours.map(pts => {
+    let area = 0;
+    for (let j = 0; j < pts.length; j++) {
+      const k = (j+1) % pts.length;
+      area += pts[j].x * pts[k].y - pts[k].x * pts[j].y;
+    }
+    return { pts, area: area/2 };
+  }).filter(m => Math.abs(m.area) > 0.5); // skip degenerate
+  
+  if (!measured.length) return [];
+  
+  // Simple approach: all contours become independent shapes
+  // (Arabic numerals don't have traditional holes like Latin 'O' or '4')
+  return measured.map(m => {
+    const shape = new THREE.Shape();
+    shape.moveTo(m.pts[0].x, m.pts[0].y);
+    for (let i = 1; i < m.pts.length; i++) {
+      shape.lineTo(m.pts[i].x, m.pts[i].y);
+    }
+    shape.closePath();
+    return shape;
+  });
+}
+
 // URL params
 const _P = new URLSearchParams(location.search);
 const EMBED = _P.has('embed') || CONTAINED;
@@ -99,17 +174,15 @@ const bloomPass = new UnrealBloomPass(
 composer.addPass(bloomPass);
 
 // ══════════════════════════════════════════
-// LIGHTING
+// LIGHTING — NOMOS-style watch photography
+// Low-intensity HDRI for hand reflections. Env rotates with tilt.
+// Dial stays calm (BasicMaterial). Hands catch sweeping softbox light.
 // ══════════════════════════════════════════
-const ambLight = new THREE.AmbientLight(0xffffff, 0.3);
-scene.add(ambLight);
-
-// Softbox rect light — product-shot fill
 const { RectAreaLightUniformsLib } = await import('three/addons/lights/RectAreaLightUniformsLib.js');
 RectAreaLightUniformsLib.init();
 
-// ── Studio HDRI environment map ──
-// Poly Haven "studio_small_08" — real studio softboxes for convincing reflections
+// ── Studio HDRI at controlled intensity ──
+let studioEnvMap;
 {
   const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -118,50 +191,38 @@ RectAreaLightUniformsLib.init();
     new RGBELoader().load('studio.hdr', resolve, undefined, reject);
   });
   const envRT = pmrem.fromEquirectangular(hdrTex);
-  scene.environment = envRT.texture;
+  studioEnvMap = envRT.texture;
+  scene.environment = studioEnvMap;
+  scene.environmentIntensity = 0.5; // dial is BasicMaterial (unaffected), moderate for PBR subdial visibility
+  scene.environmentRotation = new THREE.Euler(0.1, 0.3, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
 }
 
-const rectLight = new THREE.RectAreaLight(0xffffff, 0, 447, 447);
-rectLight.position.set(0, 0, 300);
-rectLight.lookAt(0, 0, 0);
-scene.add(rectLight);
+// Ambient — minimal shadow fill
+const ambLight = new THREE.AmbientLight(0xffffff, 0.12);
+scene.add(ambLight);
 
-// Key light — large rect for soft wrap, no shadow artifacts
-const keyLight = new THREE.RectAreaLight(0xfff5e8, 3.5, 250, 250);
-keyLight.position.set(-50, 140, 250);
+// Key light — soft rect from upper-left (warm, even illumination)
+const keyLight = new THREE.RectAreaLight(0xfff8f0, 1.0, 250, 250);
+keyLight.position.set(-60, 150, 220);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Subtle fill from bottom-right
-// Cool fill rect from right — warm/cool split
-const coolFill = new THREE.RectAreaLight(0xc8d8f0, 1.2, 200, 200);
-coolFill.position.set(120, 40, 150);
-coolFill.lookAt(0, 0, 0);
-scene.add(coolFill);
-
-// Accent spot — subtle warm pool on lower dial
-const spotLight = new THREE.SpotLight(0xffeedd, 1.5, 400, Math.PI*0.12, 0.7, 1.5);
-spotLight.position.set(20, -40, 250);
-spotLight.target.position.set(0, -R*0.3, 0);
-scene.add(spotLight);
-scene.add(spotLight.target);
-
-// Spec point — tight highlight on polished surfaces (tracks with tilt)
-const specPoint = new THREE.PointLight(0xffffff, 20, 300, 2);
+// Spec point — tilt-tracking accent highlight on hands
+const specPoint = new THREE.PointLight(0xffffff, 3, 300, 2);
 specPoint.position.set(30, 60, 180);
 scene.add(specPoint);
 
-// Soft counter-highlight — moves opposite to spec, wider wash
-const counterSpec = new THREE.PointLight(0xfff0e0, 6, 400, 2);
+// Counter spec — opposite warmth for depth
+const counterSpec = new THREE.PointLight(0xfff0e0, 1.0, 400, 2);
 counterSpec.position.set(-40, -30, 200);
 scene.add(counterSpec);
 
-// Focused subdial spotlight — tight cone for glass refraction
-const subSpot = new THREE.SpotLight(0xffffff, 30, 350, Math.PI/18, 0.6, 2);
-subSpot.position.set(10, -R*0.5 + 30, 200);
-subSpot.target.position.set(0, -R*0.5, 0); // aimed at subdial center
+// Subdial spot — wider cone to illuminate subdial face + glass sparkle
+const subSpot = new THREE.SpotLight(0xffffff, 12, 400, Math.PI/8, 0.5, 1.5);
+subSpot.position.set(5, -R*0.5 + 20, 150);
+subSpot.target.position.set(0, -R*0.5, 0);
 scene.add(subSpot);
 scene.add(subSpot.target);
 
@@ -169,33 +230,128 @@ scene.add(subSpot.target);
 // ══════════════════════════════════════════
 // MATERIALS (PBR)
 // ══════════════════════════════════════════
+
+// ── Procedural grain texture (NOMOS-style sandblasted dial finish) ──
+// Generates a roughness map with fine per-pixel noise so the dial
+// responds subtly to tilt as HDRI sweeps across the micro-texture.
+function makeGrainTexture(size = 512, baseVal = 235, spread = 20) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = Math.max(0, Math.min(255, baseVal + (Math.random() - 0.5) * spread));
+    img.data[i] = img.data[i+1] = img.data[i+2] = v;
+    img.data[i+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 2); // tile for finer grain
+  return tex;
+}
+const dialGrainTex = makeGrainTexture(512, 235, 20);     // standard dials: high roughness grain
+const metalGrainTex = makeGrainTexture(256, 140, 15);    // qamar/kawthar: subtler, lower roughness grain
+
+// ── Procedural bump map for applied numerals ──
+// Renders numeral outlines to a canvas, used as bumpMap to fake depth
+function makeNumeralBumpMap(numerals, font, size = 512) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, size, size);
+  // Numerals will be painted white = raised
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const R = size * 0.42; // numeral ring radius
+  const cx = size / 2, cy = size / 2;
+  const positions = { // hour -> angle (0=12 o'clock, clockwise)
+    12: 0, 2: 60, 10: 300, // Arabic numerals
+    // 4 (IV) and 8 (VIII) handled as Roman — skip for bump (they're separate meshes)
+  };
+  ctx.font = `bold ${size * 0.09}px Inter, sans-serif`;
+  for (const [hour, angleDeg] of Object.entries(positions)) {
+    const a = (angleDeg - 90) * Math.PI / 180;
+    const x = cx + Math.cos(a) * R;
+    const y = cy + Math.sin(a) * R;
+    ctx.fillText(hour.toString(), x, y);
+  }
+  // Roman numerals
+  ctx.font = `${size * 0.07}px Inter, sans-serif`;
+  const romans = { 'VIII': 240, 'IV': 120 };
+  for (const [text, angleDeg] of Object.entries(romans)) {
+    const a = (angleDeg - 90) * Math.PI / 180;
+    const x = cx + Math.cos(a) * R;
+    const y = cy + Math.sin(a) * R;
+    ctx.fillText(text, x, y);
+  }
+  // Stick markers at odd hours (1,3,5,7,9,11)
+  const stickHours = [1, 3, 5, 7, 9, 11];
+  for (const h of stickHours) {
+    if (h === 6) continue; // subdial
+    const a = (h * 30 - 90) * Math.PI / 180;
+    const inner = R - size * 0.03;
+    const outer = R + size * 0.015;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = size * 0.006;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner);
+    ctx.lineTo(cx + Math.cos(a) * outer, cy + Math.sin(a) * outer);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+const numeralBumpTex = makeNumeralBumpMap();
+
 // ── Procedural galvanized dial texture (NOMOS-style fine grain) ──
 function makeDialTextures() {
   const sz = 512;
+  // Normal map — fine grain bumps
   const nCvs = document.createElement('canvas'); nCvs.width = nCvs.height = sz;
   const nCtx = nCvs.getContext('2d');
   const nData = nCtx.createImageData(sz, sz);
+  // Roughness map — subtle variation
   const rCvs = document.createElement('canvas'); rCvs.width = rCvs.height = sz;
   const rCtx = rCvs.getContext('2d');
   const rData = rCtx.createImageData(sz, sz);
+  
+  // Seed-based pseudo-random for consistency
   let seed = 42;
   function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+  
   for (let i = 0; i < sz * sz; i++) {
     const idx = i * 4;
-    const nx = (rand() - 0.5) * 0.15, ny = (rand() - 0.5) * 0.15;
-    nData.data[idx] = Math.floor((nx + 0.5) * 255);
-    nData.data[idx + 1] = Math.floor((ny + 0.5) * 255);
-    nData.data[idx + 2] = 255; nData.data[idx + 3] = 255;
+    // Fine grain normal perturbation (galvanized texture)
+    const nx = (rand() - 0.5) * 0.15; // subtle X perturbation
+    const ny = (rand() - 0.5) * 0.15; // subtle Y perturbation
+    nData.data[idx]     = Math.floor((nx + 0.5) * 255); // R = X
+    nData.data[idx + 1] = Math.floor((ny + 0.5) * 255); // G = Y
+    nData.data[idx + 2] = 255; // B = Z (mostly up)
+    nData.data[idx + 3] = 255;
+    
+    // Roughness variation (0.85-1.0 range for matte galvanized look)
     const rv = 0.85 + rand() * 0.15;
     const rvByte = Math.floor(rv * 255);
-    rData.data[idx] = rvByte; rData.data[idx + 1] = rvByte;
-    rData.data[idx + 2] = rvByte; rData.data[idx + 3] = 255;
+    rData.data[idx] = rvByte;
+    rData.data[idx + 1] = rvByte;
+    rData.data[idx + 2] = rvByte;
+    rData.data[idx + 3] = 255;
   }
-  nCtx.putImageData(nData, 0, 0); rCtx.putImageData(rData, 0, 0);
+  
+  nCtx.putImageData(nData, 0, 0);
+  rCtx.putImageData(rData, 0, 0);
+  
   const normalMap = new THREE.CanvasTexture(nCvs);
-  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping; normalMap.repeat.set(3, 3);
+  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+  normalMap.repeat.set(3, 3); // tile for finer grain
+  
   const roughnessMap = new THREE.CanvasTexture(rCvs);
-  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping; roughnessMap.repeat.set(3, 3);
+  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
+  roughnessMap.repeat.set(3, 3);
+  
   return { normalMap, roughnessMap };
 }
 const dialTextures = makeDialTextures();
@@ -207,34 +363,39 @@ function dialMat(color) {
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
   };
   const s = special[cd] || { roughness:0.95, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
+  // Dial = PBR with galvanized grain texture
   const m = new THREE.MeshPhysicalMaterial({
-    color, roughness: s.roughness, metalness: s.metalness,
-    clearcoat: s.clearcoat, clearcoatRoughness: s.clearcoatRoughness,
-    normalMap: dialTextures.normalMap, normalScale: new THREE.Vector2(0.3, 0.3),
+    color,
+    roughness: s.roughness,
+    metalness: s.metalness,
+    clearcoat: s.clearcoat,
+    clearcoatRoughness: s.clearcoatRoughness,
+    normalMap: dialTextures.normalMap,
+    normalScale: new THREE.Vector2(0.3, 0.3), // subtle grain — not aggressive
     roughnessMap: dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
-  m.envMapIntensity = 0.4;
+  m.envMapIntensity = 0.4; // slightly bumped — grain catches more light
   return m;
 }
 function metalMat(color) {
   const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    roughness: precious ? 0.1 : 0.15,
+    roughness: precious ? 0.05 : 0.08, // near-mirror polish — catches HDRI as bright streaks
     metalness: precious ? 0.8 : 0.6,
     clearcoat: 1.0,
     clearcoatRoughness: 0.05,
     reflectivity: precious ? 1.0 : 0.9
   });
-  m.envMapIntensity = precious ? 0.6 : 0.4;
+  m.envMapIntensity = precious ? 6.0 : 5.0; // HERO — hands must visibly catch and release light as you tilt
   return m;
 }
 function lumeMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0.05; return m;
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0; return m; // lume = paint, no reflections
 }
 function secMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.3, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0.35; return m;
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.4, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 3.0; return m; // second hand — glossy lacquer finish
 }
 
 // ══════════════════════════════════════════
@@ -323,27 +484,68 @@ let gx=0, gy=0, tgx=0, tgy=0;
 let gyroGranted = false;
 function initGyro(){
   if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
-    // iOS: need user gesture to request permission — retry on every tap until granted
-    function requestGyro(){
+    // iOS 13+: requires explicit permission via user gesture
+    async function requestGyro(){
       if(gyroGranted) return;
-      DeviceOrientationEvent.requestPermission().then(s=>{
+      try {
+        const s = await DeviceOrientationEvent.requestPermission();
         if(s==='granted'){
           gyroGranted=true;
           window.addEventListener('deviceorientation',onG);
+          console.log('[gyro] iOS permission granted');
+        } else {
+          console.log('[gyro] iOS permission denied:', s);
         }
-      }).catch(()=>{});
+      } catch(err) {
+        console.log('[gyro] iOS permission error:', err);
+      }
     }
-    document.addEventListener('click', requestGyro);
-    document.addEventListener('touchend', requestGyro);
-  } else { 
-    window.addEventListener('deviceorientation',onG); 
+    // Attach to both click and touchend — covers all iOS gestures
+    document.addEventListener('click', requestGyro, {once:false});
+    document.addEventListener('touchend', requestGyro, {once:false});
+    // Also try immediately in case already granted from a previous session
+    DeviceOrientationEvent.requestPermission().then(s=>{
+      if(s==='granted'){
+        gyroGranted=true;
+        window.addEventListener('deviceorientation',onG);
+        console.log('[gyro] iOS already granted');
+      }
+    }).catch(()=>{}); // Expected to fail without gesture — that's fine
+  } else if(typeof DeviceOrientationEvent!=='undefined') {
+    // Android + non-iOS — just listen
+    window.addEventListener('deviceorientation',onG);
+    // Verify events actually fire
+    let gotEvent = false;
+    function checkGyro(e) {
+      if(!gotEvent && e.gamma !== null) {
+        gotEvent = true;
+        console.log('[gyro] Events firing, gamma:', e.gamma);
+      }
+    }
+    window.addEventListener('deviceorientation', checkGyro);
   }
   window.addEventListener('mousemove',e=>{tgx=((e.clientX/W)-0.5)*2;tgy=((e.clientY/H)-0.5)*2;});
 }
+// gyro debug removed
 function onG(e){
   if(e.gamma===null)return;
-  tgx=Math.max(-1,Math.min(1,(e.gamma||0)/25));
-  tgy=Math.max(-1,Math.min(1,((e.beta||0)-45)/25));
+  // gyro logging removed
+  // Auto-calibrate: first few readings establish the user's natural hold angle
+  if(!window._gyroCal) { window._gyroCal = { samples:[], done:false }; }
+  if(!window._gyroCal.done) {
+    window._gyroCal.samples.push({ g: e.gamma, b: e.beta });
+    if(window._gyroCal.samples.length >= 15) {
+      const avg = window._gyroCal.samples.reduce((a,s) => ({ g:a.g+s.g, b:a.b+s.b }), {g:0,b:0});
+      window._gyroCal.restGamma = avg.g / window._gyroCal.samples.length;
+      window._gyroCal.restBeta = avg.b / window._gyroCal.samples.length;
+      window._gyroCal.done = true;
+      console.log('[gyro] Calibrated rest position — gamma:', window._gyroCal.restGamma.toFixed(1), 'beta:', window._gyroCal.restBeta.toFixed(1));
+    }
+    return; // don't move until calibrated
+  }
+  const cal = window._gyroCal;
+  tgx=Math.max(-1,Math.min(1,((e.gamma||0) - cal.restGamma)/25));
+  tgy=Math.max(-1,Math.min(1,((e.beta||0) - cal.restBeta)/25));
   // Compass heading for qibla
   if(e.webkitCompassHeading !== undefined) {
     targetCompassHeading = e.webkitCompassHeading;
@@ -359,21 +561,39 @@ initGyro();
 // BUILD CLOCK
 // ══════════════════════════════════════════
 // Background plane (fills screen, matches dial color)
-const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x1a1a22 });
-const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), bgPlaneMat);
-bgPlane.position.z = -50;
+// Background surround plane — flush with dial face, hole cut for gap
+const CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
+const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
+// Background = PBR with fine leather/matte texture
+const bgPlaneMat = new THREE.MeshPhysicalMaterial({
+  color: 0x18181e,
+  roughness: 0.92,
+  metalness: 0.0,
+  normalMap: dialTextures.normalMap,
+  normalScale: new THREE.Vector2(0.2, 0.2), // subtler than dial
+  roughnessMap: dialTextures.roughnessMap,
+  envMapIntensity: 0.15,
+});
+const bgShape = new THREE.Shape();
+bgShape.moveTo(-1000, -1000); bgShape.lineTo(1000, -1000); bgShape.lineTo(1000, 1000); bgShape.lineTo(-1000, 1000); bgShape.closePath();
+const bgHole = new THREE.Path();
+bgHole.absarc(0, 0, bgCutoutR, 0, Math.PI*2, true);
+bgShape.holes.push(bgHole);
+const bgPlaneGeo = new THREE.ShapeGeometry(bgShape, 64);
+const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
+bgPlane.position.z = -3 * CLOCK_SCALE; // flush with dial front face in world space
 if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
 
 const clockGroup = new THREE.Group(); // everything lives here for parallax
-clockGroup.scale.setScalar(CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50));
+clockGroup.scale.setScalar(CLOCK_SCALE);
 scene.add(clockGroup);
 
 // Dial face
 let dialMesh;
 let dialLowerMesh;
-const DIAL_THICKNESS = 10;
-const DIAL_GAP = 3; // gap between upper and lower disc
+const DIAL_THICKNESS = 0.5; // thin disc — no more cutout walls clipping hands
+const DIAL_GAP = 0.5; // minimal gap — thin disc means no visible cutout walls
 let cutoutR = R*0.38;
 function buildDial() {
   if(dialMesh) clockGroup.remove(dialMesh);
@@ -385,29 +605,23 @@ function buildDial() {
   // Lower disc — solid, darker, recessed
   const lowerGeo = new THREE.CylinderGeometry(caseR, caseR, DIAL_THICKNESS, 128);
   const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-  const lowerMat = new THREE.MeshStandardMaterial({color:lowerColor, roughness:0.9, metalness:0}); lowerMat.envMapIntensity = 0.05;
+  const lowerMat = new THREE.MeshBasicMaterial({color:lowerColor}); // unlit // recessed dial — barely there
   dialLowerMesh = new THREE.Mesh(lowerGeo, lowerMat);
   dialLowerMesh.rotation.x = Math.PI/2;
   dialLowerMesh.position.z = -(DIAL_THICKNESS/2 + DIAL_GAP + DIAL_THICKNESS);
   dialLowerMesh.receiveShadow = true;
   clockGroup.add(dialLowerMesh);
   
-  // Upper disc — extruded with hole cut through at 6 o'clock
+  // Upper disc — flat circle with subdial cutout
   const dialShape = new THREE.Shape();
   dialShape.absarc(0, 0, caseR, 0, Math.PI*2, false);
+  // Cut hole for subdial
   const holePath = new THREE.Path();
   holePath.absarc(0, subY, cutoutR, 0, Math.PI*2, true);
   dialShape.holes.push(holePath);
-  
-  const geo = new THREE.ExtrudeGeometry(dialShape, {
-    depth: DIAL_THICKNESS,
-    bevelEnabled: false,
-    curveSegments: 128
-  });
+  const geo = new THREE.ShapeGeometry(dialShape, 128);
   dialMesh = new THREE.Mesh(geo, dialMat(DIALS[currentDial].bg));
-  dialMesh.position.z = -(DIAL_THICKNESS + DIAL_GAP);
-  dialMesh.receiveShadow = true;
-  dialMesh.castShadow = true;
+  dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
 }
 
@@ -435,7 +649,6 @@ function buildScrollIndicator() {
   mat.envMapIntensity = 0.2;
   scrollIndicator = new THREE.Mesh(geo, mat);
   scrollIndicator.position.z = 4; // above markers
-  // Restore position from current state (don't reset on dial switch)
   const trackR = R * 0.72;
   const hourPos = SCROLL_HOUR_MAP[scrollIndicatorTarget] ?? 0;
   const ang = Math.PI/2 - (hourPos/12) * Math.PI * 2;
@@ -465,7 +678,6 @@ function updateScrollIndicator() {
   scrollIndicator.position.x = scrollIndicatorCurrent.x;
   scrollIndicator.position.y = scrollIndicatorCurrent.y;
   scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;
-  // Pulse emissive gently
   scrollIndicator.material.emissiveIntensity = 0.3 + Math.sin(Date.now()*0.003)*0.15;
 }
 
@@ -506,15 +718,15 @@ function buildMarkers() {
         mesh.position.z = depth/2;
         mesh.rotation.x = Math.PI/2;
         clockGroup.add(mesh); markerMeshes.push(mesh);
-        mesh.userData.kawtharButton = true; mesh.userData.hourIdx = hourIdx;
+        mesh.userData.kawtharButton = true;
         lumeMeshes.push(mesh); // they all glow at night
       } else if(!isHour) {
         // Simple small dots — rose gold
         const geo = new THREE.CircleGeometry(0.6, 10);
         const mat = new THREE.MeshStandardMaterial({
-          color: c.lume, roughness: 0.3, metalness: 0.3,
+          color: c.lume, roughness: 0.12, metalness: 0.5,
           emissive: c.lume, emissiveIntensity: 0
-        }); mat.envMapIntensity = 0.2;
+        }); mat.envMapIntensity = 3.0; // applied markers — polished metal, visible tilt response
         const mesh = new THREE.Mesh(geo, mat);
         const midR = R * 0.95;
         mesh.position.x = Math.cos(ang)*midR;
@@ -551,7 +763,7 @@ function buildMarkers() {
       {
         const tH=R*0.036, tW=0.675, depth=1.5;
         const geo = new THREE.BoxGeometry(tW, tH, depth);
-        const mat = new THREE.MeshStandardMaterial({color:c.lume, roughness:0.5, metalness:0.2}); mat.envMapIntensity = 0.15;
+        const mat = lumeMat(c.lume); // minute ticks = lume paint (SuperLuminova)
         const mesh = new THREE.Mesh(geo, mat);
         const midR = (R - R*0.04 - tH/2) * 1.03;
         mesh.position.x = Math.cos(ang)*midR;
@@ -560,6 +772,7 @@ function buildMarkers() {
         mesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(mesh);
         markerMeshes.push(mesh);
+        lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
       if(isHour && !isNumeralPos){
@@ -574,7 +787,6 @@ function buildMarkers() {
         mesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(mesh);
         markerMeshes.push(mesh);
-        mesh.userData.hourIdx = hourIdx;
         
         // Lume insert
         const lGeo = new THREE.BoxGeometry(mW*0.5, mH*0.65, depth+0.5);
@@ -589,42 +801,54 @@ function buildMarkers() {
   }
 }
 
-// Arabic numerals
+// Arabic numerals — extruded 3D geometry (real depth, NOMOS-quality applied)
 let numeralSprites = [];
 let numeralMats = [];
+const NUMERAL_KEY_MAP = {0:'twelve', 2:'two', 4:'four', 8:'eight', 10:'ten'};
+const EXTRUDE_DEPTH = 3; // depth of extruded numerals — matches hand height
+
 function buildNumerals() {
   numeralSprites.forEach(s=>clockGroup.remove(s));
   numeralSprites=[]; numeralMats=[];
   if(currentDial === 'kawthar' || currentDial === 'rainbow') return; // special marker dials — no numerals
   const c = DIALS[currentDial];
   const NUMERAL_POS = [0,2,4,8,10]; // 12, 2, 4, 8, 10 (no 6 — qibla)
+  const targetH = R * 0.16; // NOMOS proportion — compact, not dominant
+  
   for(const i of NUMERAL_POS){
+    const key = NUMERAL_KEY_MAP[i];
+    const pd = NUMERAL_PATHS[key];
+    if (!pd) continue;
+    
     const ang = Math.PI/2 - (i/12)*Math.PI*2; // CW from 12
-    const r = R - R*0.18; // centered in marker gap
-    const fontSize = R*0.286;
-    const dpr = 6;
-    // Measure actual text width
-    const measCv = document.createElement('canvas');
-    const measCtx = measCv.getContext('2d');
-    measCtx.font = `400 ${fontSize*dpr}px "Lateef",sans-serif`;
-    const measured = measCtx.measureText(ARABIC[i]);
-    const tw = (measured.width / dpr) + fontSize*0.4; // padding
-    const th = fontSize*1.6;
-    const cv = document.createElement('canvas');
-    cv.width = Math.ceil(tw*dpr); cv.height = Math.ceil(th*dpr);
-    const ctx = cv.getContext('2d');
-    ctx.font = `400 ${fontSize*dpr}px "Lateef",sans-serif`;
-    ctx.fillStyle = c.text||'#ffffff';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(ARABIC[i], cv.width/2, cv.height/2);
-    const tex = new THREE.CanvasTexture(cv);
-    tex.minFilter = THREE.LinearFilter;
-    const geo = new THREE.PlaneGeometry(tw, th);
-    const faceMat = new THREE.MeshStandardMaterial({map:tex, transparent:true, metalness:0.0, roughness:0.9, color:0xffffff, depthWrite:false, emissive: new THREE.Color(c.lume), emissiveIntensity: 0}); faceMat.envMapIntensity = 0;
+    const r = R - R*0.18; // numeral ring radius
+    const maxW = R * 0.22; // max numeral width to prevent overflow
+    const scaleH = targetH / pd.h;
+    const scaleW = maxW / pd.w;
+    const scale = Math.min(scaleH, scaleW); // fit within both constraints
+    
+    const shapes = pathToShapes(pd, scale);
+    if (!shapes.length) continue;
+    
+    const extrudeSettings = {
+      depth: EXTRUDE_DEPTH,
+      bevelEnabled: true,
+      bevelThickness: 0.2,
+      bevelSize: 0.15,
+      bevelOffset: 0,
+      bevelSegments: 3,
+    };
+    
+    const geo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
+    geo.computeVertexNormals();
+    
+    // Same lume paint finish as minute markers (SuperLuminova)
+    const faceMat = lumeMat(c.lume);
+    
     const mesh = new THREE.Mesh(geo, faceMat);
-    mesh.position.x = Math.cos(ang)*r;
-    mesh.position.y = Math.sin(ang)*r;
-    mesh.position.z = 3;
+    mesh.position.x = Math.cos(ang) * r;
+    mesh.position.y = Math.sin(ang) * r;
+    mesh.position.z = 3.5; // proud of dial — same height as hand base
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(faceMat);
@@ -642,7 +866,7 @@ function buildHands() {
   
   const c = DIALS[currentDial];
   
-  // Hour — NOMOS Club Campus sword hand
+  // Hour — NOMOS Club Campus sword hand (slimmed to match reference)
   hourGroup = new THREE.Group();
   const hL=R*0.75, hW=R*0.035, hT=R*0.04, hD=4;
   const hGeo = nomosHand(hL, hW, hT, hD);
@@ -656,10 +880,10 @@ function buildHands() {
   const hlMesh = new THREE.Mesh(hlGeo, hLumeMat_);
   hlMesh.position.z = 3.5;
   hourGroup.add(hlMesh);
-  hourGroup.position.z = 5;
+  hourGroup.position.z = 15;
   clockGroup.add(hourGroup);
   
-  // Minute — NOMOS Club Campus sword hand
+  // Minute — NOMOS Club Campus sword hand (slimmed to match reference)
   minGroup = new THREE.Group();
   const mL=R*0.925, mW=R*0.035, mT=R*0.055, mD=5;
   const mGeo = nomosHand(mL, mW, mT, mD);
@@ -672,7 +896,7 @@ function buildHands() {
   const mlMesh = new THREE.Mesh(mlGeo, mLumeMat_);
   mlMesh.position.z = 4.5;
   minGroup.add(mlMesh);
-  minGroup.position.z = 7;
+  minGroup.position.z = 17;
   clockGroup.add(minGroup);
   
   // Second hand
@@ -691,14 +915,14 @@ function buildHands() {
   cwMesh.rotation.x = Math.PI/2;
   cwMesh.position.y = -sT*0.55;
   secGroup.add(cwMesh);
-  secGroup.position.z = 11;
+  secGroup.position.z = 23;  // must clear minute hand (z=17 + depth 5 = z=22)
   clockGroup.add(secGroup);
   
-  // Center cap (3D cylinder)
-  const capGeo = new THREE.CylinderGeometry(R*0.035, R*0.035, 8, 32);
+  // Center cap (3D cylinder) — must sit ON TOP of all hands including second hand
+  const capGeo = new THREE.CylinderGeometry(R*0.04, R*0.04, 8, 32);
   const capMesh = new THREE.Mesh(capGeo, metalMat(c.hand));
   capMesh.rotation.x = Math.PI/2;
-  capMesh.position.z = 13;
+  capMesh.position.z = 26;  // above second hand (z=23 + depth 2 = z=25)
   capMesh.castShadow = true;
   clockGroup.add(capMesh);
   markerMeshes.push(capMesh); // for cleanup
@@ -744,16 +968,17 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = 1;
+  qiblaGroup.position.z = 0; // flush with dial — cutout prevents z-fighting
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — slightly darker than dial, brushed metal
+  // Base disc — brushed metallic, subtle contrast from dial
   const baseMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.7),
-    roughness: 0.5, metalness: 0.4,
-    clearcoat: 0.2, envMapIntensity: 0.25
+    color: new THREE.Color(d.bg).multiplyScalar(0.82),
+    roughness: 0.35, metalness: 0.5,
+    clearcoat: 0.4, envMapIntensity: 3.5,
+    roughnessMap: metalGrainTex,
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
   qiblaGroup.add(baseDisc);
@@ -801,23 +1026,28 @@ function buildQibla() {
   mCtx.fillStyle = `rgb(${bgCol.r*255|0},${bgCol.g*255|0},${bgCol.b*255|0})`;
   mCtx.fillRect(0, 0, 256, 256);
   
-  // Lit portion — draw as ellipse
+  // Lit portion — draw as crescent/gibbous
+  // p=0: new moon (dark), p=0.5: full moon, p=1: new moon again
+  // Hijri month: day 1 ≈ thin crescent, day 15 ≈ full, day 29 ≈ thin crescent
   mCtx.fillStyle = '#f8f4e8';
   mCtx.beginPath();
   if(p <= 0.5) {
-    // Waxing: right side lit, growing
-    const illumination = p * 2; // 0→1
-    // Right half always lit
+    // Waxing: right side grows from nothing to full
+    const illum = p * 2; // 0→1
+    // Right semicircle always lit
     mCtx.arc(cx, cy, mr, -Math.PI/2, Math.PI/2);
-    // Left edge: ellipse that grows from right to left
-    mCtx.ellipse(cx, cy, mr * Math.abs(1 - illumination*2), mr, 0, Math.PI/2, -Math.PI/2, illumination > 0.5);
+    // Terminator edge: controls how much of left side is lit/dark
+    // illum 0→0.5: concave (crescent), 0.5→1: convex (gibbous)
+    const termX = mr * (1 - illum * 2); // mr→-mr as illum 0→1
+    mCtx.ellipse(cx, cy, Math.abs(termX), mr, 0, Math.PI/2, -Math.PI/2, illum < 0.5);
   } else {
-    // Waning: left side lit, shrinking from right
-    const illumination = (1 - p) * 2; // 1→0
-    // Left half always lit
+    // Waning: left side shrinks from full to nothing
+    const illum = (1 - p) * 2; // 1→0
+    // Left semicircle always lit
     mCtx.arc(cx, cy, mr, Math.PI/2, -Math.PI/2);
-    // Right edge: ellipse that shrinks
-    mCtx.ellipse(cx, cy, mr * Math.abs(1 - illumination*2), mr, 0, -Math.PI/2, Math.PI/2, illumination > 0.5);
+    // Terminator
+    const termX = mr * (1 - illum * 2);
+    mCtx.ellipse(cx, cy, Math.abs(termX), mr, 0, -Math.PI/2, Math.PI/2, illum < 0.5);
   }
   mCtx.fill();
   mCtx.restore();
@@ -855,9 +1085,9 @@ function buildQibla() {
   // Rotor disc — slightly smaller, different tone
   const rotorR = gaugeR - 2;
   const rotorMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.85),
-    roughness: 0.45, metalness: 0.3,
-    clearcoat: 0.3, envMapIntensity: 0.3
+    color: new THREE.Color(d.bg).multiplyScalar(0.75),
+    roughness: 0.2, metalness: 0.6,
+    clearcoat: 0.6, envMapIntensity: 3.0,
   });
   const rotorDisc = new THREE.Mesh(new THREE.CircleGeometry(rotorR, 64), rotorMat);
   qiblaRotor.add(rotorDisc);
@@ -869,10 +1099,9 @@ function buildQibla() {
     const ang = (i/4) * Math.PI * 2; // 0=N(up), π/2=E, π=S, 3π/2=W
     const isNorth = i === 0;
     const tGeo = new THREE.BoxGeometry(tickW, isNorth ? tickLen*1.4 : tickLen, 0.3);
-    const tColor = isNorth ? 0xf0f0f0 : new THREE.Color(d.lume).multiplyScalar(0.6);
+    const tColor = isNorth ? 0xf0f0f0 : new THREE.Color(d.lume).multiplyScalar(0.8);
     const tMat = new THREE.MeshPhysicalMaterial({
-      color: tColor, roughness: 0.3, metalness: 0.1, envMapIntensity: 0.15,
-      emissive: tColor, emissiveIntensity: 0
+      color: tColor, roughness: 0.2, metalness: 0.3, envMapIntensity: 1.5
     });
     const tick = new THREE.Mesh(tGeo, tMat);
     const tr = rotorR - tickLen*0.55;
@@ -887,8 +1116,8 @@ function buildQibla() {
     const ang = (i/8) * Math.PI * 2;
     const mtGeo = new THREE.BoxGeometry(0.3, tickLen*0.5, 0.2);
     const mtMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(d.lume).multiplyScalar(0.4),
-      roughness: 0.4, metalness: 0.1, envMapIntensity: 0.1
+      color: new THREE.Color(d.lume).multiplyScalar(0.5),
+      roughness: 0.3, metalness: 0.2, envMapIntensity: 1.0,
     });
     const mt = new THREE.Mesh(mtGeo, mtMat);
     const mtr = rotorR - tickLen*0.3;
@@ -936,14 +1165,12 @@ function buildQibla() {
       // Offset color index per ring so alignment creates columns
       const colIdx = (s + ri * 0) % segCount; // same order — alignment = color match
       const fullColor = new THREE.Color(sorbet[colIdx]);
-      const dimColor = fullColor.clone().lerp(new THREE.Color(0x888888), 0.6); // desaturated
+      const dimColor = fullColor.clone(); // full color — the Ressence rings should pop
       const segMat = new THREE.MeshPhysicalMaterial({
-        color: dimColor,
-        roughness: 0.25, metalness: 0.15,
-        clearcoat: 0.3,
-        emissive: fullColor,
-        emissiveIntensity: 0,
-        envMapIntensity: 0.2
+        color: fullColor,
+        roughness: 0.3, metalness: 0.1,
+        clearcoat: 1.0, envMapIntensity: 2.0,
+        emissive: fullColor, emissiveIntensity: 0.45,
       });
       segMat.userData = { fullColor, dimColor };
       const segMesh = new THREE.Mesh(new THREE.ShapeGeometry(segShape), segMat);
@@ -952,7 +1179,7 @@ function buildQibla() {
     }
     
     ringGroup.position.z = 0.3;
-    qiblaGroup.add(ringGroup);
+    qiblaRotor.add(ringGroup);
     window._subdialRings.push({ group: ringGroup, speed: rd.speed, dir: rd.dir });
   });
   
@@ -962,9 +1189,9 @@ function buildQibla() {
   
   const innerR = gaugeR * 0.28;
   const innerMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.95),
-    roughness: 0.15, metalness: 0.6,
-    clearcoat: 0.5, envMapIntensity: 0.5
+    color: new THREE.Color(d.bg).multiplyScalar(0.65),
+    roughness: 0.08, metalness: 0.8,
+    clearcoat: 0.8, envMapIntensity: 4.0,
   });
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
   qiblaInnerRotor.add(innerDisc);
@@ -978,12 +1205,11 @@ function buildQibla() {
   triShape.lineTo(triW/2, -triH/2);
   triShape.closePath();
   const triGeo = new THREE.ExtrudeGeometry(triShape, {depth:0.5, bevelEnabled:false});
-  const triColor = new THREE.Color(d.hand);
   const triMat = new THREE.MeshPhysicalMaterial({
-    color: triColor,
-    roughness: 0.3, metalness: 0.2,
-    emissive: triColor, emissiveIntensity: 0.15,
-    envMapIntensity: 0
+    color: new THREE.Color(d.hand),
+    roughness: 0.2, metalness: 0.3,
+    emissive: new THREE.Color(d.hand), emissiveIntensity: 0.15,
+    envMapIntensity: 1.5,
   });
   const triMesh = new THREE.Mesh(triGeo, triMat);
   triMesh.position.set(0, innerR*0.35, 0.3);
@@ -1006,29 +1232,38 @@ function buildQibla() {
   const glassDome = new THREE.SphereGeometry(
     glassR, 64, 32,
     0, Math.PI*2,
-    0, Math.PI*0.12   // very shallow dome (~22° cap, stays under hands)
+    0, Math.PI*0.12   // subtle dome (~22° cap) — watch crystal, not fishbowl
   );
+  // ── Liquid Glass effect ──
+  // Two-layer approach: transmission for devices that support it,
+  // graceful fallback via low opacity + high env reflections.
+  // Based on ektogamat/apple-liquid-glass (MIT) recipe.
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.0,       // perfectly polished sapphire
+    roughness: 0.12,
     metalness: 0.0,
-    transmission: 0.98,   // nearly perfectly clear
-    thickness: 3.5,       // thicker = more refraction visible with focused spot
-    ior: 1.77,            // sapphire crystal IOR
-    dispersion: 0.15,     // subtle chromatic aberration at edges
+    transmission: 0.95,    // near-full transmission
+    thickness: 1.5,        // subtle refraction — don't obliterate subdial readability
+    ior: 1.5,              // standard glass — more predictable across devices than 1.8
+    dispersion: 3,         // moderate chromatic shimmer (not as aggressive as ektogamat's 12)
     clearcoat: 1.0,
-    clearcoatRoughness: 0.0,
-    transparent: false,   // let transmission handle transparency, not opacity
+    clearcoatRoughness: 0.05,
+    transparent: true,     // fallback: if transmission fails, opacity kicks in
+    opacity: 0.15,         // very subtle — only visible if transmission doesn't work
+    iridescence: 0.6,      // partial thin-film — subtle rainbow, not overpowering
+    iridescenceIOR: 1.3,
+    iridescenceThicknessRange: [200, 400],
+    envMapIntensity: 3.0,
     specularIntensity: 1.5,
     specularColor: new THREE.Color(0xffffff),
-    attenuationDistance: 20,  // how far light travels before tinting
-    attenuationColor: new THREE.Color(0xf8f8ff), // very slight cool tint (sapphire)
   });
   const glassMesh = new THREE.Mesh(glassDome, glassMat);
   glassMesh.position.y = -R*0.5;
-  glassMesh.position.z = 2;  // low profile, under hands
+  glassMesh.position.z = 2;
   glassMesh.rotation.x = 0;
-  glassMesh.renderOrder = 999; // render last for proper transparency
+  glassMesh.renderOrder = 10;
+  glassMesh.material.depthWrite = false;
+  glassMesh.visible = true;
   clockGroup.add(glassMesh);
   bezelMeshes.push(glassMesh);
 }
@@ -1090,27 +1325,39 @@ function buildFlap() {
   clockGroup.add(flapSprite);
 }
 
-// Stars (Surah Yusuf 12:4)
-// 11 stars positioned in the dark corners/edges around the clock
+// Stars (Surah Yusuf 12:4) — 11 stars in a sujud (prostration) arc above the clock
+// "I saw eleven stars and the sun and the moon — I saw them prostrating to me."
 const STARS=[];
-const starPositions = [
-  {x:-0.48, y:0.48}, {x:0.48, y:0.48},   // top corners
-  {x:-0.48, y:-0.48}, {x:0.48, y:-0.48},  // bottom corners
-  {x:-0.5, y:0.15}, {x:0.5, y:0.15},      // left/right mid-upper
-  {x:-0.5, y:-0.15}, {x:0.5, y:-0.15},    // left/right mid-lower
-  {x:0, y:0.5},                             // top center
-  {x:-0.3, y:-0.5}, {x:0.3, y:-0.5},      // bottom left/right
-];
-for(let i=0;i<11;i++){STARS.push({x:starPositions[i].x+0.5,y:0.5-starPositions[i].y,r:1.0+Math.sin(i*1.7)*0.5,speed:0.0009+i*0.00008,offset:i*0.57,bright:0.7+Math.sin(i*2.3)*0.2});}
+{
+  // Arc from left to right above the clock, bowing downward (sujud toward the dial)
+  const arcCenterY = R * 0.95;  // raised — outer stars near viewport edge
+  const arcRadius = R * 0.7;    // wide spread
+  const arcDepth = R * 0.12;    // concave bow — lowest point clears dial face
+  for(let i = 0; i < 11; i++) {
+    const t = i / 10; // 0 to 1
+    const ang = Math.PI * 0.15 + t * Math.PI * 0.7; // ~27° to ~153° — spread across top
+    const x = -Math.cos(ang) * arcRadius;
+    const y = arcCenterY - Math.sin(ang) * arcDepth; // concave: middle stars bow DOWN toward dial
+    const size = 0.55 + Math.sin(i * 1.7 + 0.5) * 0.2; // tiny twinkling points
+    STARS.push({
+      px: x, py: y,
+      r: size,
+      speed: 0.0008 + i * 0.00006,
+      offset: i * 0.57,
+      bright: 0.75 + Math.sin(i * 2.3) * 0.2
+    });
+  }
+}
 let starMeshes=[];
 let moonGroup, moonMesh, moonGlowMesh;
 
 function buildStars(){
   starMeshes.forEach(m=>scene.remove(m)); starMeshes=[];
   STARS.forEach(s=>{
-    const m=new THREE.Mesh(new THREE.CircleGeometry(s.r*3,16),new THREE.MeshBasicMaterial({color:0xfffff0,transparent:true,opacity:0}));
-    m.position.x=(s.x-0.5)*180; m.position.y=(0.5-s.y)*280;
-    m.position.z=-10; m.userData=s; scene.add(m); starMeshes.push(m);
+    const m=new THREE.Mesh(new THREE.CircleGeometry(s.r, 16), new THREE.MeshBasicMaterial({color:0xfffff0, transparent:true, opacity:0}));
+    m.position.x = s.px;
+    m.position.y = s.py;
+    m.position.z = -10; m.userData=s; scene.add(m); starMeshes.push(m);
   });
   
   // 3D Moon — rises during night transition
@@ -1118,27 +1365,154 @@ function buildStars(){
   moonGroup = new THREE.Group();
   
   const moonR = 10;
-  // Moon — flat disc, MeshBasicMaterial with HDR color
+  
+  // ── Procedural moon texture with craters + Hijri phase shadow ──
+  const moonCvN = document.createElement('canvas');
+  moonCvN.width = 256; moonCvN.height = 256;
+  const mxN = moonCvN.getContext('2d');
+  const mcx = 128, mcy = 128, mcr = 124;
+  
+  // Clip everything to circle — no debris outside the moon disc
+  mxN.save();
+  mxN.beginPath(); mxN.arc(mcx, mcy, mcr, 0, Math.PI*2); mxN.clip();
+  
+  // Base moon color — warm lunar grey
+  mxN.fillStyle = '#e8e4d8';
+  mxN.fillRect(0, 0, 256, 256);
+  
+  // Subtle surface variation (maria/highlands)
+  const surfGrad = mxN.createRadialGradient(100, 90, 10, mcx, mcy, mcr);
+  surfGrad.addColorStop(0, 'rgba(180,175,160,0.3)');
+  surfGrad.addColorStop(0.5, 'rgba(200,195,180,0.15)');
+  surfGrad.addColorStop(1, 'rgba(220,215,200,0)');
+  mxN.fillStyle = surfGrad;
+  mxN.beginPath(); mxN.arc(mcx, mcy, mcr, 0, Math.PI*2); mxN.fill();
+  
+  // Craters — seeded pseudo-random
+  const craters = [
+    {x:95, y:80, r:18, d:0.12},   // Tycho-like
+    {x:155, y:105, r:22, d:0.10},  // Copernicus-like  
+    {x:130, y:155, r:15, d:0.08},
+    {x:75, y:135, r:12, d:0.10},
+    {x:165, y:65, r:10, d:0.07},
+    {x:110, y:60, r:8, d:0.09},
+    {x:145, y:180, r:14, d:0.06},
+    {x:85, y:170, r:9, d:0.08},
+    {x:170, y:145, r:7, d:0.07},
+    {x:120, y:120, r:6, d:0.05},
+  ];
+  craters.forEach(c => {
+    // Shadow inside crater
+    const cGrad = mxN.createRadialGradient(c.x - c.r*0.2, c.y - c.r*0.2, 0, c.x, c.y, c.r);
+    cGrad.addColorStop(0, `rgba(140,135,120,${c.d})`);
+    cGrad.addColorStop(0.6, `rgba(160,155,140,${c.d * 0.5})`);
+    cGrad.addColorStop(1, 'rgba(200,195,180,0)');
+    mxN.fillStyle = cGrad;
+    mxN.beginPath(); mxN.arc(c.x, c.y, c.r, 0, Math.PI*2); mxN.fill();
+    // Rim highlight
+    mxN.strokeStyle = `rgba(245,240,230,${c.d * 0.4})`;
+    mxN.lineWidth = 0.8;
+    mxN.beginPath(); mxN.arc(c.x, c.y, c.r * 0.9, -0.5, 1.2); mxN.stroke();
+  });
+  
+  // ── Hijri moon phase shadow ──
+  // Calculate independently — buildStars may run before buildQibla
+  // Synodic month calculation — works year-round, not just Ramadan
+  // Known new moon: Jan 29, 2026 12:36 UTC (astronomical)
+  const KNOWN_NEW_MOON = new Date(Date.UTC(2026, 0, 29, 12, 36));
+  const SYNODIC = 29.53059; // days
+  const daysSinceNew = (Date.now() - KNOWN_NEW_MOON.getTime()) / 86400000;
+  const phase = ((daysSinceNew % SYNODIC) + SYNODIC) % SYNODIC / SYNODIC; // 0→1
+  // Phase rendering — pixel-based for reliability
+  // phase 0 = new moon (dark), 0.5 = full moon, 1.0 = dark again
+  // illumination: 0→1→0 over the month
+  const illum = phase <= 0.5 ? phase * 2 : (1 - phase) * 2; // 0→1→0
+  const waxing = phase <= 0.5; // right side lit first (Northern hemisphere Hijri)
+  
+  // Draw shadow overlay using compositing
+  const shadowCv = document.createElement('canvas');
+  shadowCv.width = 256; shadowCv.height = 256;
+  const sx = shadowCv.getContext('2d');
+  
+  // Fill with shadow
+  sx.fillStyle = 'rgba(5,5,10,0.93)';
+  sx.beginPath(); sx.arc(mcx, mcy, mcr + 1, 0, Math.PI * 2); sx.fill();
+  
+  // Cut out the illuminated portion
+  sx.globalCompositeOperation = 'destination-out';
+  sx.fillStyle = '#fff';
+  sx.beginPath();
+  
+  if(illum < 0.01) {
+    // New moon — all dark, cut nothing
+  } else if(illum > 0.99) {
+    // Full moon — cut everything
+    sx.arc(mcx, mcy, mcr + 1, 0, Math.PI * 2);
+    sx.fill();
+  } else {
+    // Crescent/gibbous — half circle + terminator ellipse
+    const litSide = waxing ? 1 : -1; // +1 = right lit, -1 = left lit
+    // Always draw the lit half-circle
+    const startAng = litSide > 0 ? -Math.PI/2 : Math.PI/2;
+    const endAng = litSide > 0 ? Math.PI/2 : -Math.PI/2;
+    sx.arc(mcx, mcy, mcr, startAng, endAng);
+    // Terminator: ellipse width controls crescent shape
+    // illum 0→0.5: crescent (terminator on lit side), 0.5→1: gibbous (terminator on dark side)
+    const tWidth = Math.abs(illum * 2 - 1) * mcr;
+    const ccw = illum < 0.5; // crescent: cut less, gibbous: cut more
+    sx.ellipse(mcx, mcy, tWidth || 0.5, mcr, 0, endAng, startAng, ccw);
+    sx.closePath();
+    sx.fill();
+  }
+  
+  // Apply shadow to moon
+  mxN.drawImage(shadowCv, 0, 0);
+  
+  // Soft limb darkening — edge of moon sphere
+  const limbGrad = mxN.createRadialGradient(mcx, mcy, mcr * 0.7, mcx, mcy, mcr);
+  limbGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  limbGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+  mxN.fillStyle = limbGrad;
+  mxN.beginPath(); mxN.arc(mcx, mcy, mcr, 0, Math.PI*2); mxN.fill();
+  mxN.restore(); // release global moon clip
+  
+  const moonTexN = new THREE.CanvasTexture(moonCvN);
+  
+  // Moon mesh with texture
   const moonGeo = new THREE.CircleGeometry(moonR, 48);
   const moonMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(3.0, 2.9, 2.6),
+    map: moonTexN,
+    color: new THREE.Color(1.15, 1.12, 1.05), // barely HDR — moon glows, doesn't blast
     transparent: true, opacity: 0, depthWrite: false,
   });
   moonMesh = new THREE.Mesh(moonGeo, moonMat);
   moonGroup.add(moonMesh);
   
   // Soft radial glow — larger, subtle
-  const glowGeo = new THREE.CircleGeometry(moonR * 4, 48);
-  // Use ShaderMaterial for radial falloff
+  const glowGeo = new THREE.CircleGeometry(moonR * 2.5, 48);
+  // Radial gradient texture for soft atmospheric falloff
+  const glowCv = document.createElement('canvas');
+  glowCv.width = 128; glowCv.height = 128;
+  const gCtx = glowCv.getContext('2d');
+  const grad = gCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,250,240,1)');
+  grad.addColorStop(0.15, 'rgba(255,245,230,0.6)');
+  grad.addColorStop(0.4, 'rgba(255,240,220,0.2)');
+  grad.addColorStop(0.7, 'rgba(255,235,210,0.05)');
+  grad.addColorStop(1, 'rgba(255,230,200,0)');
+  gCtx.fillStyle = grad;
+  gCtx.fillRect(0, 0, 128, 128);
+  const glowTex = new THREE.CanvasTexture(glowCv);
   const glowMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(2.0, 1.8, 1.5),
+    map: glowTex,
+    color: new THREE.Color(1.5, 1.4, 1.2),
     transparent: true, opacity: 0, depthWrite: false,
   });
   moonGlowMesh = new THREE.Mesh(glowGeo, glowMat);
   moonGlowMesh.position.z = -0.5;
   moonGroup.add(moonGlowMesh);
   
-  moonGroup.position.set(70, -100, -25);
+  moonGroup.position.set(0, -60, -15);
   moonGroup.visible = false;
   scene.add(moonGroup);
 }
@@ -1156,7 +1530,7 @@ function updateSurah() {
   }
   const toggle = document.getElementById('modeToggle');
   if(toggle) toggle.style.color = DIALS[currentDial].text || '#ffffff';
-  if(typeof updateModeIcon==='function') updateModeIcon();
+  updateModeIcon();
 }
 // ══════════════════════════════════════════
 // RAINBOW BEZEL — Rolex Daytona Rainbow tribute
@@ -1237,20 +1611,26 @@ function buildBezel() {
 
 function buildAll(){
   if(CONTAINED) console.log('[clock] buildAll, dial:', currentDial, 'scale:', clockGroup.scale.x);
-  // Clear clockGroup
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
-  bgPlaneMat.color.set(DIALS[currentDial].bg);
-  if(!EMBED || CONTAINED) scene.background = new THREE.Color(DIALS[currentDial].bg);
-  buildDial();
-  buildBezel();
-  buildMarkers();
-  buildNumerals();
-  buildHands();
-  buildQibla();
-  buildFlap();
-  buildStars();
-  buildScrollIndicator();
-  updateSurah();
+  const dialBg = new THREE.Color(DIALS[currentDial].bg);
+  bgPlaneMat.color.copy(dialBg);
+  if(!EMBED || CONTAINED) scene.background = dialBg.clone();
+  if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
+  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
+  for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
+  if(!CONTAINED) {
+    // Update dial info panel
+    const c = DIALS[currentDial];
+    const dn = document.getElementById('dialName');
+    const ds = document.getElementById('dialSurah');
+    const lb = document.getElementById('listenBtn');
+    if(dn) { dn.textContent = currentDial.charAt(0).toUpperCase() + currentDial.slice(1); dn.style.color = c.text; }
+    if(ds) { ds.textContent = c.surah || ''; ds.style.color = c.text; }
+    if(lb) { lb.style.color = c.text; }
+    // Update prayer times color
+    const pt = document.getElementById('prayerTimes');
+    if(pt) pt.style.color = c.text;
+  }
 }
 // Debug — expose internals
 window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getAnimCount: () => _animCount };
@@ -1272,12 +1652,11 @@ window._clockQiblaDemo = function(on){
     qiblaBearing = 45;
     hasCompassData = true;
     _qiblaDemoStart = Date.now();
-    targetCompassHeading = qiblaBearing + 180; // start opposite
+    targetCompassHeading = qiblaBearing + 180;
   } else {
     hasCompassData = false;
   }
 };
-// Called from animate loop — no competing interval
 function updateQiblaDemo(){
   if(!_qiblaDemoActive || _compassLocked) return;
   const elapsed = Date.now() - _qiblaDemoStart;
@@ -1285,14 +1664,11 @@ function updateQiblaDemo(){
   const holdDur = 2500;
   const cycleDur = sweepDur + holdDur;
   const cycleT = elapsed % cycleDur;
-  
   if(cycleT < sweepDur){
     const t = cycleT / sweepDur;
-    // Ease-in-out cubic
     const ease = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
     targetCompassHeading = qiblaBearing + 180*(1-ease);
   } else {
-    // Hold at alignment
     targetCompassHeading = qiblaBearing;
   }
 }
@@ -1300,11 +1676,11 @@ function updateQiblaDemo(){
 // Wait for fonts then build (Lateef for Arabic numerals)
 document.fonts.ready.then(()=>{
   buildAll();
-  // Set initial bg color immediately (animate loop will maintain it)
-  const initBg = new THREE.Color(DIALS[currentDial].bg);
-  scene.background = initBg;
-  bgPlaneMat.color.copy(initBg);
-  // Clock loaded
+  if(CONTAINED) {
+    const initBg = new THREE.Color(DIALS[currentDial].bg);
+    scene.background = initBg;
+    bgPlaneMat.color.copy(initBg);
+  }
 });
 
 // ══════════════════════════════════════════
@@ -1394,9 +1770,13 @@ async function fetchPrayer(){
   const r=await fetch(`https://api.aladhan.com/v1/timingsByCity/${dd}?city=LosAngeles&country=US&method=2`);
   const j=await r.json();if(j.code===200){PD=j.data.timings;
   if(!CONTAINED){
-  document.getElementById('hijri').textContent=`Fajr ${PD.Fajr} · Maghrib ${PD.Maghrib}`;
+  // Prayer times → top bar
+  document.getElementById('prayerTimes').textContent=`Fajr ${PD.Fajr} · Dhuhr ${PD.Dhuhr} · Asr ${PD.Asr} · Maghrib ${PD.Maghrib} · Isha ${PD.Isha}`;
+  document.getElementById('prayerTimes').style.color=DIALS[currentDial].text;
+  // Bottom info — date
+  document.getElementById('hijri').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('hijri').style.color=DIALS[currentDial].text;
-  document.getElementById('greg').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('greg').textContent='';
   document.getElementById('greg').style.color=DIALS[currentDial].text;
   }
   }}catch(e){}
@@ -1407,6 +1787,23 @@ fetchPrayer();
 // INTERACTIONS (standalone only)
 // ══════════════════════════════════════════
 if(!CONTAINED){
+// ── Surah audio (Alafasy via QuranCDN) ──
+const SURAH_MAP = {
+  'Ar-Raḥmān': 55, 'An-Nūr': 24, 'Ash-Shams': 91, 'Al-Layl': 92,
+  'Al-Burūj': 85, 'Al-Kawthar': 108, 'Aḍ-Ḍuḥā': 93, 'An-Najm': 53,
+  'Al-Qamar': 54, 'Al-Wāqiʿah': 56, 'Al-Mulk': 67, 'Al-Insān': 76,
+};
+let surahAudio = null;
+document.getElementById('listenBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const surahName = DIALS[currentDial].surah;
+  const num = SURAH_MAP[surahName];
+  if (!num) return;
+  if (surahAudio && !surahAudio.paused) { surahAudio.pause(); surahAudio = null; return; }
+  surahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
+  surahAudio.play().catch(() => {});
+});
+
 let infoTimer;
 const SUN_SVG='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
 const MOON_SVG='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
@@ -1422,9 +1819,11 @@ document.getElementById('modeToggle').addEventListener('click',(e)=>{
 function showInfo(){
   document.getElementById('info').classList.add('visible');
   document.getElementById('dialBar').classList.add('visible');
+  document.getElementById('dialInfo').classList.add('visible');
+  document.getElementById('prayerBar').classList.add('visible');
   document.getElementById('modeToggle').classList.add('visible');
   clearTimeout(infoTimer);
-  infoTimer=setTimeout(()=>{document.getElementById('info').classList.remove('visible');document.getElementById('dialBar').classList.remove('visible');document.getElementById('modeToggle').classList.remove('visible');},4000);
+  infoTimer=setTimeout(()=>{document.getElementById('info').classList.remove('visible');document.getElementById('dialBar').classList.remove('visible');document.getElementById('dialInfo').classList.remove('visible');document.getElementById('prayerBar').classList.remove('visible');document.getElementById('modeToggle').classList.remove('visible');},4000);
 }
 renderer.domElement.addEventListener('click',showInfo);
 renderer.domElement.addEventListener('dblclick',()=>{modeTarget=modeTarget>0.5?0:1;});
@@ -1437,9 +1836,12 @@ renderer.domElement.addEventListener('touchstart',e=>{
 renderer.domElement.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-touchStartX;
   const dy=e.changedTouches[0].clientY-touchStartY;
+  // Determine if swipe is more horizontal or vertical
   if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 50) {
+    // Vertical swipe — up = night, down = day
     modeTarget = dy < 0 ? 1 : 0;
   } else if(Math.abs(dx) > 50) {
+    // Horizontal swipe — change dial
     const idx=DIAL_NAMES.indexOf(currentDial);
     currentDial=DIAL_NAMES[dx>0?(idx-1+DIAL_NAMES.length)%DIAL_NAMES.length:(idx+1)%DIAL_NAMES.length];
     buildAll();
@@ -1487,6 +1889,7 @@ function animate(){
   if(CONTAINED && _animCount<3) console.log('[clock] animate frame', _animCount);
   _animCount++;
   try {
+  
   // Night blend
   if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.015;
   else modeBlend=modeTarget;
@@ -1513,13 +1916,13 @@ function animate(){
   
   // Dial surface picks up faint lume ambient bounce
   if(dialMesh && dialMesh.material) {
-    // Darken dial surface at night — lighter dials need more darkening
     const dayColor = new THREE.Color(DIALS[currentDial].bg);
     const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
     dialMesh.material.color.copy(nightDialColor);
-    dialMesh.material.emissive = dialMesh.material.emissive || new THREE.Color(0);
-    dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
-    dialMesh.material.emissiveIntensity = modeBlend;
+    if(dialMesh.material.emissive) { // PBR materials only (kawthar, qamar)
+      dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
+      dialMesh.material.emissiveIntensity = modeBlend;
+    }
   }
   // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
@@ -1539,7 +1942,7 @@ function animate(){
     qiblaGroup.traverse(child => {
       if(child.material && child.material.emissive) {
         if(child.material === window._qiblaTriMat) {
-          // Qibla triangle — strong glow
+          // Qibla green triangle — strong glow
           child.material.emissiveIntensity = 0.15 + modeBlend * 1.0;
         } else if(child.material.emissiveIntensity !== undefined) {
           // Compass ticks — subtle lume glow
@@ -1567,13 +1970,13 @@ function animate(){
   bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
   // Dim scene lights for night — let lume own the scene
-  ambLight.intensity = 0.3 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 3.5 * (1 - modeBlend * 0.8);
-  coolFill.intensity = 1.2 * (1 - modeBlend * 0.9);
-  spotLight.intensity = 1.5 * (1 - modeBlend * 0.7);
-  specPoint.intensity = 20 * (1 - modeBlend * 0.6);
-  counterSpec.intensity = 6 * (1 - modeBlend * 0.7);
-  subSpot.intensity = 30 * (1 - modeBlend * 0.5);
+  ambLight.intensity = 0.06 * (1 - modeBlend * 0.85);
+  keyLight.intensity = 1.0 * (1 - modeBlend * 0.85);
+  specPoint.intensity = 3 * (1 - modeBlend * 0.7);
+  counterSpec.intensity = 1.0 * (1 - modeBlend * 0.7);
+  subSpot.intensity = 8 * (1 - modeBlend * 0.5);
+  // Reduce env intensity at night so lume glows dominate
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
   renderer.toneMappingExposure = 0.8 - modeBlend * 0.25;
   
   // Vignette at night
@@ -1590,14 +1993,14 @@ function animate(){
   starMeshes.forEach((m,i)=>{
     const s=m.userData;if(!s)return;
     // Stagger: each star appears at a different modeBlend threshold
-    const starThreshold = 0.15 + (i / starMeshes.length) * 0.4; // 0.15 → 0.55
+    const starThreshold = 0.2 + (i / starMeshes.length) * 0.25; // 0.2 → 0.45 — all visible by modeBlend 0.6
     const starBlend = Math.max(0, Math.min(1, (modeBlend - starThreshold) / 0.15));
     const twinkle = (Math.sin(Date.now()*s.speed+s.offset)*0.3+0.7);
     m.material.opacity = starBlend * s.bright * twinkle;
-    // Stars scale up as they appear
-    const sc = 0.5 + starBlend * 1.0;
+    // Stars gently scale in
+    const sc = 0.6 + starBlend * 0.4;
     m.scale.setScalar(sc);
-    const starCol = new THREE.Color(2.0, 2.0, 1.8); // HDR star white
+    const starCol = new THREE.Color(2.2, 2.2, 1.9); // HDR for bloom pickup
     starCol.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.5), modeBlend * 0.3);
     m.material.color.copy(starCol);
   });
@@ -1609,8 +2012,8 @@ function animate(){
     moonGroup.visible = modeBlend > 0.1;
     
     // Rise from below-right to upper-right
-    const startY = -100, endY = 75;
-    const startX = 70, endX = 60;
+    const startY = -60, endY = 80;   // above the star arc
+    const startX = 0, endX = 0;     // centered — moon crowns the prostration arc
     // Ease-out cubic for natural rise
     const eased = 1 - Math.pow(1 - moonBlend, 3);
     moonGroup.position.y = startY + (endY - startY) * eased;
@@ -1620,14 +2023,14 @@ function animate(){
     if(moonMesh) {
       moonMesh.material.opacity = moonBlend;
       // HDR moon tinted slightly toward lume
-      const mc = new THREE.Color(2.5, 2.4, 2.2);
-      mc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(2.0), 0.15);
+      const mc = new THREE.Color(1.15, 1.12, 1.05);
+      mc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(0.8), 0.1);
       moonMesh.material.color.copy(mc);
     }
     if(moonGlowMesh) {
-      moonGlowMesh.material.opacity = moonBlend * 0.12;
-      const gc = new THREE.Color(1.5, 1.4, 1.2);
-      gc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.5), 0.2);
+      moonGlowMesh.material.opacity = moonBlend * 0.15;
+      const gc = new THREE.Color(1.2, 1.15, 1.0);
+      gc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.2), 0.2);
       moonGlowMesh.material.color.copy(gc);
     }
     
@@ -1641,18 +2044,25 @@ function animate(){
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
-    if(!CONTAINED) { cam.position.x = gx*15; }
-  cam.position.y = CONTAINED ? -2 : (-30 + -gy*12);
+  // gyro debug dot removed
+  // Camera parallax — skip when contained
+  if(!CONTAINED) { cam.position.x = 0; }
+  cam.position.y = CONTAINED ? -2 : -3;
   cam.lookAt(0,0,0);
   
-  // Spec point follows tilt — highlight glides across dial like turning a watch under a lamp
-  specPoint.position.x = 30 + gx * 80;
-  specPoint.position.y = 60 + gy * 60;
-  // Subdial spotlight follows tilt — offset from center
-  subSpot.position.x = 10 + gx * 50;
-  subSpot.position.y = -R*0.5 + 30 + gy * 40;
-  // Counter light moves opposite — dual-highlight dance
-  counterSpec.position.x = -40 - gx * 60;
+  // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
+  if(scene.environmentRotation) {
+    scene.environmentRotation.y = 0.3 + gx * 0.6;  // base offset + tilt sweep
+    scene.environmentRotation.x = 0.1 + gy * 0.3;
+  }
+  // Spec point follows tilt — the main visible highlight on hands
+  specPoint.position.x = 30 + gx * 120;  // wider travel
+  specPoint.position.y = 60 + gy * 90;
+  // Subdial spot follows tilt
+  subSpot.position.x = 10 + gx * 70;
+  subSpot.position.y = -R*0.5 + 30 + gy * 50;
+  // Counter spec — opposite dance for depth
+  counterSpec.position.x = -40 - gx * 90;
   counterSpec.position.y = -30 - gy * 50;
   
   updateHands();
@@ -1699,7 +2109,11 @@ function animate(){
     });
   }
   
-  if(!CONTAINED && scene.background) { const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content='#'+scene.background.getHexString(); }
+  if(!CONTAINED) {
+    const bgHex = '#'+bgPlaneMat.color.getHexString();
+    const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
+    document.documentElement.style.background = document.body.style.background = bgHex;
+  }
   
   // Use composer for bloom; in embed+night, render dark bg (no alpha)
   if(modeBlend > 0.01) {

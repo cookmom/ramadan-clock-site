@@ -800,20 +800,25 @@ function buildMarkers() {
         lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
-      // NOMOS proportion: tall narrow lume bars — fully luminous SuperLuminova
+      // NOMOS proportion: applied metal base + lume top (two-layer index)
       if(isHour && !isNumeralPos){
         const mH=R*0.16, mW=R*0.03, depth=3;
-        const geo = new THREE.BoxGeometry(mW, mH, depth);
-        const mesh = new THREE.Mesh(geo, lumeMat(c.lume));
-        mesh.castShadow = true;
         const midR = (R - R*0.04 - mH/2) * 0.92;
-        mesh.position.x = Math.cos(ang)*midR;
-        mesh.position.y = Math.sin(ang)*midR;
-        mesh.position.z = depth/2;
-        mesh.rotation.z = ang + Math.PI/2;
-        clockGroup.add(mesh);
-        markerMeshes.push(mesh);
-        lumeMeshes.push(mesh);
+        const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
+        // Layer 1: wider polished metal base plate
+        const baseGeo = new THREE.BoxGeometry(mW*1.6, mH*1.05, depth*0.5);
+        const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
+        baseMesh.position.set(px, py, depth*0.25);
+        baseMesh.rotation.z = ang + Math.PI/2;
+        baseMesh.castShadow = true;
+        clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
+        // Layer 2: lume on top
+        const lumeGeo = new THREE.BoxGeometry(mW, mH, depth*0.6);
+        const lumeMesh = new THREE.Mesh(lumeGeo, lumeMat(c.lume));
+        lumeMesh.position.set(px, py, depth*0.5 + depth*0.3);
+        lumeMesh.rotation.z = ang + Math.PI/2;
+        clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
+        lumeMeshes.push(lumeMesh);
       }
     }
   }
@@ -864,12 +869,21 @@ function buildNumerals() {
     const faceMat = lumeMat(c.lume);
     
     const mesh = new THREE.Mesh(geo, faceMat);
-    mesh.position.x = Math.cos(ang) * r;
-    mesh.position.y = Math.sin(ang) * r;
-    mesh.position.z = 3.5; // proud of dial — same height as hand base
+    const nx = Math.cos(ang) * r, ny = Math.sin(ang) * r;
+    mesh.position.set(nx, ny, 3.5); // proud of dial — same height as hand base
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(faceMat);
+    // Metal base plate under numeral (wider footprint, like NOMOS applied indices)
+    const bBox = new THREE.Box3().setFromObject(mesh);
+    const bW = (bBox.max.x - bBox.min.x) * 1.25;
+    const bH = (bBox.max.y - bBox.min.y) * 1.15;
+    const baseGeo = new THREE.BoxGeometry(bW, bH, 1.5);
+    const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
+    baseMesh.position.set(nx, ny, 2.5);
+    baseMesh.castShadow = true;
+    clockGroup.add(baseMesh);
+    numeralSprites.push(baseMesh);
   }
 }
 

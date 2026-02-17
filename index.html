@@ -1098,8 +1098,28 @@ function checkPrayerAdhan(){
     if(pTime===nowHM && _lastAdhanFired!==p+nowHM){
       _lastAdhanFired=p+nowHM;
       console.log('[adhan] Auto-triggering for '+p+' at '+nowHM);
-      const btn=document.getElementById('adhanBtn');
-      if(btn) playAdhan(btn);
+      // iOS blocks audio without user gesture — use pre-unlocked Audio (plain) for auto-trigger
+      // Then show banner so user can tap to upgrade to spatial HRTF
+      if(_preUnlockedAudio&&_preUnlockedAudio._isBackup){
+        adhanAudio=_preUnlockedAudio;_preUnlockedAudio=null;
+        adhanAudio.currentTime=0;
+        adhanPlaying=true;
+        setupAdhanAudioEvents(adhanAudio);
+        adhanAudio.play().then(()=>{
+          adhanDbg('Auto-adhan plain playing for '+p);
+          if(window._pauseTour)window._pauseTour();
+          if(window._stopTour)window._stopTour();
+          _adhanUpdateBtn();
+        }).catch(e=>{
+          adhanDbg('Auto-adhan play failed (no gesture): '+e);
+          adhanPlaying=false;
+          // Fall through to notification only
+        });
+      }else{
+        // No pre-unlocked audio — try anyway (works on Android, desktop)
+        const btn=document.getElementById('adhanBtn');
+        if(btn) playAdhan(btn);
+      }
       // Browser notification
       if('Notification' in window&&Notification.permission==='granted'){
         if(swReg){
@@ -1411,7 +1431,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=74';
+_cs.type='module';_cs.src='clock.js?v=75';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

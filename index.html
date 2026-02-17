@@ -1065,6 +1065,35 @@ function updateNavClock(){
   }
 }
 
+// ── Auto-adhan at prayer times ──
+let _lastAdhanFired='';
+let _adhanCheckTimer=null;
+function startAdhanCheck(){
+  if(_adhanCheckTimer)return;
+  _adhanCheckTimer=setInterval(checkPrayerAdhan,15000); // check every 15s
+}
+function checkPrayerAdhan(){
+  const t=window._prayerTimings;
+  if(!t||adhanPlaying)return;
+  const now=new Date();
+  const nowHM=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const prayers=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  for(const p of prayers){
+    // Aladhan returns "HH:MM (TZ)" — strip timezone
+    const pTime=(t[p]||'').split(' ')[0];
+    if(pTime===nowHM && _lastAdhanFired!==p+nowHM){
+      _lastAdhanFired=p+nowHM;
+      console.log('[adhan] Auto-triggering for '+p+' at '+nowHM);
+      const btn=document.getElementById('adhanBtn');
+      if(btn) playAdhan(btn);
+      return;
+    }
+  }
+}
+// Start checking once prayer times are loaded
+const _origStartNav=startNavClock;
+startNavClock=function(){_origStartNav();startAdhanCheck();};
+
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
@@ -1360,7 +1389,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=66';
+_cs.type='module';_cs.src='clock.js?v=67';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

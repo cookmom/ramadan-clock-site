@@ -1745,8 +1745,13 @@ async function fetchPrayer(){
   const j=await r.json();if(j.code===200){PD=j.data.timings;
   if(!CONTAINED){
   // Prayer times → top bar
-  document.getElementById('prayerTimes').textContent=`Fajr ${PD.Fajr} · Dhuhr ${PD.Dhuhr} · Asr ${PD.Asr} · Maghrib ${PD.Maghrib} · Isha ${PD.Isha}`;
-  document.getElementById('prayerTimes').style.color=DIALS[currentDial].text;
+  const _pt5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  const _now=new Date(),_nowM=_now.getHours()*60+_now.getMinutes();
+  const _toM=s=>{const[h,m]=(s||'').split(':').map(Number);return h*60+m;};
+  let _nextP='';_pt5.forEach(p=>{if(!_nextP&&_toM(PD[p])>_nowM)_nextP=p;});
+  const ptEl=document.getElementById('prayerTimes');
+  ptEl.innerHTML=_pt5.map(p=>`<span style="${p===_nextP?'color:#c0392b;font-weight:700':''}">${p} ${PD[p]}</span>`).join(' · ');
+  ptEl.style.color=DIALS[currentDial].text;
   // Bottom info — date
   document.getElementById('hijri').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('hijri').style.color=DIALS[currentDial].text;

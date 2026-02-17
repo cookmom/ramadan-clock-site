@@ -1271,7 +1271,11 @@ function fsStopClock() {
 }
 
 function fsSetPrayerTimes(t, hijri) {
-  document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
+  const _fpt5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  const _fnow=new Date(),_fnowM=_fnow.getHours()*60+_fnow.getMinutes();
+  const _ftoM=s=>{const[h,m]=(s||'').split(':').map(Number);return h*60+m;};
+  let _fnextP='';_fpt5.forEach(p=>{if(!_fnextP&&_ftoM(t[p])>_fnowM)_fnextP=p;});
+  document.getElementById('fsPrayerTimes').innerHTML=_fpt5.map(p=>`<span style="${p===_fnextP?'color:#c0392b;font-weight:600':''}">${p} ${t[p]}</span>`).join(' · ');
   // Top header: Hijri date replaces Gregorian date/time
   if(hijri) {
     document.getElementById('fsDateTime').textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH  ·  ${hijri.month.ar}`;
@@ -1436,7 +1440,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=76';
+_cs.type='module';_cs.src='clock.js?v=77';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

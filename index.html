@@ -310,15 +310,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
 .fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6)}
 .fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
-.fs-info{position:fixed;bottom:env(safe-area-inset-bottom,12px);left:0;right:0;text-align:center;font-family:var(--font);pointer-events:none;z-index:210;padding:0 16px 16px;color:rgba(255,255,255,.7)}
-.fs-info .hijri{font-size:.8rem;font-weight:300;letter-spacing:.04em}
-.fs-info .greg{font-size:.7rem;font-weight:200;margin-top:3px;opacity:.6}
-.fs-dial-bar{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 52px);left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:210;pointer-events:auto}
-.fs-dial-info{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7)}
-#fsDialName{font-size:.7rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;opacity:.7}
-#fsDialSurah{font-size:.75rem;font-weight:200;letter-spacing:.04em;opacity:.5;display:inline}
-.fs-listen-btn{background:none;border:none;padding:3px 8px;cursor:pointer;opacity:.4;transition:opacity .2s;vertical-align:middle;color:rgba(255,255,255,.6)}
-.fs-listen-btn:hover{opacity:.8}
+.fs-dial-picker{position:fixed;bottom:calc(env(safe-area-inset-bottom,12px) + 16px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7)}
+.fs-dial-bar{display:flex;justify-content:center;gap:7px}
 .fs-dial-bar .dial-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;transition:all .3s;background:none;padding:0}
 .fs-dial-bar .dial-dot.active{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.4)}
 </style>
@@ -334,9 +327,17 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <div class="fs-prayer-bar" id="fsPrayerBar"><span id="fsPrayerTimes"></span></div>
   </div>
   <button id="fsModeToggle" class="fs-mode-toggle" aria-label="Toggle day/night"><svg id="fsModeIcon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-  <div id="fsInfo" class="fs-info"><div class="hijri" id="fsHijri"></div><div class="greg" id="fsGreg"></div></div>
-  <div id="fsDialBar" class="fs-dial-bar"></div>
-  <div id="fsDialInfo" class="fs-dial-info"><span id="fsDialName"></span><br><span id="fsDialSurah"></span><button id="fsListenBtn" class="fs-listen-btn" aria-label="Listen to surah"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5,3 19,12 5,21"/></svg></button></div>
+  <div id="fsDialPicker" class="fs-dial-picker">
+    <div style="display:flex;align-items:center;gap:1.2rem;justify-content:center">
+      <button onclick="fsPrevDial()" aria-label="Previous" style="background:none;border:none;cursor:pointer;padding:.5rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"><polyline points="15,18 9,12 15,6"/></svg></button>
+      <div style="text-align:center;min-width:140px">
+        <span id="fsDialName" style="font-size:.7rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;opacity:.7"></span><br>
+        <span id="fsDialSurah" style="font-size:.65rem;font-weight:200;letter-spacing:.06em;opacity:.45"></span>
+      </div>
+      <button onclick="fsNextDial()" aria-label="Next" style="background:none;border:none;cursor:pointer;padding:.5rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"><polyline points="9,6 15,12 9,18"/></svg></button>
+    </div>
+    <div id="fsDialBar" class="fs-dial-bar" style="margin-top:8px"></div>
+  </div>
 </div>
 
 <!-- Nav -->
@@ -873,13 +874,23 @@ function buildFsDialDots() {
 
 function fsSwitchDial(name) {
   if(window._clockSwitchDial) window._clockSwitchDial(name);
-  // Update landing page state
   const idx = DIALS.indexOf(name);
   if(idx >= 0) { dialIdx = idx; updateDial(); }
-  // Update fullscreen UI
   document.querySelectorAll('#fsDialBar .dial-dot').forEach(d => d.classList.toggle('active', d.dataset.dial === name));
   document.getElementById('fsDialName').textContent = name.charAt(0).toUpperCase() + name.slice(1);
   document.getElementById('fsDialSurah').textContent = FS_DIAL_NAMES_MAP[name] || '';
+}
+function fsPrevDial() {
+  const names = FS_DIALS_DATA.map(d=>d.name);
+  const cur = names.indexOf(DIALS[dialIdx]);
+  const prev = (cur - 1 + names.length) % names.length;
+  fsSwitchDial(names[prev]);
+}
+function fsNextDial() {
+  const names = FS_DIALS_DATA.map(d=>d.name);
+  const cur = names.indexOf(DIALS[dialIdx]);
+  const next = (cur + 1) % names.length;
+  fsSwitchDial(names[next]);
 }
 
 function fsUpdateModeIcon() {
@@ -910,8 +921,7 @@ function fsSetPrayerTimes(t, hijri) {
   if(hijri) {
     document.getElementById('fsDateTime').textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH  ·  ${hijri.month.ar}`;
   }
-  // Bottom info stays as Gregorian
-  document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  // Gregorian date removed from fullscreen
 }
 function fsSetLocation(text) {
   const el = document.getElementById('fsLocation');
@@ -1058,7 +1068,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=37';
+_cs.type='module';_cs.src='clock.js?v=38';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

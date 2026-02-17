@@ -3,8 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>A Gift of Time — Prayer Clock for Muslim Families</title>
-<meta name="description" content="A beautiful, prayer-aware clock for Muslim families. Prayer alarms, Qibla compass, and 11 handcrafted dial themes named for Surahs of the Holy Quran.">
+<title>A Gift of Time — Prayer Times, Islamic Prayer Clock, Qibla Compass & Spatial Adhan</title>
+<meta name="description" content="A Gift of Time — a beautiful prayer clock for Muslims. Accurate prayer times, Qibla compass, spatial adhan toward Mecca, Ramadan fasting timer, and 11 dial designs named after Surahs. Free, no ads, no tracking — sadaqah jariyah.">
+<meta name="keywords" content="A Gift of Time, prayer times, Islamic prayer times, prayer clock, Muslim prayer app, salah times, namaz times, Fajr time, Dhuhr time, Asr time, Maghrib time, Isha time, Qibla compass, Qibla direction, adhan notification, spatial adhan, Ramadan fasting clock, suhoor iftar timer, prayer reminder, Al-Fajr, Ash-Shams, Al-Asr, Al-Qadr, An-Nur, Al-Kawthar, Al-Mulk, Ar-Rahman, Al-Kahf, Ya-Sin, Al-Fatihah, Surah Yusuf, Islamic art, sadaqah jariyah, free Muslim app, agiftoftime">
+<link rel="canonical" href="https://agiftoftime.app/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://agiftoftime.app/">
+<meta property="og:title" content="A Gift of Time — Prayer Times, Qibla Compass & Spatial Adhan">
+<meta property="og:description" content="A Gift of Time — accurate prayer times, Qibla compass, spatial adhan toward Mecca, Ramadan fasting timer, and 11 Surah-named dials. Free, no ads — sadaqah jariyah.">
+<meta property="og:image" content="https://agiftoftime.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A Gift of Time prayer clock showing Arabic numerals, Qibla compass subdial, and prayer time indicators">
+<meta property="og:site_name" content="A Gift of Time">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="A Gift of Time — Prayer Times & Islamic Prayer Clock">
+<meta name="twitter:description" content="A Gift of Time — prayer times, Qibla compass, spatial adhan toward Mecca, fasting timer. 11 dials named after Surahs. Free, no ads — sadaqah jariyah.">
+<meta name="twitter:image" content="https://agiftoftime.app/og-image.png">
+<meta name="twitter:image:alt" content="A Gift of Time prayer clock with Arabic numerals and Qibla compass">
+
+<!-- Additional SEO -->
+<meta name="author" content="Tawfeeq Martin">
+<meta name="theme-color" content="#f8f7f4">
+<meta name="apple-mobile-web-app-title" content="A Gift of Time">
+<meta name="application-name" content="A Gift of Time">
+<link rel="apple-touch-icon" href="https://agiftoftime.app/apple-touch-icon.png">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "A Gift of Time",
+  "url": "https://agiftoftime.app",
+  "description": "A beautiful Three.js prayer clock for Muslims with accurate prayer times, Qibla compass, HRTF spatial adhan toward Mecca, Ramadan fasting tracker, and 11 dial designs named after Surahs of the Quran.",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires WebGL support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Tawfeeq Martin",
+    "url": "https://tawfeeqmartin.com"
+  },
+  "featureList": [
+    "Accurate Islamic prayer times based on location",
+    "Qibla compass with real-time direction to Mecca",
+    "HRTF spatial adhan — sound from the direction of Qibla",
+    "Ramadan fasting progress tracker (Suhoor to Iftar)",
+    "11 dial designs named after Surahs of the Quran",
+    "Night mode with SuperLuminova lume glow",
+    "Tawaf animation at Maghrib",
+    "Works offline as a Progressive Web App",
+    "Three.js GPU-rendered with PBR materials and HDRI reflections",
+    "No ads, no tracking — completely free"
+  ],
+  "screenshot": "https://agiftoftime.app/og-image.png",
+  "inLanguage": "en",
+  "isAccessibleForFree": true
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is A Gift of Time?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Gift of Time is a free Islamic prayer clock web app with accurate prayer times, Qibla compass, spatial adhan toward Mecca, fasting tracker, and 11 beautiful dial designs named after Surahs of the Quran. Built with Three.js and WebGL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the spatial adhan work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The adhan audio is spatialized using the Web Audio API so the sound appears to come from the direction of Qibla (Mecca). When you turn your phone, the adhan shifts direction — best experienced with headphones."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is A Gift of Time free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, completely free with no ads and no tracking. It is built as a sadaqah jariyah (ongoing charity) for the Muslim community."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I install it on my phone?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open the clock in your mobile browser, tap Share, then select Add to Home Screen. It works offline as a Progressive Web App."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the 11 dial designs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Each dial is named after a Surah of the Quran: Al-Fajr, Ash-Shams, Al-Asr, Al-Qadr, An-Nur, Al-Kawthar, Al-Mulk, Ar-Rahman, Al-Kahf, Ya-Sin, and Al-Fatihah. Inspired by Surah Yusuf 12:4 — eleven stars."
+      }
+    }
+  ]
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Lateef:wght@400&display=swap" rel="stylesheet">
@@ -183,7 +299,7 @@ footer a:hover{color:var(--text)}
 <!-- Nav -->
 <nav>
   <div class="nav-logo">A Gift of Time</div>
-  <a href="https://cookmom.github.io/ramadan-clock/index-threejs.html" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
+  <a href="https://agiftoftime.app/index-threejs.html" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
 </nav>
 
 <!-- Sticky Clock -->
@@ -313,7 +429,7 @@ footer a:hover{color:var(--text)}
         <p>Opens full-screen, like a native app.</p>
       </div>
     </div>
-    <a href="https://cookmom.github.io/ramadan-clock/index-threejs.html" class="btn btn-primary" style="margin-top:3rem">Open Clock</a>
+    <a href="https://agiftoftime.app/index-threejs.html" class="btn btn-primary" style="margin-top:3rem">Open Clock</a>
   </div>
 </section>
 

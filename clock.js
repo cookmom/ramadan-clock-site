@@ -1768,18 +1768,23 @@ const SURAH_MAP = {
   'Al-Qamar': 54, 'Al-Wāqiʿah': 56, 'Al-Mulk': 67, 'Al-Insān': 76,
 };
 let surahAudio = null;
-document.getElementById('listenBtn').addEventListener('click', (e) => {
+const _listenBtn = document.getElementById('listenBtn');
+if(_listenBtn) _listenBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   const surahName = DIALS[currentDial].surah;
   const num = SURAH_MAP[surahName];
   if (!num) return;
-  if (surahAudio && !surahAudio.paused) { surahAudio.pause(); surahAudio = null; if(window._resumeTour) window._resumeTour(); return; }
+  if (surahAudio && !surahAudio.paused) {
+    surahAudio.pause(); surahAudio = null;
+    _listenBtn.innerHTML='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><polygon points="5,3 19,12 5,21"/></svg>Listen to this Surah';
+    if(window._resumeTour) window._resumeTour(); return;
+  }
   surahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
   surahAudio.play().catch(() => {});
-  // Pause tour/demo while surah is playing
+  _listenBtn.innerHTML='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Playing — al-Afasy';
   if(window._pauseTour) window._pauseTour();
   surahAudio.addEventListener('ended', () => {
-    // Resume tour after 2s padding
+    _listenBtn.innerHTML='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><polygon points="5,3 19,12 5,21"/></svg>Listen to this Surah';
     setTimeout(() => { if(window._resumeTour) window._resumeTour(); }, 2000);
   }, {once:true});
 });

@@ -1079,19 +1079,24 @@ document.getElementById('fsModeToggle').addEventListener('click', () => {
 });
 
 // Listen button in fullscreen
+const FS_PLAY_SVG='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><polygon points="5,3 19,12 5,21"/></svg>';
+const FS_PAUSE_SVG='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
 function fsPlaySurah() {
   const cur = DIALS[dialIdx];
   const num = FS_SURAH_MAP[cur];
   if(!num) return;
-  if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; return; }
+  const btn=document.getElementById('fsListenBtn');
+  if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah'; return; }
   fsSurahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
   fsSurahAudio.play().catch(()=>{});
+  btn.innerHTML=FS_PAUSE_SVG+'Playing — al-Afasy';
+  fsSurahAudio.onended=()=>{fsSurahAudio=null;btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah';};
 }
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=54';
+_cs.type='module';_cs.src='clock.js?v=55';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

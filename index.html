@@ -256,10 +256,6 @@ a{color:inherit;text-decoration:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 
 /* ── Prayer card ── */
-#prayerCard{
-  font-family:var(--font);
-  transition:color 1s ease;
-}
 
 /* ── Dial picker ── */
 .dial-dots{display:flex;gap:6px;justify-content:center;margin-top:1rem;flex-wrap:wrap}
@@ -396,11 +392,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <p class="section-label">Prayer Times</p>
     <h2 class="section-title">Every salah, right on time.</h2>
     <p class="section-body">Automatic prayer times for your location. From Fajr to Isha, never miss a moment.</p>
-    <div id="prayerCard" style="text-align:center;margin-top:1.5rem">
-      <p style="font-size:.75rem;font-weight:300;letter-spacing:.06em;color:var(--text-muted)" id="pcHijri">Loading...</p>
-      <p style="font-size:.65rem;font-weight:200;letter-spacing:.08em;color:var(--text-muted);opacity:.5;margin-top:2px" id="pcLoc"></p>
-      <p style="font-size:.65rem;font-weight:300;letter-spacing:.1em;color:var(--text-muted);opacity:.55;margin-top:6px" id="pcTimes"></p>
-    </div>
+    <p id="pcTimes" style="font-size:.65rem;font-weight:300;letter-spacing:.08em;color:var(--text-muted);opacity:.6;margin-top:1rem"></p>
     <div class="verse">
       <p class="verse-ar">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
       <p class="verse-en">"Indeed, prayer has been decreed upon the believers at specified times."</p>
@@ -797,11 +789,15 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
   try{
     const r=await fetch(apiUrl);const j=await r.json();if(j.code!==200)return;
     const t=j.data.timings,d=j.data.date;
-    document.getElementById('pcHijri').textContent=`${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH  ·  ${d.hijri.month.ar}`;
-    document.getElementById('pcLoc').textContent=`${city}${country?', '+country:''}`;
     const t5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-    document.getElementById('pcTimes').textContent=t5.map(p=>`${p} ${t[p]}`).join(' · ');
-  }catch(e){document.getElementById('pcHijri').textContent='Prayer times unavailable';}
+    const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
+    const toMin=s=>{const[h,m]=s.split(':').map(Number);return h*60+m;};
+    let nextP='';t5.forEach(p=>{if(!nextP&&toMin(t[p])>nowM)nextP=p;});
+    document.getElementById('pcTimes').innerHTML=t5.map(p=>{
+      const hi=p===nextP;
+      return`<span style="${hi?'font-weight:500;color:var(--text);opacity:1':''}">` +p+' '+t[p]+'</span>';
+    }).join(' · ');
+  }catch(e){}
 })();
 
 // ══════════════════════════════════════════
@@ -1094,7 +1090,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=50';
+_cs.type='module';_cs.src='clock.js?v=51';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

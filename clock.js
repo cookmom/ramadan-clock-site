@@ -1613,7 +1613,14 @@ function buildAll(){
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
   if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
-  if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
+  // Apply ACES tonemapping + sRGB to match Three.js rendered background
+  {
+    const _exp = renderer.toneMappingExposure;
+    function _at(x){x*=_exp;return Math.min(1,Math.max(0,x*(2.51*x+0.03)/(x*(2.43*x+0.59)+0.14)));}
+    function _ls(c){return c<=0.0031308?c*12.92:1.055*Math.pow(c,1/2.4)-0.055;}
+    const _hex='#'+((1<<24)|(Math.round(_ls(_at(dialBg.r))*255)<<16)|(Math.round(_ls(_at(dialBg.g))*255)<<8)|Math.round(_ls(_at(dialBg.b))*255)).toString(16).slice(1);
+    if(!CONTAINED) document.documentElement.style.background = document.body.style.background = _hex;
+  }
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
   if(!CONTAINED) {
@@ -2069,9 +2076,16 @@ function animate(){
   }
   
   if(!CONTAINED || isFullscreen) {
-    // Use scene background color directly — readPixels caused mismatch with PBR lighting/tonemapping
-    const bgColor = scene.background || new THREE.Color(DIALS[currentDial].bg);
-    const bgHex = '#' + bgColor.getHexString();
+    // Match scene.background through same ACES filmic tonemapping + sRGB that Three.js applies
+    const _bgLin = (scene.background || new THREE.Color(DIALS[currentDial].bg)).clone();
+    const _exp = renderer.toneMappingExposure;
+    // Apply exposure + ACES filmic + linear→sRGB per channel
+    function _acesTone(x) { x *= _exp; return Math.min(1, Math.max(0, x*(2.51*x+0.03)/(x*(2.43*x+0.59)+0.14))); }
+    function _linToSRGB(c) { return c <= 0.0031308 ? c*12.92 : 1.055*Math.pow(c,1/2.4)-0.055; }
+    const _r = Math.round(_linToSRGB(_acesTone(_bgLin.r))*255);
+    const _g = Math.round(_linToSRGB(_acesTone(_bgLin.g))*255);
+    const _b = Math.round(_linToSRGB(_acesTone(_bgLin.b))*255);
+    const bgHex = '#'+((1<<24)|(_r<<16)|(_g<<8)|_b).toString(16).slice(1);
     const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
     if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
     if(isFullscreen) {

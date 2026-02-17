@@ -618,14 +618,13 @@ function setNightMode(on){
     fsClock.classList.add('fs-chrome-hidden');
   }
 }
-// Tap to toggle chrome visibility in fullscreen
-document.addEventListener('touchstart',function(e){
+// Tap to toggle chrome visibility in fullscreen (click = tap without drag)
+document.addEventListener('click',function(e){
   const fsClock=document.getElementById('clockFullscreen');
   if(!fsClock||!fsClock.classList.contains('active'))return;
-  // Don't toggle if tapping a button/control
-  if(e.target.closest('button,a,.fs-dial-bar'))return;
+  if(e.target.closest('button,a,.fs-dial-bar,.fs-dial-picker'))return;
   fsClock.classList.toggle('fs-chrome-hidden');
-},{passive:true});
+});
 
 // ══════════════════════════════════════════
 // SPATIAL ADHAN — HRTF with Background/Foreground Handoff (v25)
@@ -1473,7 +1472,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=111';
+_cs.type='module';_cs.src='clock.js?v=112';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

@@ -588,10 +588,12 @@ window._clockSetFullscreen = function(on) {
   isFullscreen = on;
   if(on) {
     CLOCK_SCALE = 0.50;
-    if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
+    // No bgPlane in fullscreen — scene.background fills the screen seamlessly
+    if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
+    if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }
   // Update bgPlane cutout

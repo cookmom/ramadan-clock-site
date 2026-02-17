@@ -1041,23 +1041,25 @@ let _navClockTimer=null;
 function startNavClock(){
   if(_navClockTimer)return;
   updateNavClock();
-  _navClockTimer=setInterval(updateNavClock,10000);
+  _navClockTimer=setInterval(updateNavClock,1000);
 }
 function updateNavClock(){
   const t=window._prayerTimings;
   if(!t)return;
   const now=new Date();
-  const nowM=now.getHours()*60+now.getMinutes();
+  const nowS=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
   const t5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-  const toMin=s=>{const[hh,mm]=s.split(':').map(Number);return hh*60+mm;};
-  // Next prayer countdown
+  const toSec=s=>{const[hh,mm]=s.split(':').map(Number);return hh*3600+mm*60;};
   const elNext=document.getElementById('navNext');
   if(elNext){
-    let nextP='',nextM=0;
-    t5.forEach(p=>{const pm=toMin(t[p]);if(!nextP&&pm>nowM){nextP=p;nextM=pm;}});
+    let nextP='',nextS=0;
+    t5.forEach(p=>{const ps=toSec(t[p]);if(!nextP&&ps>nowS){nextP=p;nextS=ps;}});
     if(nextP){
-      const diff=nextM-nowM;
-      const label=diff>=60?Math.floor(diff/60)+'h '+diff%60+'min':diff+'min';
+      let diff=nextS-nowS;
+      const h=Math.floor(diff/3600);diff%=3600;
+      const m=Math.floor(diff/60);
+      const s=diff%60;
+      const label=h>0?h+'h '+m+'m '+s+'s':m>0?m+'m '+s+'s':s+'s';
       elNext.textContent=nextP+' in '+label;
     }else{
       elNext.textContent='';
@@ -1415,7 +1417,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=70';
+_cs.type='module';_cs.src='clock.js?v=71';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

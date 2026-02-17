@@ -194,7 +194,7 @@ let studioEnvMap;
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
   scene.environmentIntensity = 0.5; // dial is BasicMaterial (unaffected), moderate for PBR subdial visibility
-  scene.environmentRotation = new THREE.Euler(0.1, 0.3, 0); // start offset — softbox pre-positioned for hand reflections at rest
+  scene.environmentRotation = new THREE.Euler(0.1, 1.5, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
 }
@@ -2065,7 +2065,7 @@ function animate(){
   
   // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
   if(scene.environmentRotation) {
-    scene.environmentRotation.y = 0.3 + gx * 0.6;  // base offset + tilt sweep
+    scene.environmentRotation.y = 1.5 + gx * 0.6;  // base offset + tilt sweep
     scene.environmentRotation.x = 0.1 + gy * 0.3;
   }
   // Spec point follows tilt — the main visible highlight on hands

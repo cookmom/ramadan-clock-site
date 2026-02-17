@@ -2133,6 +2133,9 @@ function animate(){
     const bgHex = '#'+bgPlaneMat.color.getHexString();
     const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
     if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
+    if(isFullscreen) {
+      const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=bgHex;
+    }
   }
   
   // Use composer for bloom; in embed+night, render dark bg (no alpha)

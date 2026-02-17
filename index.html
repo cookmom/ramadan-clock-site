@@ -615,8 +615,7 @@ function setNightMode(on){
   // Hide all fullscreen chrome when night mode starts
   const fsClock=document.getElementById('clockFullscreen');
   if(fsClock){
-    if(on) fsClock.classList.add('fs-chrome-hidden');
-    else fsClock.classList.remove('fs-chrome-hidden');
+    fsClock.classList.add('fs-chrome-hidden');
   }
 }
 // Tap to toggle chrome visibility in fullscreen
@@ -1474,7 +1473,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=110';
+_cs.type='module';_cs.src='clock.js?v=111';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

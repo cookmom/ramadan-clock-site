@@ -386,7 +386,7 @@ function metalMat(color) {
   const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    roughness: precious ? 0.02 : 0.04, // near-mirror polish — catches HDRI as bright streaks
+    roughness: precious ? 0.02 : 0.04,
     metalness: 1.0,
     clearcoat: 0.4,
     clearcoatRoughness: 0.02,
@@ -394,6 +394,21 @@ function metalMat(color) {
     ior: 2.33,
   });
   m.envMapIntensity = precious ? 4.0 : 3.5;
+  return m;
+}
+// Brushed aluminum — directional anisotropic highlights along hand length
+function brushedHandMat(color) {
+  const m = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(color).lerp(new THREE.Color(0xD6D6D6), 0.3), // aluminum tint
+    roughness: 0.28,        // brushed aluminum: 0.25-0.40
+    metalness: 1.0,
+    anisotropy: 0.8,        // strong directional brushing
+    anisotropyRotation: 0,  // brushing along hand length (Y axis)
+    clearcoat: 0.15,        // subtle protective coat
+    clearcoatRoughness: 0.1,
+    reflectivity: 0.9,
+  });
+  m.envMapIntensity = 2.5;
   return m;
 }
 function lumeMat(color) {
@@ -901,7 +916,7 @@ function buildHands() {
   hourGroup = new THREE.Group();
   const hL=R*0.72, hW=R*0.064, hT=R*0.035, hD=4;
   const hGeo = nomosHand(hL, hW, hT, hD);
-  hourMat_ = metalMat(c.hand);
+  hourMat_ = brushedHandMat(c.hand);
   const hMesh = new THREE.Mesh(hGeo, hourMat_);
   hMesh.castShadow = true;
   hourGroup.add(hMesh);
@@ -918,7 +933,7 @@ function buildHands() {
   minGroup = new THREE.Group();
   const mL=R*0.9, mW=R*0.056, mT=R*0.05, mD=5;
   const mGeo = nomosHand(mL, mW, mT, mD);
-  minMat_ = metalMat(c.hand);
+  minMat_ = brushedHandMat(c.hand);
   const mMesh = new THREE.Mesh(mGeo, minMat_);
   mMesh.castShadow = true;
   minGroup.add(mMesh);

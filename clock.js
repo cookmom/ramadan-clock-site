@@ -906,7 +906,7 @@ function buildHands() {
   
   // Hour — NOMOS Club Campus sword hand (slimmed to match reference)
   hourGroup = new THREE.Group();
-  const hL=R*0.75, hW=R*0.035, hT=R*0.04, hD=4;
+  const hL=R*0.75, hW=R*0.05, hT=R*0.04, hD=4;
   const hGeo = nomosHand(hL, hW, hT, hD);
   hourMat_ = metalMat(c.hand);
   const hMesh = new THREE.Mesh(hGeo, hourMat_);
@@ -923,7 +923,7 @@ function buildHands() {
   
   // Minute — NOMOS Club Campus sword hand (slimmed to match reference)
   minGroup = new THREE.Group();
-  const mL=R*0.925, mW=R*0.035, mT=R*0.055, mD=5;
+  const mL=R*0.925, mW=R*0.045, mT=R*0.055, mD=5;
   const mGeo = nomosHand(mL, mW, mT, mD);
   minMat_ = metalMat(c.hand);
   const mMesh = new THREE.Mesh(mGeo, minMat_);

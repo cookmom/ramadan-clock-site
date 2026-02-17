@@ -1178,10 +1178,11 @@ function buildQibla() {
   triShape.lineTo(triW/2, -triH/2);
   triShape.closePath();
   const triGeo = new THREE.ExtrudeGeometry(triShape, {depth:0.5, bevelEnabled:false});
+  const triLume = d.lume || d.hand;
   const triMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.hand),
+    color: new THREE.Color(triLume),
     roughness: 0.2, metalness: 0.3,
-    emissive: new THREE.Color(d.hand), emissiveIntensity: 0.15,
+    emissive: new THREE.Color(triLume), emissiveIntensity: 0.15,
     envMapIntensity: 1.5,
   });
   const triMesh = new THREE.Mesh(triGeo, triMat);

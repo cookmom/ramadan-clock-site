@@ -427,39 +427,32 @@ function extrudedLeaf(len, maxW, tailLen, depth, baseScale=1.0) {
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled:true, bevelThickness:0.4, bevelSize:0.3, bevelSegments:3 });
 }
 
-// NOMOS Club Campus sword hands — flat baton tapering to point, lume channel recessed
+// NOMOS leaf/feuille hands — smooth taper from wide base to fine point, lume fills most of width
 function nomosHand(len, baseW, tailLen, depth) {
   const s = new THREE.Shape();
   const hw = baseW / 2;
-  const triH = baseW; // equilateral: height ≈ width
-  const triStart = len - triH;
-  // Start at tail bottom-left
-  s.moveTo(-hw * 0.6, -tailLen);
-  // Straight parallel sides up to triangle start
-  s.lineTo(-hw, 0);
-  s.lineTo(-hw, triStart);
-  // Short equilateral triangle tip
-  s.lineTo(0, len);
-  s.lineTo(hw, triStart);
-  // Back down
-  s.lineTo(hw, 0);
-  s.lineTo(hw * 0.6, -tailLen);
+  // Leaf shape: widest ~30% up, tapers smoothly to point
+  s.moveTo(-hw * 0.5, -tailLen);     // tail base (narrower)
+  s.lineTo(-hw * 0.7, 0);             // shoulder
+  s.quadraticCurveTo(-hw, len*0.15, -hw, len*0.3);  // widest point
+  s.quadraticCurveTo(-hw*0.8, len*0.65, 0, len);    // smooth taper to tip
+  s.quadraticCurveTo(hw*0.8, len*0.65, hw, len*0.3); // mirror
+  s.quadraticCurveTo(hw, len*0.15, hw*0.7, 0);
+  s.lineTo(hw * 0.5, -tailLen);
   s.closePath();
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.2, bevelSegments: 2 });
 }
 
-// Lume channel — recessed strip in center of NOMOS hand
+// Lume fill — same leaf shape but ~80% width (thin metal border visible)
 function nomosLume(len, baseW, depth) {
-  const cw = baseW * 0.35; // channel width
-  const hw = cw / 2;
-  const startY = len * 0.33; // start one-third up from base
-  const triH = baseW; // match nomosHand triangle height
-  const endY = len - triH; // stop at triangle base
   const s = new THREE.Shape();
-  s.moveTo(-hw, startY);
-  s.lineTo(-hw, endY);
-  s.lineTo(hw, endY);
-  s.lineTo(hw, startY);
+  const hw = baseW * 0.4; // 80% of full width
+  const startY = len * 0.08;
+  s.moveTo(-hw * 0.6, startY);
+  s.quadraticCurveTo(-hw, len*0.15, -hw, len*0.3);
+  s.quadraticCurveTo(-hw*0.8, len*0.65, 0, len*0.95);
+  s.quadraticCurveTo(hw*0.8, len*0.65, hw, len*0.3);
+  s.quadraticCurveTo(hw, len*0.15, hw*0.6, startY);
   s.closePath();
   return new THREE.ExtrudeGeometry(s, { depth: 1.5, bevelEnabled: false });
 }
@@ -1182,25 +1175,36 @@ function buildQibla() {
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
   qiblaInnerRotor.add(innerDisc);
   
-  // Qibla marker — small triangle on inner disc pointing to Mecca
-  const triH = innerR * 1.56;
-  const triW = innerR * 1.04;
-  const triShape = new THREE.Shape();
-  triShape.moveTo(0, triH/2);
-  triShape.lineTo(-triW/2, -triH/2);
-  triShape.lineTo(triW/2, -triH/2);
-  triShape.closePath();
-  const triGeo = new THREE.ExtrudeGeometry(triShape, {depth:0.5, bevelEnabled:false});
+  // Qibla marker — NOMOS subdial hand style (thin needle + circle counterweight)
+  const needleLen = innerR * 1.4;   // reaches to edge of subdial
+  const needleW = innerR * 0.08;    // ultra-thin
+  const counterR = innerR * 0.15;   // small circle at tail
   const triLume = d.lume || d.hand;
   const triMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(triLume),
-    roughness: 0.2, metalness: 0.3,
+    roughness: 0.15, metalness: 0.5,
     emissive: new THREE.Color(triLume), emissiveIntensity: 0.15,
-    envMapIntensity: 1.5,
+    envMapIntensity: 2.0,
   });
-  const triMesh = new THREE.Mesh(triGeo, triMat);
-  triMesh.position.set(0, innerR*0.35, 0.3);
+  // Needle body
+  const needleShape = new THREE.Shape();
+  const nhw = needleW / 2;
+  needleShape.moveTo(-nhw, -counterR * 1.5);  // start below center
+  needleShape.lineTo(-nhw * 0.3, needleLen * 0.8);  // taper
+  needleShape.lineTo(0, needleLen);                   // tip
+  needleShape.lineTo(nhw * 0.3, needleLen * 0.8);
+  needleShape.lineTo(nhw, -counterR * 1.5);
+  needleShape.closePath();
+  const needleGeo = new THREE.ExtrudeGeometry(needleShape, {depth:0.5, bevelEnabled:false});
+  const triMesh = new THREE.Mesh(needleGeo, triMat);
+  triMesh.position.set(0, 0, 0.3);
   qiblaInnerRotor.add(triMesh);
+  // Circle counterweight at tail
+  const counterGeo = new THREE.CylinderGeometry(counterR, counterR, 0.5, 24);
+  const counterMesh = new THREE.Mesh(counterGeo, triMat);
+  counterMesh.rotation.x = Math.PI / 2;
+  counterMesh.position.set(0, -counterR * 2.5, 0.3);
+  qiblaInnerRotor.add(counterMesh);
   window._qiblaTriMat = triMat;
   
   // Position inner rotor offset from center (orbiting)

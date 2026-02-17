@@ -800,27 +800,20 @@ function buildMarkers() {
         lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
+      // NOMOS proportion: tall narrow lume bars — fully luminous SuperLuminova
       if(isHour && !isNumeralPos){
-        const mH=R*0.12, mW=R*0.05, depth=3;
+        const mH=R*0.16, mW=R*0.03, depth=3;
         const geo = new THREE.BoxGeometry(mW, mH, depth);
-        const mesh = new THREE.Mesh(geo, metalMat(c.hand));
+        const mesh = new THREE.Mesh(geo, lumeMat(c.lume));
         mesh.castShadow = true;
-        const midR = (R - R*0.04 - mH/2) * 0.9;
+        const midR = (R - R*0.04 - mH/2) * 0.92;
         mesh.position.x = Math.cos(ang)*midR;
         mesh.position.y = Math.sin(ang)*midR;
         mesh.position.z = depth/2;
         mesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(mesh);
         markerMeshes.push(mesh);
-        
-        // Lume insert
-        const lGeo = new THREE.BoxGeometry(mW*0.5, mH*0.65, depth+0.5);
-        const lMesh = new THREE.Mesh(lGeo, lumeMat(c.lume));
-        lMesh.position.copy(mesh.position);
-        lMesh.position.z = depth/2 + 0.3;
-        lMesh.rotation.z = mesh.rotation.z;
-        clockGroup.add(lMesh);
-        lumeMeshes.push(lMesh);
+        lumeMeshes.push(mesh);
       }
     }
   }

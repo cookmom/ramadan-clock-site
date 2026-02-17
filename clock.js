@@ -664,9 +664,10 @@ function buildScrollIndicator() {
   const dotR = R * 0.022;
   console.log('[clock] buildScrollIndicator, target:', scrollIndicatorTarget, 'CONTAINED:', CONTAINED);
   const geo = new THREE.CircleGeometry(dotR, 16);
+  const lumeCol = c.lume || c.hand;
   const mat = new THREE.MeshStandardMaterial({
-    color: c.hand, roughness: 0.3, metalness: 0.4,
-    emissive: c.hand, emissiveIntensity: 0.3,
+    color: lumeCol, roughness: 0.3, metalness: 0.4,
+    emissive: lumeCol, emissiveIntensity: nightBlend > 0.3 ? 1.5 : 0.3,
     transparent: true, opacity: 1
   });
   mat.envMapIntensity = 0.2;
@@ -701,7 +702,8 @@ function updateScrollIndicator() {
   scrollIndicator.position.x = scrollIndicatorCurrent.x;
   scrollIndicator.position.y = scrollIndicatorCurrent.y;
   scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;
-  scrollIndicator.material.emissiveIntensity = 0.3 + Math.sin(Date.now()*0.003)*0.15;
+  const lumeGlow = nightBlend > 0.3 ? 1.5 : 0.3;
+  scrollIndicator.material.emissiveIntensity = lumeGlow + Math.sin(Date.now()*0.003)*0.15;
 }
 
 // Hour markers (extruded pills — actual 3D)

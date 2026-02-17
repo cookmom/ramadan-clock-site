@@ -292,14 +292,44 @@ footer a:hover{color:var(--text)}
   :root{--clock-size:min(560px,35vw)}
   .scroll-section{max-width:800px}
 }
+
+/* ── Fullscreen Clock Overlay ── */
+.clock-fs-overlay{position:fixed;inset:0;z-index:200;background:#0a0a0a;display:none;flex-direction:column;align-items:center;justify-content:center}
+.clock-fs-overlay.active{display:flex}
+.clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
+.clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
+.fs-prayer-bar{position:fixed;top:calc(env(safe-area-inset-top,12px) + 14px);left:16px;right:56px;font-family:var(--font);font-size:.65rem;font-weight:300;letter-spacing:.12em;text-align:left;z-index:210;pointer-events:none;color:rgba(255,255,255,.55)}
+.fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6)}
+.fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
+.fs-info{position:fixed;bottom:env(safe-area-inset-bottom,12px);left:0;right:0;text-align:center;font-family:var(--font);pointer-events:none;z-index:210;padding:0 16px 16px;color:rgba(255,255,255,.7)}
+.fs-info .hijri{font-size:.8rem;font-weight:300;letter-spacing:.04em}
+.fs-info .greg{font-size:.7rem;font-weight:200;margin-top:3px;opacity:.6}
+.fs-dial-bar{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 52px);left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:210;pointer-events:auto}
+.fs-dial-info{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7)}
+#fsDialName{font-size:.7rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;opacity:.7}
+#fsDialSurah{font-size:.75rem;font-weight:200;letter-spacing:.04em;opacity:.5;display:inline}
+.fs-listen-btn{background:none;border:none;padding:3px 8px;cursor:pointer;opacity:.4;transition:opacity .2s;vertical-align:middle;color:rgba(255,255,255,.6)}
+.fs-listen-btn:hover{opacity:.8}
+.fs-dial-bar .dial-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;transition:all .3s;background:none;padding:0}
+.fs-dial-bar .dial-dot.active{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
 
+<!-- Fullscreen Clock Overlay -->
+<div id="clockFullscreen" class="clock-fs-overlay">
+  <button id="clockFsClose" class="clock-fs-close" aria-label="Close">&times;</button>
+  <div id="fsPrayerBar" class="fs-prayer-bar"><span id="fsPrayerTimes"></span></div>
+  <button id="fsModeToggle" class="fs-mode-toggle" aria-label="Toggle day/night"><svg id="fsModeIcon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+  <div id="fsInfo" class="fs-info"><div class="hijri" id="fsHijri"></div><div class="greg" id="fsGreg"></div></div>
+  <div id="fsDialBar" class="fs-dial-bar"></div>
+  <div id="fsDialInfo" class="fs-dial-info"><span id="fsDialName"></span><br><span id="fsDialSurah"></span><button id="fsListenBtn" class="fs-listen-btn" aria-label="Listen to surah"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5,3 19,12 5,21"/></svg></button></div>
+</div>
+
 <!-- Nav -->
 <nav>
   <div class="nav-logo">A Gift of Time</div>
-  <a href="https://agiftoftime.app/index-threejs.html" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
+  <a href="#" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem" onclick="openClockFullscreen();return false;">Open Clock</a>
 </nav>
 
 <!-- Sticky Clock -->
@@ -429,7 +459,7 @@ footer a:hover{color:var(--text)}
         <p>Opens full-screen, like a native app.</p>
       </div>
     </div>
-    <a href="https://agiftoftime.app/index-threejs.html" class="btn btn-primary" style="margin-top:3rem">Open Clock</a>
+    <a href="#" class="btn btn-primary" style="margin-top:3rem" onclick="openClockFullscreen();return false;">Open Clock</a>
   </div>
 </section>
 
@@ -790,6 +820,152 @@ document.body.scrollTop=0;
 setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},50);
 setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},200);
 setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
+
+// ══════════════════════════════════════════
+// FULLSCREEN CLOCK
+// ══════════════════════════════════════════
+const FS_DIALS_DATA = [
+  {name:'tennis',color:'#68b890'},{name:'white',color:'#e8e4dc'},{name:'salmon',color:'#d8988c'},
+  {name:'slate',color:'#6a6a74'},{name:'sky',color:'#82b8d8'},{name:'kawthar',color:'#f2dce0'},
+  {name:'dhuha',color:'#f08040'},{name:'najm',color:'#384870'},{name:'qamar',color:'#c0c4cc'},
+  {name:'ward',color:'#d89098'},{name:'lilas',color:'#8878a8'}
+];
+const FS_SURAH_MAP = {tennis:55,white:24,salmon:91,slate:92,sky:85,kawthar:108,dhuha:93,najm:53,qamar:54,ward:56,lilas:67};
+const FS_DIAL_NAMES_MAP = {tennis:'Ar-Raḥmān',white:'An-Nūr',salmon:'Ash-Shams',slate:'Al-Layl',sky:'Al-Burūj',kawthar:'Al-Kawthar',dhuha:'Aḍ-Ḍuḥā',najm:'An-Najm',qamar:'Al-Qamar',ward:'Al-Wāqiʿah',lilas:'Al-Mulk'};
+let fsNight = false;
+let fsSurahAudio = null;
+
+const SUN_SVG='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const MOON_SVG='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+function buildFsDialDots() {
+  const bar = document.getElementById('fsDialBar');
+  bar.innerHTML = FS_DIALS_DATA.map(d =>
+    `<button class="dial-dot${d.name===DIALS[dialIdx]?' active':''}" data-dial="${d.name}" style="border-color:${d.color}" onclick="fsSwitchDial('${d.name}')" aria-label="${FS_DIAL_NAMES_MAP[d.name]}"></button>`
+  ).join('');
+}
+
+function fsSwitchDial(name) {
+  if(window._clockSwitchDial) window._clockSwitchDial(name);
+  // Update landing page state
+  const idx = DIALS.indexOf(name);
+  if(idx >= 0) { dialIdx = idx; updateDial(); }
+  // Update fullscreen UI
+  document.querySelectorAll('#fsDialBar .dial-dot').forEach(d => d.classList.toggle('active', d.dataset.dial === name));
+  document.getElementById('fsDialName').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById('fsDialSurah').textContent = FS_DIAL_NAMES_MAP[name] || '';
+}
+
+function fsUpdateModeIcon() {
+  document.getElementById('fsModeIcon').innerHTML = fsNight ? SUN_SVG : MOON_SVG;
+}
+
+async function fsFetchPrayer() {
+  try {
+    const pos = await new Promise((r,j) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}) : j());
+    const lat=pos.coords.latitude, lon=pos.coords.longitude;
+    const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
+    const j = await res.json();
+    if(j.code===200) {
+      const t = j.data.timings;
+      document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
+      document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    }
+  } catch(e) {
+    try {
+      const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=LosAngeles&country=US&method=2`);
+      const j = await res.json();
+      if(j.code===200) {
+        const t = j.data.timings;
+        document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
+        document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+      }
+    } catch(e2) {}
+  }
+}
+
+function openClockFullscreen() {
+  const overlay = document.getElementById('clockFullscreen');
+  const canvas = document.querySelector('#dialHero canvas');
+  if(!canvas) return;
+
+  // Stop tour/idle
+  stopDialCycle();
+
+  // Move canvas into overlay
+  overlay.appendChild(canvas);
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  document.querySelector('nav').style.display = 'none';
+
+  // Tell clock engine to go fullscreen
+  if(window._clockSetFullscreen) window._clockSetFullscreen(true);
+
+  // Set night to match current page state
+  fsNight = pageNight;
+  fsUpdateModeIcon();
+
+  // Build dial dots
+  buildFsDialDots();
+  const cur = DIALS[dialIdx];
+  document.getElementById('fsDialName').textContent = cur.charAt(0).toUpperCase() + cur.slice(1);
+  document.getElementById('fsDialSurah').textContent = DIAL_NAMES[cur] || '';
+
+  // Fetch prayer times for fullscreen bar
+  fsFetchPrayer();
+
+  // Push history state for back button
+  history.pushState({clockFs:true}, '', '#clock');
+}
+
+function closeClockFullscreen() {
+  const overlay = document.getElementById('clockFullscreen');
+  const canvas = overlay.querySelector('canvas');
+  if(!canvas) return;
+
+  // Move canvas back
+  document.getElementById('dialHero').appendChild(canvas);
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  document.querySelector('nav').style.display = '';
+
+  // Tell clock engine to go back to contained
+  if(window._clockSetFullscreen) window._clockSetFullscreen(false);
+
+  // Stop any fullscreen surah audio
+  if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; }
+}
+
+// Close button
+document.getElementById('clockFsClose').addEventListener('click', () => {
+  closeClockFullscreen();
+  if(location.hash === '#clock') history.back();
+});
+
+// Back button
+window.addEventListener('popstate', (e) => {
+  if(document.getElementById('clockFullscreen').classList.contains('active')) {
+    closeClockFullscreen();
+  }
+});
+
+// Mode toggle in fullscreen
+document.getElementById('fsModeToggle').addEventListener('click', () => {
+  fsNight = !fsNight;
+  fsUpdateModeIcon();
+  if(window._clockSetNight) window._clockSetNight(fsNight);
+  setNightMode(fsNight);
+});
+
+// Listen button in fullscreen
+document.getElementById('fsListenBtn').addEventListener('click', () => {
+  const cur = DIALS[dialIdx];
+  const num = FS_SURAH_MAP[cur];
+  if(!num) return;
+  if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; return; }
+  fsSurahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
+  fsSurahAudio.play().catch(()=>{});
+});
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');

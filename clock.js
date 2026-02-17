@@ -562,7 +562,8 @@ initGyro();
 // ══════════════════════════════════════════
 // Background plane (fills screen, matches dial color)
 // Background surround plane — flush with dial face, hole cut for gap
-const CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
+let isFullscreen = false;
+let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background = PBR with fine leather/matte texture
 const bgPlaneMat = new THREE.MeshPhysicalMaterial({
@@ -584,6 +585,25 @@ const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
 bgPlane.position.z = -3 * CLOCK_SCALE; // flush with dial front face in world space
 if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
+
+// Fullscreen API for landing page
+window._clockSetFullscreen = function(on) {
+  isFullscreen = on;
+  if(on) {
+    CLOCK_SCALE = 0.50;
+    if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
+    renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
+  } else {
+    CLOCK_SCALE = 0.95;
+    renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
+  }
+  // Update bgPlane cutout
+  const newCutoutR = R * 1.12 * CLOCK_SCALE;
+  bgPlane.position.z = -3 * CLOCK_SCALE;
+  clockGroup.scale.setScalar(CLOCK_SCALE);
+  onResize();
+  buildAll();
+};
 
 const clockGroup = new THREE.Group(); // everything lives here for parallax
 clockGroup.scale.setScalar(CLOCK_SCALE);
@@ -1614,7 +1634,7 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED || CONTAINED) scene.background = dialBg.clone();
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
   if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
@@ -1866,8 +1886,8 @@ window.addEventListener('message',(e)=>{
   if(e.data&&e.data.type==='nightOff'){modeTarget=0;}
 });
 function onResize(){
-  W=CONTAINED?CONTAINER.clientWidth:window.innerWidth;
-  H=CONTAINED?CONTAINER.clientHeight:window.innerHeight;
+  W=(CONTAINED && !isFullscreen)?CONTAINER.clientWidth:window.innerWidth;
+  H=(CONTAINED && !isFullscreen)?CONTAINER.clientHeight:window.innerHeight;
   renderer.setSize(W,H);
   const a=W/H;
   cam.aspect=a;
@@ -2039,15 +2059,15 @@ function animate(){
   
   // BG color blend
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend); // deep midnight — not void black
-  if(!EMBED || CONTAINED) scene.background = nightBg;
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = nightBg;
   bgPlaneMat.color.copy(nightBg);
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
   // gyro debug dot removed
-  // Camera parallax — skip when contained
-  if(!CONTAINED) { cam.position.x = 0; }
-  cam.position.y = CONTAINED ? -2 : -3;
+  // Camera parallax — skip when contained (unless fullscreen)
+  if(!CONTAINED || isFullscreen) { cam.position.x = 0; }
+  cam.position.y = (CONTAINED && !isFullscreen) ? -2 : -3;
   cam.lookAt(0,0,0);
   
   // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position

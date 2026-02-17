@@ -191,6 +191,20 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
 .btn-outline:hover{border-color:var(--text)}
 .support-heart{transition:color .6s ease}
 .support-heart.filled{color:#e74c4c}
+.sticky-cta{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  z-index:900;display:flex;align-items:center;gap:.6rem;
+  background:rgba(20,20,22,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.08);border-radius:2rem;
+  padding:.6rem 1.25rem;font-size:.8rem;font-weight:400;letter-spacing:.02em;
+  color:rgba(255,255,255,.85);text-decoration:none;
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+  transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s ease;
+  opacity:0;pointer-events:none;
+}
+.sticky-cta.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+.sticky-cta .cta-heart{color:#e74c4c;font-size:1rem}
+.sticky-cta .cta-count{font-size:.65rem;font-weight:300;opacity:.5;margin-left:-.2rem}
 a{color:inherit;text-decoration:none}
 
 /* ── Sections ── */
@@ -360,7 +374,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1>
     <p class="section-body">A prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
-    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Support this project</a>
+    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Keep this free</a>
   </div>
 </section>
 
@@ -1098,7 +1112,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=47';
+_cs.type='module';_cs.src='clock.js?v=48';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1247,6 +1261,46 @@ setTimeout(setupScrollObservers,500);
   setTimeout(resetIdle, 3000);
 })();
 
+// Sticky CTA — appears after engagement (surah play, fullscreen, or deep scroll)
+(function(){
+  const sticky=document.querySelector('.sticky-cta');
+  if(!sticky) return;
+  let shown=false;
+  function show(){
+    if(shown) return; shown=true;
+    sticky.classList.add('visible');
+  }
+  function hide(){ sticky.classList.remove('visible'); shown=false; }
+  // Trigger: scroll past 3rd section
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) show(); });
+  },{threshold:0.3});
+  const sec3=document.getElementById('sec-night')||document.querySelectorAll('.scroll-section')[3];
+  if(sec3) observer.observe(sec3);
+  // Trigger: surah play or fullscreen open
+  const origListenClick=document.getElementById('listenBtn');
+  document.addEventListener('click',(e)=>{
+    if(e.target.closest('#listenBtn')||e.target.closest('[onclick*="playVerse"]')) show();
+  });
+  // Hide in fullscreen clock view
+  const fsClock=document.getElementById('clockFullscreen');
+  if(fsClock){
+    new MutationObserver(()=>{
+      if(fsClock.classList.contains('active')) sticky.classList.remove('visible');
+      else if(shown) sticky.classList.add('visible');
+    }).observe(fsClock,{attributes:true,attributeFilter:['class']});
+  }
+  // Fetch supporter count from Supabase
+  fetch('https://ypniokxbftuebagppxzj.supabase.co/rest/v1/signups?select=id',{
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwbmlva3hiZnR1ZWJhZ3BweHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTQ2MjcsImV4cCI6MjA4Njc3MDYyN30.u63gpVUX7bOm5WQZkgt1elVWwwSBx_UGektwDTnllhw',
+      'Prefer':'count=exact'}
+  }).then(r=>{
+    const count=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
+    const el=document.querySelector('.cta-count');
+    if(el&&count>0) el.textContent=count+' supporters';
+  }).catch(()=>{});
+})();
+
 // Heart pulse: alternate thin outline ↔ filled red
 (function(){
   const h=document.querySelector('.support-heart');
@@ -1262,5 +1316,10 @@ setTimeout(setupScrollObservers,500);
   },2000);
 })();
 </script>
+<a href="support.html" class="sticky-cta">
+  <i class="ph-fill ph-heart cta-heart"></i>
+  <span>Keep this free</span>
+  <span class="cta-count"></span>
+</a>
 </body>
 </html>

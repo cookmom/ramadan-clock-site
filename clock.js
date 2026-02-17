@@ -400,7 +400,7 @@ function metalMat(color) {
 function brushedHandMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(color).lerp(new THREE.Color(0xD6D6D6), 0.3), // aluminum tint
-    roughness: 0.28,        // brushed aluminum: 0.25-0.40
+    roughness: 0.38,        // brushed aluminum: softer sheen
     metalness: 1.0,
     anisotropy: 0.8,        // strong directional brushing
     anisotropyRotation: 0,  // brushing along hand length (Y axis)
@@ -408,7 +408,7 @@ function brushedHandMat(color) {
     clearcoatRoughness: 0.1,
     reflectivity: 0.9,
   });
-  m.envMapIntensity = 2.5;
+  m.envMapIntensity = 1.8;
   return m;
 }
 function lumeMat(color) {

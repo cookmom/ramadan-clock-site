@@ -693,7 +693,7 @@ function startHrtfBuffer(pos){
     adhanPanner=adhanCtx.createStereoPanner();
     updateAdhanPannerPosition();
     adhanGain=adhanCtx.createGain();
-    adhanGain.gain.value=1.5;
+    adhanGain.gain.value=2.0;
     bufSrc.connect(adhanGain).connect(adhanPanner).connect(adhanCtx.destination);
     adhanHrtfStartOffset=pos;
     adhanHrtfStartCtxTime=adhanCtx.currentTime;
@@ -1325,7 +1325,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=64';
+_cs.type='module';_cs.src='clock.js?v=65';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

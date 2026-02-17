@@ -189,8 +189,9 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
   transition:color .5s ease,background-color .5s ease,border-color .5s ease;
 }
 .btn-outline:hover{border-color:var(--text)}
-.support-heart{transition:color .6s ease}
+.support-heart{transition:color .6s ease;display:inline-block;animation:heartpulse .833s ease-in-out infinite}
 .support-heart.filled{color:#e74c4c}
+@keyframes heartpulse{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}60%{transform:scale(1)}}
 .sticky-cta{
   position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
   z-index:900;display:flex;align-items:center;gap:.6rem;
@@ -203,7 +204,7 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
   opacity:0;pointer-events:none;
 }
 .sticky-cta.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
-.sticky-cta .cta-heart{color:#e74c4c;font-size:1rem}
+.sticky-cta .cta-heart{color:#e74c4c;font-size:1rem;display:inline-block;animation:heartpulse .833s ease-in-out infinite}
 .sticky-cta .cta-count{font-size:.65rem;font-weight:300;opacity:.5;margin-left:-.2rem}
 a{color:inherit;text-decoration:none}
 
@@ -1432,7 +1433,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=79';
+_cs.type='module';_cs.src='clock.js?v=80';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

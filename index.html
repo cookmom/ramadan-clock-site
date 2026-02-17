@@ -195,10 +195,10 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
 .sticky-cta{
   position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
   z-index:900;display:flex;align-items:center;gap:.6rem;
-  background:rgba(20,20,22,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.08);border-radius:2rem;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(0,0,0,.08);border-radius:2rem;
   padding:.6rem 1.25rem;font-size:.8rem;font-weight:400;letter-spacing:.02em;
-  color:rgba(255,255,255,.85);text-decoration:none;
+  color:rgba(0,0,0,.75);text-decoration:none;
   box-shadow:0 4px 24px rgba(0,0,0,.3);
   transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s ease;
   opacity:0;pointer-events:none;
@@ -1433,7 +1433,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=80';
+_cs.type='module';_cs.src='clock.js?v=81';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1605,7 +1605,7 @@ setTimeout(setupScrollObservers,500);
   const observer=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{ if(e.isIntersecting) show(); });
   },{threshold:0.3});
-  const sec3=document.getElementById('sec-night')||document.querySelectorAll('.scroll-section')[3];
+  const sec3=document.getElementById('sec-prayer')||document.querySelectorAll('.scroll-section')[2];
   if(sec3) observer.observe(sec3);
   // Trigger: surah play or fullscreen open
   const origListenClick=document.getElementById('listenBtn');

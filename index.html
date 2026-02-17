@@ -501,7 +501,7 @@ const DIAL_SURAHS={'tennis':55,'white':24,'salmon':91,'slate':92,'sky':85,'kawth
 let dialIdx=3; // slate default
 let pageNight=false;
 let dialAudio=null, dialPlaying=false;
-let adhanAudio=null;
+let adhanAudio=null, adhanPlaying=false;
 let dialCycleTimer=null;
 
 // ══════════════════════════════════════════
@@ -605,14 +605,44 @@ function setNightMode(on){
 }
 
 // ══════════════════════════════════════════
-// SPATIAL ADHAN (HRTF toward Qibla)
+// SPATIAL ADHAN — HRTF with Background/Foreground Handoff (v25)
 // ══════════════════════════════════════════
-let adhanCtx=null, adhanBufSrc=null, adhanPanner=null, adhanGain=null;
-let adhanDecodedBuf=null, adhanInterval=null;
-let adhanDeviceHeading=0, adhanQiblaAngle=0, adhanCurrentPan=0;
-let adhanHasCompass=false;
+// ARCHITECTURE:
+//   - Foreground: HRTF via AudioBufferSourceNode + StereoPanner (no plain Audio)
+//   - Background: plain Audio survives via MediaSession
+//   - HIDE: get position, kill HRTF, resume plain Audio from position
+//   - SHOW: get position from plain Audio, pause it, restart HRTF from position
+//   - Plain Audio ONLY exists during background, never simultaneously with HRTF
 
-// Get Qibla bearing from user location
+const ADHAN_SRC='https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3';
+let adhanCtx=null, adhanBufSrc=null, adhanPanner=null, adhanGain=null;
+let adhanDecodedBuf=null, adhanPannerInterval=null;
+let adhanHrtfStartCtxTime=0, adhanHrtfStartOffset=0;
+let adhanHrtfStartWall=0;
+let adhanDeviceHeading=0, adhanQiblaAngle=0, adhanCurrentPan=0;
+let adhanHasCompass=false, adhanCompassEventCount=0;
+let _preUnlockedAudio=null;
+let _adhanBtn=null; // stash button ref for ended/visibility handlers
+
+function adhanDbg(){console.log('[adhan]',...arguments);}
+
+// ── Pre-unlock Audio on first tap (iOS requires user gesture) ──
+function _preUnlockAudio(){
+  if(_preUnlockedAudio)return;
+  const a=new Audio(ADHAN_SRC);
+  a.preload='auto';
+  a.load();
+  a._unlocked=false;a._isBackup=true;a._swapping=false;
+  _preUnlockedAudio=a;
+}
+document.addEventListener('touchstart',function _unlockA(){
+  _preUnlockAudio();
+},{once:false});
+document.addEventListener('click',function _unlockA2(){
+  _preUnlockAudio();
+},{once:false});
+
+// ── Qibla + Compass ──
 async function adhanGetQibla(){
   try{
     const pos=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:5000}));
@@ -621,34 +651,137 @@ async function adhanGetQibla(){
     adhanQiblaAngle=Math.atan2(Math.sin(mLng-lng),Math.cos(lat)*Math.tan(mLat)-Math.sin(lat)*Math.cos(mLng-lng));
   }catch(e){}
 }
-
-// Track device compass
 function adhanCompassHandler(e){
   const h=e.webkitCompassHeading||e.alpha;
   if(h==null)return;
   adhanHasCompass=true;
+  adhanCompassEventCount++;
   adhanDeviceHeading=h*Math.PI/180;
 }
 
-function updateAdhanPan(){
-  if(!adhanPanner||!adhanHasCompass)return;
-  const ra=adhanQiblaAngle-adhanDeviceHeading;
-  const target=Math.max(-1,Math.min(1,Math.sin(ra)));
-  adhanCurrentPan+=(target-adhanCurrentPan)*0.15;
-  adhanPanner.pan.value=adhanCurrentPan;
+// ── Position tracking ──
+function adhanPosition(){
+  if(adhanAudio&&!adhanAudio.paused) return adhanAudio.currentTime;
+  if(adhanHrtfStartWall>0&&adhanPlaying)
+    return adhanHrtfStartOffset+(Date.now()-adhanHrtfStartWall)/1000;
+  if(adhanCtx&&adhanBufSrc&&adhanCtx.state==='running')
+    return adhanHrtfStartOffset+(adhanCtx.currentTime-adhanHrtfStartCtxTime);
+  return adhanHrtfStartOffset;
 }
 
+// ── Panner update ──
+let _lastPannerLog=0;
+function updateAdhanPannerPosition(){
+  if(!adhanPanner||!adhanHasCompass||!adhanCtx||adhanCtx.state!=='running')return;
+  const h=adhanDeviceHeading||0;
+  const ra=adhanQiblaAngle-h;
+  const targetPan=Math.max(-1,Math.min(1,Math.sin(ra)));
+  adhanCurrentPan+=(targetPan-adhanCurrentPan)*0.15;
+  adhanPanner.pan.value=adhanCurrentPan;
+  const now=Date.now();
+  if(now-_lastPannerLog>2000){_lastPannerLog=now;adhanDbg('pan h='+(h*180/Math.PI).toFixed(0)+'° q='+(adhanQiblaAngle*180/Math.PI).toFixed(0)+'° pan='+adhanCurrentPan.toFixed(2)+' evt='+adhanCompassEventCount);}
+}
+
+// ── HRTF buffer start ──
+function startHrtfBuffer(pos){
+  if(adhanBufSrc){try{adhanBufSrc.stop();}catch(e){}adhanBufSrc=null;}
+  if(!adhanCtx||!adhanDecodedBuf||!adhanPlaying)return Promise.reject('no ctx/buf');
+  return adhanCtx.resume().then(()=>{
+    const bufSrc=adhanCtx.createBufferSource();
+    bufSrc.buffer=adhanDecodedBuf;
+    adhanBufSrc=bufSrc;
+    adhanPanner=adhanCtx.createStereoPanner();
+    updateAdhanPannerPosition();
+    adhanGain=adhanCtx.createGain();
+    adhanGain.gain.value=1.5;
+    bufSrc.connect(adhanGain).connect(adhanPanner).connect(adhanCtx.destination);
+    adhanHrtfStartOffset=pos;
+    adhanHrtfStartCtxTime=adhanCtx.currentTime;
+    adhanHrtfStartWall=Date.now();
+    if(adhanAudio&&!adhanAudio.paused){adhanAudio._swapping=true;adhanAudio.pause();setTimeout(()=>{if(adhanAudio)adhanAudio._swapping=false;},50);}
+    bufSrc.start(0,pos);
+    bufSrc.onended=()=>{
+      if(adhanBufSrc===bufSrc){
+        adhanBufSrc=null;
+        if(!document.hidden){adhanPlaying=false;adhanHrtfStartWall=0;_adhanUpdateBtn();}
+        adhanDbg('HRTF buf ended'+(document.hidden?' (bg)':' naturally'));
+      }
+    };
+    adhanDbg('HRTF buf started pos='+pos.toFixed(2)+' ctx='+adhanCtx.state);
+  });
+}
+
+// ── HRTF sequence: fetch + decode + start ──
+function startHrtfSequence(src,startOffset){
+  const offset=startOffset||0;
+  adhanCtx=adhanCtx||new(window.AudioContext||window.webkitAudioContext)();
+  if(adhanCtx.state==='suspended')adhanCtx.resume();
+  adhanPannerInterval=setInterval(updateAdhanPannerPosition,200);
+  adhanPlaying=true;
+  fetch(src).then(r=>r.arrayBuffer())
+    .then(buf=>adhanCtx.decodeAudioData(buf))
+    .then(decoded=>{
+      adhanDecodedBuf=decoded;
+      adhanPlaying=true;
+      adhanDbg('decoded '+decoded.duration.toFixed(1)+'s, starting HRTF from '+offset.toFixed(2));
+      return startHrtfBuffer(offset);
+    })
+    .catch(e=>{
+      adhanDbg('HRTF setup failed: '+e+', falling back to plain');
+      adhanPlaying=true;
+      if(adhanAudio&&adhanAudio._unlocked){adhanAudio.currentTime=0;adhanAudio.play().catch(()=>{});}
+    });
+}
+
+// ── Button UI helper ──
+function _adhanUpdateBtn(){
+  if(!_adhanBtn)return;
+  if(adhanPlaying){
+    _adhanBtn.innerHTML=adhanHasCompass
+      ?'<i class="ph-thin ph-pause"></i> Playing toward Qibla — turn your phone'
+      :'<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+  }else{
+    _adhanBtn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
+  }
+}
+
+// ── Setup ended/pause handlers + MediaSession ──
+function setupAdhanAudioEvents(audio){
+  audio.addEventListener('ended',()=>{
+    adhanPlaying=false;
+    if(adhanPannerInterval){clearInterval(adhanPannerInterval);adhanPannerInterval=null;}
+    _adhanUpdateBtn();
+    adhanDbg('plain audio ended');
+  });
+  audio.addEventListener('pause',()=>{
+    if(audio._swapping)return;
+    adhanPlaying=false;
+    if(adhanPannerInterval){clearInterval(adhanPannerInterval);adhanPannerInterval=null;}
+    _adhanUpdateBtn();
+  });
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:'Adhan',artist:'Mishari Rashid al-Afasy',album:'A Gift of Time'
+    });
+    navigator.mediaSession.setActionHandler('play',()=>{if(adhanAudio&&document.hidden)adhanAudio.play();});
+    navigator.mediaSession.setActionHandler('pause',()=>{if(adhanAudio&&document.hidden)adhanAudio.pause();});
+    navigator.mediaSession.setActionHandler('stop',()=>{if(adhanAudio){adhanAudio.pause();}adhanPlaying=false;_adhanUpdateBtn();});
+  }
+}
+
+// ── Main play/stop entry point ──
 async function playAdhan(btn){
-  // Stop if playing
-  if(adhanBufSrc){
-    try{adhanBufSrc.stop();}catch(e){}
-    adhanBufSrc=null;
-    if(adhanInterval){clearInterval(adhanInterval);adhanInterval=null;}
-    btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
+  _adhanBtn=btn;
+  // Stop if already playing
+  if(adhanPlaying){
+    adhanPlaying=false;
+    if(adhanPannerInterval){clearInterval(adhanPannerInterval);adhanPannerInterval=null;}
+    if(adhanBufSrc){try{adhanBufSrc.stop();}catch(e){}adhanBufSrc=null;}
+    if(adhanAudio){adhanAudio.pause();adhanAudio=null;}
+    adhanHrtfStartWall=0;
+    _adhanUpdateBtn();
     return;
   }
-  // Also stop plain audio if it was playing
-  if(adhanAudio&&!adhanAudio.paused){adhanAudio.pause();adhanAudio=null;}
 
   btn.innerHTML='<i class="ph-thin ph-circle-notch"></i> Loading...';
 
@@ -657,47 +790,125 @@ async function playAdhan(btn){
     try{await DeviceOrientationEvent.requestPermission();}catch(e){}
   }
   window.addEventListener('deviceorientation',adhanCompassHandler);
-
-  // Get Qibla direction
   await adhanGetQibla();
 
-  // Create audio context + decode
-  if(!adhanCtx) adhanCtx=new(window.AudioContext||window.webkitAudioContext)();
-  await adhanCtx.resume();
+  const useHrtf=adhanQiblaAngle!==0;
+  adhanDbg('playAdhan hrtf='+useHrtf);
 
-  if(!adhanDecodedBuf){
-    try{
-      const r=await fetch('https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3');
-      const ab=await r.arrayBuffer();
-      adhanDecodedBuf=await adhanCtx.decodeAudioData(ab);
-    }catch(e){
-      btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
-      return;
-    }
+  // Kill previous state
+  if(adhanBufSrc){try{adhanBufSrc.stop();}catch(e){}adhanBufSrc=null;}
+  if(adhanAudio){adhanAudio.pause();adhanAudio=null;}
+  if(adhanCtx&&adhanCtx!==null){try{adhanCtx.close();}catch(e){}}
+  adhanCtx=null;adhanPanner=null;adhanGain=null;adhanDecodedBuf=null;
+
+  adhanPlaying=true;
+  _adhanUpdateBtn();
+
+  // MediaSession metadata
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:'Adhan',artist:'Mishari Rashid al-Afasy',album:'A Gift of Time'
+    });
   }
 
-  // Play through StereoPanner toward Qibla
-  adhanBufSrc=adhanCtx.createBufferSource();
-  adhanBufSrc.buffer=adhanDecodedBuf;
-  adhanPanner=adhanCtx.createStereoPanner();
-  adhanGain=adhanCtx.createGain();
-  adhanGain.gain.value=1.0;
-  adhanBufSrc.connect(adhanGain).connect(adhanPanner).connect(adhanCtx.destination);
+  // audioSession.type for iOS 17+
+  if('audioSession' in navigator){
+    try{navigator.audioSession.type='playback';}catch(e){}
+  }
 
-  updateAdhanPan();
-  adhanInterval=setInterval(updateAdhanPan,100);
-
-  adhanBufSrc.start(0);
-  adhanBufSrc.onended=()=>{
-    adhanBufSrc=null;
-    if(adhanInterval){clearInterval(adhanInterval);adhanInterval=null;}
-    btn.innerHTML='<i class="ph-thin ph-play"></i> Play Spatial Adhan';
-  };
-
-  btn.innerHTML=adhanHasCompass
-    ?'<i class="ph-thin ph-pause"></i> Playing toward Qibla — turn your phone'
-    :'<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+  if(useHrtf){
+    if(_preUnlockedAudio){
+      adhanAudio=_preUnlockedAudio;
+      _preUnlockedAudio=null;
+      adhanAudio._swapping=true;
+      adhanAudio.play().then(()=>{
+        adhanAudio.pause();adhanAudio.currentTime=0;
+        adhanAudio._unlocked=true;
+        setupAdhanAudioEvents(adhanAudio);
+        setTimeout(()=>{adhanAudio._swapping=false;},50);
+        adhanDbg('pre-loaded Audio unlocked');
+        startHrtfSequence(ADHAN_SRC,0);
+      }).catch(e=>{
+        adhanDbg('pre-loaded unlock failed: '+e);
+        adhanAudio._swapping=false;
+        _preUnlockedAudio=null;
+        adhanAudio=new Audio(ADHAN_SRC);
+        adhanAudio._isBackup=true;adhanAudio._unlocked=false;
+        adhanAudio.play().then(()=>{
+          adhanAudio._swapping=true;adhanAudio.pause();adhanAudio.currentTime=0;
+          adhanAudio._unlocked=true;setupAdhanAudioEvents(adhanAudio);
+          setTimeout(()=>{adhanAudio._swapping=false;},50);
+          startHrtfSequence(ADHAN_SRC,0);
+        }).catch(e2=>{
+          adhanDbg('all unlock failed: '+e2);
+          adhanAudio=new Audio(ADHAN_SRC);setupAdhanAudioEvents(adhanAudio);adhanAudio.play().catch(()=>{});
+        });
+      });
+    }else{
+      adhanAudio=new Audio(ADHAN_SRC);
+      adhanAudio._isBackup=true;adhanAudio._unlocked=false;
+      adhanAudio.play().then(()=>{
+        adhanAudio._swapping=true;adhanAudio.pause();adhanAudio.currentTime=0;
+        adhanAudio._unlocked=true;setupAdhanAudioEvents(adhanAudio);
+        setTimeout(()=>{adhanAudio._swapping=false;},50);
+        adhanDbg('plain Audio unlocked (fallback)');
+        startHrtfSequence(ADHAN_SRC,0);
+      }).catch(e=>{
+        adhanDbg('plain unlock failed: '+e+', playing plain only');
+        adhanAudio=new Audio(ADHAN_SRC);setupAdhanAudioEvents(adhanAudio);adhanAudio.play().catch(()=>{});
+      });
+    }
+  }else{
+    adhanAudio=new Audio(ADHAN_SRC);
+    setupAdhanAudioEvents(adhanAudio);
+    adhanAudio.play().catch(()=>{});
+  }
 }
+
+// ── Visibility swap: HRTF ↔ Plain ──
+document.addEventListener('visibilitychange',()=>{
+  if(!adhanPlaying||!adhanDecodedBuf) return;
+
+  if(document.hidden){
+    // BACKGROUND: get position, kill HRTF, resume plain Audio
+    const pos=adhanPosition();
+    adhanDbg('HIDE: pos='+pos.toFixed(2)+' unlocked='+!!(adhanAudio&&adhanAudio._unlocked));
+    if(adhanBufSrc){try{adhanBufSrc.stop();}catch(e){}adhanBufSrc=null;}
+    if(adhanAudio&&adhanAudio._unlocked){
+      adhanAudio._swapping=true;
+      adhanAudio.currentTime=pos;
+      adhanAudio.play().then(()=>{
+        adhanAudio._swapping=false;
+        adhanDbg('HIDE: plain resumed from pos='+pos.toFixed(2));
+      }).catch(e=>{
+        adhanAudio._swapping=false;
+        adhanDbg('HIDE: plain resume failed: '+e);
+      });
+    }else{
+      adhanDbg('HIDE: no unlocked Audio, silence in background');
+    }
+  }else{
+    // FOREGROUND: get position from plain Audio, pause it, restart HRTF
+    const pos=(adhanAudio&&!adhanAudio.paused)?adhanAudio.currentTime:adhanPosition();
+    adhanDbg('SHOW: pos='+pos.toFixed(2)+' switching to HRTF');
+    if(adhanAudio&&!adhanAudio.paused){
+      adhanAudio._swapping=true;
+      adhanAudio.pause();
+      setTimeout(()=>{if(adhanAudio)adhanAudio._swapping=false;},50);
+    }
+    if(adhanDecodedBuf&&adhanCtx){
+      if(!adhanPannerInterval)adhanPannerInterval=setInterval(updateAdhanPannerPosition,200);
+      startHrtfBuffer(pos).then(()=>{
+        adhanPlaying=true;
+        if(!adhanPannerInterval)adhanPannerInterval=setInterval(updateAdhanPannerPosition,200);
+        adhanDbg('SHOW: HRTF restored at pos='+pos.toFixed(2));
+      }).catch(e=>{
+        adhanDbg('SHOW: HRTF failed, resuming plain: '+e);
+        if(adhanAudio){adhanAudio.currentTime=pos;adhanAudio.play().catch(()=>{});}
+      });
+    }
+  }
+});
 
 // ══════════════════════════════════════════
 // SCROLL OBSERVERS
@@ -1107,7 +1318,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=61';
+_cs.type='module';_cs.src='clock.js?v=62';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

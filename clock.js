@@ -868,22 +868,28 @@ function buildNumerals() {
     // Same lume paint finish as minute markers (SuperLuminova)
     const faceMat = lumeMat(c.lume);
     
-    const mesh = new THREE.Mesh(geo, faceMat);
     const nx = Math.cos(ang) * r, ny = Math.sin(ang) * r;
-    mesh.position.set(nx, ny, 3.5); // proud of dial — same height as hand base
+    // Layer 1: metal base — same numeral shape, ~10% larger scale
+    const baseScale = scale * 1.1;
+    const baseShapes = pathToShapes(pd, baseScale);
+    if(baseShapes.length) {
+      const baseGeo = new THREE.ExtrudeGeometry(baseShapes, {
+        depth: EXTRUDE_DEPTH * 0.5, bevelEnabled: true,
+        bevelThickness: 0.15, bevelSize: 0.12, bevelOffset: 0, bevelSegments: 2
+      });
+      baseGeo.computeVertexNormals();
+      const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
+      baseMesh.position.set(nx, ny, 2.5);
+      baseMesh.castShadow = true;
+      clockGroup.add(baseMesh);
+      numeralSprites.push(baseMesh);
+    }
+    // Layer 2: lume numeral on top
+    const mesh = new THREE.Mesh(geo, faceMat);
+    mesh.position.set(nx, ny, 3.5);
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(faceMat);
-    // Metal base plate under numeral (wider footprint, like NOMOS applied indices)
-    const bBox = new THREE.Box3().setFromObject(mesh);
-    const bW = (bBox.max.x - bBox.min.x) * 1.25;
-    const bH = (bBox.max.y - bBox.min.y) * 1.15;
-    const baseGeo = new THREE.BoxGeometry(bW, bH, 1.5);
-    const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-    baseMesh.position.set(nx, ny, 2.5);
-    baseMesh.castShadow = true;
-    clockGroup.add(baseMesh);
-    numeralSprites.push(baseMesh);
   }
 }
 

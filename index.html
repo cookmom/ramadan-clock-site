@@ -904,9 +904,17 @@ function fsStopClock() {
   if(_fsClockTimer) { clearInterval(_fsClockTimer); _fsClockTimer = null; }
 }
 
-function fsSetPrayerTimes(t) {
+function fsSetPrayerTimes(t, hijri) {
   document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
-  document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  // Bottom info: Hijri date if available, else Gregorian
+  if(hijri) {
+    document.getElementById('fsHijri').textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+    // Also show Arabic month name below
+    const greg = document.getElementById('fsGreg');
+    if(greg) greg.textContent = `${hijri.month.ar} · ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}`;
+  } else {
+    document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  }
 }
 function fsSetLocation(text) {
   const el = document.getElementById('fsLocation');
@@ -925,8 +933,7 @@ async function fsFetchPrayer() {
       const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
       const j = await res.json();
       if(j.code===200) {
-        fsSetPrayerTimes(j.data.timings);
-        // Use Aladhan meta for location if available
+        fsSetPrayerTimes(j.data.timings, j.data.date && j.data.date.hijri);
         const meta = j.data.meta;
         if(meta && meta.timezone) {
           // Extract city-like name from timezone (e.g. "America/Los_Angeles" → "Los Angeles")
@@ -950,7 +957,7 @@ async function fsFetchPrayer() {
       if(ip.latitude && ip.longitude) {
         const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${ip.latitude}&longitude=${ip.longitude}&method=2`);
         const j = await res.json();
-        if(j.code===200) fsSetPrayerTimes(j.data.timings);
+        if(j.code===200) fsSetPrayerTimes(j.data.timings, j.data.date && j.data.date.hijri);
         fsSetLocation(ip.city ? (ip.region_code ? `${ip.city}, ${ip.region_code}` : ip.city) : '');
       }
     } catch(e2) {}
@@ -1054,7 +1061,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=35';
+_cs.type='module';_cs.src='clock.js?v=36';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

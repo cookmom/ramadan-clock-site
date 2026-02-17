@@ -323,7 +323,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 .fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 88px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65);transition:opacity .5s ease}
 .fs-header.hidden{opacity:0}
 .fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
-.fs-header .fs-location{font-size:.6rem;font-weight:200;letter-spacing:.08em;margin-top:2px;opacity:.5}
+.fs-header .fs-location{display:none}
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
 .fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6)}
 .fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
@@ -1476,7 +1476,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=107';
+_cs.type='module';_cs.src='clock.js?v=108';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

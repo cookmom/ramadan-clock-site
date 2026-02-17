@@ -1875,6 +1875,12 @@ function onResize(){
   cam.updateProjectionMatrix();
   composer.setSize(W, H);
   bloomPass.resolution.set(W, H);
+  // Enforce correct scale — fullscreen=0.50, contained=0.95, embed=0.65
+  const targetScale = isFullscreen ? 0.50 : (CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50));
+  if(CLOCK_SCALE !== targetScale) {
+    CLOCK_SCALE = targetScale;
+    clockGroup.scale.setScalar(CLOCK_SCALE);
+  }
 }
 window.addEventListener('resize',onResize);
 if(CONTAINED){new ResizeObserver(onResize).observe(CONTAINER);}

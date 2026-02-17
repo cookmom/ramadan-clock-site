@@ -1335,7 +1335,7 @@ function buildStars(){
   if(moonGroup) scene.remove(moonGroup);
   moonGroup = new THREE.Group();
   
-  const moonR = 10;
+  const moonR = 7;
   
   // ── Procedural moon texture with craters + Hijri phase shadow ──
   const moonCvN = document.createElement('canvas');
@@ -2000,7 +2000,7 @@ function animate(){
     moonGroup.visible = modeBlend > 0.1;
     
     // Rise from below-right to upper-right
-    const startY = -60, endY = 80;   // above the star arc
+    const startY = -60, endY = 65;   // above the star arc, lower to avoid header crop
     const startX = 0, endX = 0;     // centered — moon crowns the prostration arc
     // Ease-out cubic for natural rise
     const eased = 1 - Math.pow(1 - moonBlend, 3);

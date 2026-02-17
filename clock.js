@@ -570,9 +570,8 @@ initGyro();
 let isFullscreen = false;
 let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
-// Background = PBR with fine leather/matte texture
-// bgPlane uses same PBR as dial so they look identical
-const bgPlaneMat = dialMat(0x18181e);
+// Background plane — MeshBasicMaterial (unlit) so it always matches scene.background exactly
+const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e });
 const bgShape = new THREE.Shape();
 bgShape.moveTo(-1000, -1000); bgShape.lineTo(1000, -1000); bgShape.lineTo(1000, 1000); bgShape.lineTo(-1000, 1000); bgShape.closePath();
 const bgHole = new THREE.Path();

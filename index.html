@@ -927,47 +927,54 @@ function fsSetLocation(text) {
   if(el && text) el.textContent = text;
 }
 async function fsFetchPrayer() {
-  let lat, lon, gotGPS = false;
-  // Try GPS first
-  try {
-    const pos = await new Promise((r,j) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(r,j,{maximumAge:600000,timeout:8000}) : j());
-    lat = pos.coords.latitude; lon = pos.coords.longitude; gotGPS = true;
-  } catch(e) {}
+  let resolved = false;
 
-  if(gotGPS) {
+  async function fromCoords(lat, lon, locationName) {
     try {
       const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=2`);
       const j = await res.json();
-      if(j.code===200) {
+      if(j.code===200 && !resolved) {
+        resolved = true;
         fsSetPrayerTimes(j.data.timings, j.data.date && j.data.date.hijri);
-        const meta = j.data.meta;
-        if(meta && meta.timezone) {
-          // Extract city-like name from timezone (e.g. "America/Los_Angeles" → "Los Angeles")
-          const tzCity = meta.timezone.split('/').pop().replace(/_/g,' ');
-          fsSetLocation(tzCity);
+        if(locationName) fsSetLocation(locationName);
+        else {
+          const tz = j.data.meta && j.data.meta.timezone;
+          if(tz) fsSetLocation(tz.split('/').pop().replace(/_/g,' '));
         }
       }
+      // Upgrade location with reverse geocode (non-blocking)
+      fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
+        .then(r=>r.json()).then(g=>{
+          const city = g.city || g.locality || '';
+          const region = g.principalSubdivisionCode ? g.principalSubdivisionCode.split('-').pop() : '';
+          if(city) fsSetLocation(region ? `${city}, ${region}` : city);
+        }).catch(()=>{});
     } catch(e) {}
-    // Also try reverse geocode for better location name (non-blocking)
-    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
-      .then(r=>r.json()).then(g=>{
-        const city = g.city || g.locality || '';
-        const region = g.principalSubdivisionCode ? g.principalSubdivisionCode.split('-').pop() : '';
-        if(city) fsSetLocation(region ? `${city}, ${region}` : city);
-      }).catch(()=>{});
-  } else {
-    // Fallback: IP geolocation → Aladhan
-    try {
-      const ipRes = await fetch('https://ipapi.co/json/');
-      const ip = await ipRes.json();
-      if(ip.latitude && ip.longitude) {
-        const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${ip.latitude}&longitude=${ip.longitude}&method=2`);
-        const j = await res.json();
-        if(j.code===200) fsSetPrayerTimes(j.data.timings, j.data.date && j.data.date.hijri);
-        fsSetLocation(ip.city ? (ip.region_code ? `${ip.city}, ${ip.region_code}` : ip.city) : '');
-      }
-    } catch(e2) {}
   }
+
+  // Race: GPS vs IP geolocation — first to resolve wins
+  // GPS path
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => fromCoords(pos.coords.latitude, pos.coords.longitude),
+      ()=>{}, {maximumAge:600000, timeout:5000}
+    );
+  }
+
+  // IP path (starts immediately, doesn't wait for GPS)
+  try {
+    const ipRes = await fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(4000)});
+    const ip = await ipRes.json();
+    if(ip.latitude && ip.longitude) {
+      const loc = ip.city ? (ip.region_code ? `${ip.city}, ${ip.region_code}` : ip.city) : '';
+      await fromCoords(ip.latitude, ip.longitude, loc);
+    }
+  } catch(e) {}
+
+  // Last resort: hardcoded LA if nothing worked after 6s
+  setTimeout(() => {
+    if(!resolved) fromCoords(34.05, -118.25, 'Los Angeles, CA');
+  }, 6000);
 }
 
 function openClockFullscreen() {
@@ -1068,7 +1075,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=41';
+_cs.type='module';_cs.src='clock.js?v=42';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

@@ -67,7 +67,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.4;
+renderer.toneMappingExposure = 0.8;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -169,22 +169,52 @@ scene.add(subSpot.target);
 // ══════════════════════════════════════════
 // MATERIALS (PBR)
 // ══════════════════════════════════════════
+// ── Procedural galvanized dial texture (NOMOS-style fine grain) ──
+function makeDialTextures() {
+  const sz = 512;
+  const nCvs = document.createElement('canvas'); nCvs.width = nCvs.height = sz;
+  const nCtx = nCvs.getContext('2d');
+  const nData = nCtx.createImageData(sz, sz);
+  const rCvs = document.createElement('canvas'); rCvs.width = rCvs.height = sz;
+  const rCtx = rCvs.getContext('2d');
+  const rData = rCtx.createImageData(sz, sz);
+  let seed = 42;
+  function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+  for (let i = 0; i < sz * sz; i++) {
+    const idx = i * 4;
+    const nx = (rand() - 0.5) * 0.15, ny = (rand() - 0.5) * 0.15;
+    nData.data[idx] = Math.floor((nx + 0.5) * 255);
+    nData.data[idx + 1] = Math.floor((ny + 0.5) * 255);
+    nData.data[idx + 2] = 255; nData.data[idx + 3] = 255;
+    const rv = 0.85 + rand() * 0.15;
+    const rvByte = Math.floor(rv * 255);
+    rData.data[idx] = rvByte; rData.data[idx + 1] = rvByte;
+    rData.data[idx + 2] = rvByte; rData.data[idx + 3] = 255;
+  }
+  nCtx.putImageData(nData, 0, 0); rCtx.putImageData(rData, 0, 0);
+  const normalMap = new THREE.CanvasTexture(nCvs);
+  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping; normalMap.repeat.set(3, 3);
+  const roughnessMap = new THREE.CanvasTexture(rCvs);
+  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping; roughnessMap.repeat.set(3, 3);
+  return { normalMap, roughnessMap };
+}
+const dialTextures = makeDialTextures();
+
 function dialMat(color) {
   const cd = currentDial;
   const special = {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.6, clearcoatRoughness:0.3 },
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
-    rainbow: { roughness:1.0, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 },
   };
-  const s = special[cd] || { roughness:1.0, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
-  const isFlat = !special[cd]; // non-special dials get emissive fill for flat look
+  const s = special[cd] || { roughness:0.95, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
   const m = new THREE.MeshPhysicalMaterial({
-    color, roughness:s.roughness, metalness:s.metalness,
-    sheen:s.sheen, sheenColor:new THREE.Color(s.sheenColor), sheenRoughness:s.sheenRoughness,
-    clearcoat:s.clearcoat, clearcoatRoughness:s.clearcoatRoughness,
-    emissive: isFlat ? color : 0x000000, emissiveIntensity: isFlat ? 0.15 : 0
+    color, roughness: s.roughness, metalness: s.metalness,
+    clearcoat: s.clearcoat, clearcoatRoughness: s.clearcoatRoughness,
+    normalMap: dialTextures.normalMap, normalScale: new THREE.Vector2(0.3, 0.3),
+    roughnessMap: dialTextures.roughnessMap,
   });
-  m.envMapIntensity = s.metalness > 0.1 ? 0.3 : 0.08;
+  if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
+  m.envMapIntensity = 0.4;
   return m;
 }
 function metalMat(color) {
@@ -614,7 +644,7 @@ function buildHands() {
   
   // Hour — NOMOS Club Campus sword hand
   hourGroup = new THREE.Group();
-  const hL=R*0.75, hW=R*0.05, hT=R*0.05, hD=4;
+  const hL=R*0.75, hW=R*0.035, hT=R*0.04, hD=4;
   const hGeo = nomosHand(hL, hW, hT, hD);
   hourMat_ = metalMat(c.hand);
   const hMesh = new THREE.Mesh(hGeo, hourMat_);
@@ -631,7 +661,7 @@ function buildHands() {
   
   // Minute — NOMOS Club Campus sword hand
   minGroup = new THREE.Group();
-  const mL=R*0.925, mW=R*0.05, mT=R*0.07, mD=5;
+  const mL=R*0.925, mW=R*0.035, mT=R*0.055, mD=5;
   const mGeo = nomosHand(mL, mW, mT, mD);
   minMat_ = metalMat(c.hand);
   const mMesh = new THREE.Mesh(mGeo, minMat_);
@@ -1544,7 +1574,7 @@ function animate(){
   specPoint.intensity = 20 * (1 - modeBlend * 0.6);
   counterSpec.intensity = 6 * (1 - modeBlend * 0.7);
   subSpot.intensity = 30 * (1 - modeBlend * 0.5);
-  renderer.toneMappingExposure = 1.4 - modeBlend * 0.5;
+  renderer.toneMappingExposure = 0.8 - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;

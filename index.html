@@ -1065,6 +1065,19 @@ function updateNavClock(){
   }
 }
 
+// ── Service Worker + Notifications ──
+let swReg=null;
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(r=>{swReg=r;}).catch(()=>{});
+}
+function requestNotifPermission(){
+  if('Notification' in window&&Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+document.addEventListener('touchstart',requestNotifPermission,{once:true});
+document.addEventListener('click',requestNotifPermission,{once:true});
+
 // ── Auto-adhan at prayer times ──
 let _lastAdhanFired='';
 let _adhanCheckTimer=null;
@@ -1079,13 +1092,20 @@ function checkPrayerAdhan(){
   const nowHM=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   const prayers=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
   for(const p of prayers){
-    // Aladhan returns "HH:MM (TZ)" — strip timezone
     const pTime=(t[p]||'').split(' ')[0];
     if(pTime===nowHM && _lastAdhanFired!==p+nowHM){
       _lastAdhanFired=p+nowHM;
       console.log('[adhan] Auto-triggering for '+p+' at '+nowHM);
       const btn=document.getElementById('adhanBtn');
       if(btn) playAdhan(btn);
+      // Browser notification
+      if('Notification' in window&&Notification.permission==='granted'){
+        if(swReg){
+          swReg.showNotification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p,renotify:true});
+        }else{
+          new Notification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p});
+        }
+      }
       return;
     }
   }
@@ -1389,7 +1409,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=67';
+_cs.type='module';_cs.src='clock.js?v=68';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

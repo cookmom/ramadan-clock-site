@@ -1,11 +1,11 @@
 // A Gift of Time — Service Worker
 const CACHE_NAME = 'rc-v1';
 const ASSETS = [
-  '/ramadan-clock/',
-  '/ramadan-clock/index.html',
-  '/ramadan-clock/manifest.json',
-  '/ramadan-clock/icon-192.png',
-  '/ramadan-clock/icon-512.png'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 // Install: cache core assets
@@ -39,9 +39,9 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const c of list) {
-        if (c.url.includes('/ramadan-clock') && 'focus' in c) return c.focus();
+        if (c.url.includes('/') && 'focus' in c) return c.focus();
       }
-      return clients.openWindow('/ramadan-clock/');
+      return clients.openWindow('/');
     })
   );
 });
@@ -52,8 +52,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/ramadan-clock/icon-192.png',
-      badge: '/ramadan-clock/icon-192.png',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
       tag: data.tag || 'prayer',
       renotify: true
     })

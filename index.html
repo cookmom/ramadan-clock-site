@@ -794,8 +794,10 @@ async function playAdhan(btn){
   window.addEventListener('deviceorientation',adhanCompassHandler);
   await adhanGetQibla();
 
-  const useHrtf=adhanQiblaAngle!==null;
-  adhanDbg('playAdhan hrtf='+useHrtf);
+  // Always use HRTF path for background/foreground handoff
+  // If no Qibla angle, panning stays centered — still get MediaSession + handoff benefits
+  const useHrtf=true;
+  adhanDbg('playAdhan hrtf='+useHrtf+' qibla='+(adhanQiblaAngle!==null?'yes':'no'));
 
   // Kill previous state
   if(adhanBufSrc){try{adhanBufSrc.stop();}catch(e){}adhanBufSrc=null;}
@@ -1323,7 +1325,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=63';
+_cs.type='module';_cs.src='clock.js?v=64';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

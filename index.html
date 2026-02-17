@@ -1432,7 +1432,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=89';
+_cs.type='module';_cs.src='clock.js?v=90';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1606,7 +1606,8 @@ setTimeout(setupScrollObservers,500);
   },{threshold:0.1});
   const sec3=document.getElementById('sec-qibla')||document.querySelectorAll('.scroll-section')[1];
   if(sec3) observer.observe(sec3);
-  window.addEventListener('scroll',()=>{ if(window.scrollY > window.innerHeight * 1.2) show(); },{passive:true});
+  window.addEventListener('scroll',()=>{ if(window.scrollY > window.innerHeight * 0.5) show(); },{passive:true});
+  setTimeout(show, 8000); // fallback: show after 8s engagement
   // Trigger: surah play or fullscreen open
   const origListenClick=document.getElementById('listenBtn');
   document.addEventListener('click',(e)=>{

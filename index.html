@@ -537,6 +537,17 @@ function updateDial(){
   document.getElementById('dialListen').innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';
   if(window._clockSwitchDial) window._clockSwitchDial(d);
   updateLumeHalo();
+  // Sync fullscreen UI if active
+  if(document.getElementById('clockFullscreen').classList.contains('active')){
+    document.querySelectorAll('#fsDialBar .dial-dot').forEach(dot => dot.classList.toggle('active', dot.dataset.dial === d));
+    document.getElementById('fsDialSurah').textContent = (typeof FS_DIAL_NAMES_MAP!=='undefined' && FS_DIAL_NAMES_MAP[d]) || DIAL_NAMES[d] || '';
+    // Stop fullscreen surah if playing
+    if(typeof fsSurahAudio!=='undefined' && fsSurahAudio && !fsSurahAudio.paused){
+      fsSurahAudio.pause(); fsSurahAudio=null;
+      const fb=document.getElementById('fsListenBtn');
+      if(fb) fb.innerHTML=FS_PLAY_SVG+'Listen to this Surah';
+    }
+  }
 }
 function dialNext(){dialIdx=(dialIdx+1)%DIALS.length;updateDial();}
 function dialPrev(){dialIdx=(dialIdx-1+DIALS.length)%DIALS.length;updateDial();}
@@ -1096,7 +1107,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=57';
+_cs.type='module';_cs.src='clock.js?v=58';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

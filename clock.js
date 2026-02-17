@@ -142,7 +142,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.8;
+renderer.toneMappingExposure = 0.75;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -194,7 +194,7 @@ let studioEnvMap;
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
   scene.environmentIntensity = 0.5; // dial is BasicMaterial (unaffected), moderate for PBR subdial visibility
-  scene.environmentRotation = new THREE.Euler(0.1, 1.5, 0); // start offset — softbox pre-positioned for hand reflections at rest
+  scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
 }
@@ -204,23 +204,29 @@ const ambLight = new THREE.AmbientLight(0xffffff, 0.12);
 scene.add(ambLight);
 
 // Key light — soft rect from upper-left (warm, even illumination)
-const keyLight = new THREE.RectAreaLight(0xfff8f0, 1.0, 250, 250);
-keyLight.position.set(-60, 150, 220);
+const keyLight = new THREE.RectAreaLight(0xfff8f0, 2.5, 300, 300);
+keyLight.position.set(-80, 180, 250);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Spec point — tilt-tracking accent highlight on hands
-const specPoint = new THREE.PointLight(0xffffff, 3, 300, 2);
+// Strip light — narrow rect for hand specular streaks
+const stripLight = new THREE.RectAreaLight(0xffffff, 4.0, 20, 200);
+stripLight.position.set(40, 80, 200);
+stripLight.lookAt(0, 0, 0);
+scene.add(stripLight);
+
+// Spec point — accent highlight on hands, boosted
+const specPoint = new THREE.PointLight(0xffffff, 6, 350, 2);
 specPoint.position.set(30, 60, 180);
 scene.add(specPoint);
 
 // Counter spec — opposite warmth for depth
-const counterSpec = new THREE.PointLight(0xfff0e0, 1.0, 400, 2);
+const counterSpec = new THREE.PointLight(0xfff0e0, 1.5, 400, 2);
 counterSpec.position.set(-40, -30, 200);
 scene.add(counterSpec);
 
-// Subdial spot — wider cone to illuminate subdial face + glass sparkle
-const subSpot = new THREE.SpotLight(0xffffff, 12, 400, Math.PI/8, 0.5, 1.5);
+// Subdial spot — wider cone for glass sparkle, boosted
+const subSpot = new THREE.SpotLight(0xffffff, 20, 400, Math.PI/8, 0.5, 1.5);
 subSpot.position.set(5, -R*0.5 + 20, 150);
 subSpot.target.position.set(0, -R*0.5, 0);
 scene.add(subSpot);
@@ -382,13 +388,14 @@ function metalMat(color) {
   const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    roughness: precious ? 0.05 : 0.08, // near-mirror polish — catches HDRI as bright streaks
-    metalness: precious ? 0.8 : 0.6,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.05,
-    reflectivity: precious ? 1.0 : 0.9
+    roughness: precious ? 0.02 : 0.04, // near-mirror polish — catches HDRI as bright streaks
+    metalness: 1.0,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.02,
+    reflectivity: 1.0,
+    ior: 2.33,
   });
-  m.envMapIntensity = precious ? 6.0 : 5.0; // HERO — hands must visibly catch and release light as you tilt
+  m.envMapIntensity = precious ? 4.0 : 3.5;
   return m;
 }
 function lumeMat(color) {
@@ -1984,13 +1991,14 @@ function animate(){
   
   // Dim scene lights for night — let lume own the scene
   ambLight.intensity = 0.06 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 1.0 * (1 - modeBlend * 0.85);
-  specPoint.intensity = 3 * (1 - modeBlend * 0.7);
-  counterSpec.intensity = 1.0 * (1 - modeBlend * 0.7);
-  subSpot.intensity = 8 * (1 - modeBlend * 0.5);
+  keyLight.intensity = 2.5 * (1 - modeBlend * 0.85);
+  stripLight.intensity = 4.0 * (1 - modeBlend * 0.8);
+  specPoint.intensity = 6 * (1 - modeBlend * 0.7);
+  counterSpec.intensity = 1.5 * (1 - modeBlend * 0.7);
+  subSpot.intensity = 20 * (1 - modeBlend * 0.5);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = 0.8 - modeBlend * 0.25;
+  renderer.toneMappingExposure = 0.75 - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
@@ -2065,7 +2073,7 @@ function animate(){
   
   // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
   if(scene.environmentRotation) {
-    scene.environmentRotation.y = 1.5 + gx * 0.6;  // base offset + tilt sweep
+    scene.environmentRotation.y = 2.8 + gx * 0.6;  // base offset + tilt sweep
     scene.environmentRotation.x = 0.1 + gy * 0.3;
   }
   // Spec point follows tilt — the main visible highlight on hands

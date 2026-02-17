@@ -1773,9 +1773,15 @@ document.getElementById('listenBtn').addEventListener('click', (e) => {
   const surahName = DIALS[currentDial].surah;
   const num = SURAH_MAP[surahName];
   if (!num) return;
-  if (surahAudio && !surahAudio.paused) { surahAudio.pause(); surahAudio = null; return; }
+  if (surahAudio && !surahAudio.paused) { surahAudio.pause(); surahAudio = null; if(window._resumeTour) window._resumeTour(); return; }
   surahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
   surahAudio.play().catch(() => {});
+  // Pause tour/demo while surah is playing
+  if(window._pauseTour) window._pauseTour();
+  surahAudio.addEventListener('ended', () => {
+    // Resume tour after 2s padding
+    setTimeout(() => { if(window._resumeTour) window._resumeTour(); }, 2000);
+  }, {once:true});
 });
 
 let infoTimer;

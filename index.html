@@ -1095,7 +1095,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=43';
+_cs.type='module';_cs.src='clock.js?v=44';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1172,6 +1172,23 @@ setTimeout(setupScrollObservers,500);
     try{if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});}catch(e){}
   }
   window._stopTour = stopTour;
+
+  // Pause/resume for surah playback — freezes tour timer without killing the tour
+  let _tourPaused = false, _tourRemainingMs = 0, _tourPauseTime = 0;
+  function pauseTour(){
+    if(!tourActive || _tourPaused) return;
+    _tourPaused = true;
+    // Capture remaining time on current dwell timer
+    if(tourTimer){ clearTimeout(tourTimer); tourTimer=null; }
+    _tourRemainingMs = Math.max(0, _tourPauseTime ? 0 : 2000); // fallback 2s
+  }
+  function resumeTour(){
+    if(!tourActive || !_tourPaused) return;
+    _tourPaused = false;
+    tourTimer = setTimeout(()=>advanceTour(), _tourRemainingMs || 2000);
+  }
+  window._pauseTour = pauseTour;
+  window._resumeTour = resumeTour;
 
   function advanceTour(){
     if(!tourActive) return;

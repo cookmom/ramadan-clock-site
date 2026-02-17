@@ -897,8 +897,8 @@ function fsUpdateDateTime() {
   el.textContent = `${date} · ${time}`;
 }
 function fsStartClock() {
-  fsUpdateDateTime();
-  _fsClockTimer = setInterval(fsUpdateDateTime, 10000); // update every 10s
+  fsUpdateDateTime(); // initial Gregorian fallback — overwritten by Hijri when API responds
+  // No interval needed — Hijri date from API is static
 }
 function fsStopClock() {
   if(_fsClockTimer) { clearInterval(_fsClockTimer); _fsClockTimer = null; }
@@ -906,15 +906,12 @@ function fsStopClock() {
 
 function fsSetPrayerTimes(t, hijri) {
   document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
-  // Bottom info: Hijri date if available, else Gregorian
+  // Top header: Hijri date replaces Gregorian date/time
   if(hijri) {
-    document.getElementById('fsHijri').textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
-    // Also show Arabic month name below
-    const greg = document.getElementById('fsGreg');
-    if(greg) greg.textContent = `${hijri.month.ar} · ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}`;
-  } else {
-    document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    document.getElementById('fsDateTime').textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH  ·  ${hijri.month.ar}`;
   }
+  // Bottom info stays as Gregorian
+  document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
 function fsSetLocation(text) {
   const el = document.getElementById('fsLocation');
@@ -1061,7 +1058,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=36';
+_cs.type='module';_cs.src='clock.js?v=37';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

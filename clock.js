@@ -2129,10 +2129,10 @@ function animate(){
     });
   }
   
-  if(!CONTAINED) {
+  if(!CONTAINED || isFullscreen) {
     const bgHex = '#'+bgPlaneMat.color.getHexString();
     const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
-    document.documentElement.style.background = document.body.style.background = bgHex;
+    if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
   }
   
   // Use composer for bloom; in embed+night, render dark bg (no alpha)

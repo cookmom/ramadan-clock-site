@@ -932,6 +932,9 @@ function closeClockFullscreen() {
   // Tell clock engine to go back to contained
   if(window._clockSetFullscreen) window._clockSetFullscreen(false);
 
+  // Restore landing page theme-color
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content='#f8f7f4';
+
   // Stop any fullscreen surah audio
   if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; }
 }

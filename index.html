@@ -906,9 +906,29 @@ function fsUpdateDateTime() {
   const time = now.toLocaleTimeString('en-US',{hour:'numeric', minute:'2-digit', hour12:true});
   el.textContent = `${date} · ${time}`;
 }
+// Client-side Hijri date — instant, no API needed
+function getHijriDate() {
+  // Use Intl.DateTimeFormat with islamic-umalqura calendar
+  try {
+    const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {day:'numeric',month:'long',year:'numeric'});
+    const parts = fmt.formatToParts(new Date());
+    const day = parts.find(p=>p.type==='day')?.value || '';
+    const month = parts.find(p=>p.type==='month')?.value || '';
+    const year = parts.find(p=>p.type==='year')?.value || '';
+    // Also get Arabic month name
+    const fmtAr = new Intl.DateTimeFormat('ar-u-ca-islamic-umalqura', {month:'long'});
+    const monthAr = fmtAr.format(new Date());
+    return { day, month, year, monthAr };
+  } catch(e) { return null; }
+}
 function fsStartClock() {
-  fsUpdateDateTime(); // initial Gregorian fallback — overwritten by Hijri when API responds
-  // No interval needed — Hijri date from API is static
+  // Set Hijri date instantly — no API wait
+  const h = getHijriDate();
+  if(h) {
+    document.getElementById('fsDateTime').textContent = `${h.day} ${h.month} ${h.year} AH  ·  ${h.monthAr}`;
+  } else {
+    fsUpdateDateTime(); // Gregorian fallback
+  }
 }
 function fsStopClock() {
   if(_fsClockTimer) { clearInterval(_fsClockTimer); _fsClockTimer = null; }
@@ -1075,7 +1095,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=42';
+_cs.type='module';_cs.src='clock.js?v=43';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

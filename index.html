@@ -188,6 +188,8 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
   transition:color .5s ease,background-color .5s ease,border-color .5s ease;
 }
 .btn-outline:hover{border-color:var(--text)}
+.support-heart{animation:heartPulse 2s ease-in-out infinite}
+@keyframes heartPulse{0%,100%{color:inherit}50%{color:#e74c4c}}
 a{color:inherit;text-decoration:none}
 
 /* ── Sections ── */
@@ -357,7 +359,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1>
     <p class="section-body">A prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
-    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart"></i> Support this project</a>
+    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Support this project</a>
   </div>
 </section>
 
@@ -1095,7 +1097,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=45';
+_cs.type='module';_cs.src='clock.js?v=46';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

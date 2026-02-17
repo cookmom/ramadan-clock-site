@@ -573,7 +573,7 @@ const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background plane — MeshBasicMaterial (unlit) so it always matches scene.background exactly
 const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e });
 const bgShape = new THREE.Shape();
-bgShape.moveTo(-1000, -1000); bgShape.lineTo(1000, -1000); bgShape.lineTo(1000, 1000); bgShape.lineTo(-1000, 1000); bgShape.closePath();
+bgShape.moveTo(-5000, -5000); bgShape.lineTo(5000, -5000); bgShape.lineTo(5000, 5000); bgShape.lineTo(-5000, 5000); bgShape.closePath();
 const bgHole = new THREE.Path();
 bgHole.absarc(0, 0, bgCutoutR, 0, Math.PI*2, true);
 bgShape.holes.push(bgHole);

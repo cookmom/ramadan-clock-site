@@ -956,6 +956,9 @@ function closeClockFullscreen() {
   document.documentElement.classList.remove('clock-direct');
   document.documentElement.style.cssText='';
 
+  // Clear #clock from URL
+  if(location.hash === '#clock') history.replaceState(null, '', location.pathname);
+
   // Stop any fullscreen surah audio
   if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; }
 }

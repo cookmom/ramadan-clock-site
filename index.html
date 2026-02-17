@@ -216,13 +216,18 @@ a{color:inherit;text-decoration:none}
   position:relative;
   transition:background 1s ease,color 1s ease;
 }
+.section-header{
+  position:sticky;top:calc(var(--clock-size) + 4.5rem);
+  z-index:40;padding:.75rem 0 .5rem;
+  background:var(--bg);transition:background 1s ease;
+}
 .section-label{
   font-weight:500;font-size:.7rem;letter-spacing:.15em;
   text-transform:uppercase;color:var(--gold);margin-bottom:.25rem;
 }
 .section-title{
   font-weight:600;font-size:clamp(2rem,5vw,3.5rem);
-  line-height:1.15;letter-spacing:-.02em;margin-bottom:1.25rem;
+  line-height:1.15;letter-spacing:-.02em;margin-bottom:0;
   transition:color 1s ease;
 }
 .section-body{
@@ -367,8 +372,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 1. THE HOOK -->
 <section class="scroll-section" id="sec-hook">
   <div class="reveal">
-    <p class="section-label">Introducing</p>
-    <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1>
+    <div class="section-header"><p class="section-label">Introducing</p>
+    <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1></div>
     <p class="section-body">A prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
     <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Keep this free</a>
   </div>
@@ -377,8 +382,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 2. QIBLA -->
 <section class="scroll-section" id="sec-qibla">
   <div class="reveal">
-    <p class="section-label">Direction</p>
-    <h2 class="section-title">Always facing Qibla.</h2>
+    <div class="section-header"><p class="section-label">Direction</p>
+    <h2 class="section-title">Always facing Qibla.</h2></div>
     <p class="section-body">The subdial compass finds the direction of al-Masjid al-Haram. Turn your phone, and it turns with you.</p>
     <div class="verse">
       <p class="verse-ar">فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ</p>
@@ -392,9 +397,9 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 3. PRAYER TIMES -->
 <section class="scroll-section" id="sec-prayer">
   <div class="reveal">
-    <p class="section-label">Prayer Times</p>
+    <div class="section-header"><p class="section-label">Prayer Times</p>
     <h2 class="section-title" style="margin-bottom:0">Come to prayer.</h2>
-    <p style="font-size:.75rem;font-weight:300;letter-spacing:.1em;color:var(--text-muted);opacity:.45;margin-bottom:1rem">Hayya 'ala as-salah</p>
+    <p style="font-size:.75rem;font-weight:300;letter-spacing:.1em;color:var(--text-muted);opacity:.45;margin-bottom:0">Hayya 'ala as-salah</p></div>
     <p class="section-body">Automatic prayer times for your location. From Fajr to Isha, never miss a moment.</p>
     <div id="pcTimes" style="display:inline-block;font-size:.65rem;font-weight:600;letter-spacing:.08em;color:var(--gold);margin-top:1.25rem;padding:.6rem 1.25rem;background:rgba(200,164,78,.08);border:1px solid rgba(200,164,78,.15);border-radius:100px"></div>
     <div class="verse">
@@ -409,8 +414,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 4. ELEVEN DIALS -->
 <section class="scroll-section" id="sec-dials">
   <div class="reveal">
-    <p class="section-label">Dial Themes</p>
-    <h2 class="section-title">Eleven stars, eleven dials.</h2>
+    <div class="section-header"><p class="section-label">Dial Themes</p>
+    <h2 class="section-title">Eleven stars, eleven dials.</h2></div>
     <p class="section-body">Each dial is named for a Surah of the Holy Quran — chosen to inspire reflection on mercy, creation, and time.</p>
     <div style="margin-top:1.5rem;display:flex;align-items:center;gap:1.5rem">
       <button onclick="dialPrev()" aria-label="Previous" style="background:none;border:none;cursor:pointer;padding:.5rem"><i class="ph-thin ph-caret-left" style="font-size:1.5rem;color:var(--text);opacity:.3"></i></button>
@@ -433,8 +438,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 5. NIGHT MODE -->
 <section class="scroll-section" id="sec-night">
   <div class="reveal">
-    <p class="section-label">Night Mode</p>
-    <h2 class="section-title">The lume reveals itself.</h2>
+    <div class="section-header"><p class="section-label">Night Mode</p>
+    <h2 class="section-title">The lume reveals itself.</h2></div>
     <p class="section-body">As darkness falls, SuperLuminova indices glow to life. Each dial has its own lume colour — a quiet constellation on your wrist.</p>
     <div class="verse">
       <p class="verse-ar">وَجَعَلَ ٱلظُّلُمَـٰتِ وَٱلنُّورَ</p>
@@ -448,8 +453,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 6. ADHAN -->
 <section class="scroll-section" id="sec-adhan">
   <div class="reveal">
-    <p class="section-label">Adhan</p>
-    <h2 class="section-title">Hear the call to prayer.</h2>
+    <div class="section-header"><p class="section-label">Adhan</p>
+    <h2 class="section-title">Hear the call to prayer.</h2></div>
     <p class="section-body">Mishary Rashid al-Afasy's voice, spatialized toward Qibla. The sound comes from the direction of Mecca.</p>
     <button id="adhanBtn" onclick="playAdhan(this)" class="btn btn-outline adhan-btn"><i class="ph-thin ph-play"></i> Play Spatial Adhan</button>
     <p style="font-size:.7rem;color:var(--text-muted);margin-top:.75rem;font-weight:300;opacity:.6">Best with headphones — sound moves toward Mecca as you turn</p>
@@ -459,8 +464,8 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 7. INSTALL -->
 <section class="scroll-section" id="sec-install">
   <div class="reveal">
-    <p class="section-label">Install</p>
-    <h2 class="section-title">Add to your home screen.</h2>
+    <div class="section-header"><p class="section-label">Install</p>
+    <h2 class="section-title">Add to your home screen.</h2></div>
     <div class="steps">
       <div class="step">
         <i class="ph-thin ph-globe step-icon"></i>

@@ -923,54 +923,34 @@ document.addEventListener('visibilitychange',()=>{
 // SCROLL OBSERVERS
 // ══════════════════════════════════════════
 function setupScrollObservers(){
-  const opts={threshold:0.4};
-
-  // Section → clock state mapping
-  const observe=(id,fn)=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    new IntersectionObserver((entries)=>{
-      if(entries[0].isIntersecting) fn();
-    },opts).observe(el);
+  // Track intersection ratios — only the most-visible section wins
+  const sectionStates={
+    'sec-hook':    ()=>{ if(window._clockSwitchDial&&DIALS[dialIdx]!=='slate'){dialIdx=3;updateDial();} setNightMode(false); },
+    'sec-qibla':   ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(true); },
+    'sec-prayer':  ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(false); },
+    'sec-dials':   ()=>{ setNightMode(false); startDialCycle(); },
+    'sec-night':   ()=>{ setNightMode(true); },
+    'sec-adhan':   ()=>{ setNightMode(true); },
+    'sec-install': ()=>{ setNightMode(false); },
   };
-
-  // Hook: slate, day
-  observe('sec-hook',()=>{
-    if(window._clockSwitchDial&&DIALS[dialIdx]!=='slate'){dialIdx=3;updateDial();}
-    setNightMode(false);
-  });
-
-  // Qibla: keep slate, day
-  observe('sec-qibla',()=>{
-    setNightMode(false);
-    if(window._clockQiblaDemo) window._clockQiblaDemo(true);
-  });
-
-  // Prayer: keep current, day — stop qibla demo
-  observe('sec-prayer',()=>{
-    setNightMode(false);
-    if(window._clockQiblaDemo) window._clockQiblaDemo(false);
-  });
-
-  // Dials: start cycling
-  observe('sec-dials',()=>{
-    setNightMode(false);
-    startDialCycle();
-  });
-
-  // Night: activate night mode
-  observe('sec-night',()=>{
-    setNightMode(true);
-  });
-
-  // Adhan: keep night
-  observe('sec-adhan',()=>{
-    setNightMode(true);
-  });
-
-  // Install: back to day
-  observe('sec-install',()=>{
-    setNightMode(false);
+  const ratios={};
+  let _lastActive='';
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const id=e.target.id;
+      ratios[id]=e.isIntersecting?e.intersectionRatio:0;
+    });
+    // Find section with highest visibility
+    let best='',bestR=0;
+    for(const id in ratios){if(ratios[id]>bestR){bestR=ratios[id];best=id;}}
+    if(best&&best!==_lastActive&&bestR>0.3){
+      _lastActive=best;
+      if(sectionStates[best]) sectionStates[best]();
+    }
+  },{threshold:[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]});
+  Object.keys(sectionStates).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) io.observe(el);
   });
 
   // Stop dial cycle when leaving dials section
@@ -1440,7 +1420,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=77';
+_cs.type='module';_cs.src='clock.js?v=78';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

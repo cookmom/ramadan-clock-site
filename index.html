@@ -619,7 +619,7 @@ let adhanCtx=null, adhanBufSrc=null, adhanPanner=null, adhanGain=null;
 let adhanDecodedBuf=null, adhanPannerInterval=null;
 let adhanHrtfStartCtxTime=0, adhanHrtfStartOffset=0;
 let adhanHrtfStartWall=0;
-let adhanDeviceHeading=0, adhanQiblaAngle=0, adhanCurrentPan=0;
+let adhanDeviceHeading=0, adhanQiblaAngle=null, adhanCurrentPan=0;
 let adhanHasCompass=false, adhanCompassEventCount=0;
 let _preUnlockedAudio=null;
 let _adhanBtn=null; // stash button ref for ended/visibility handlers
@@ -703,7 +703,7 @@ function startHrtfBuffer(pos){
     bufSrc.onended=()=>{
       if(adhanBufSrc===bufSrc){
         adhanBufSrc=null;
-        if(!document.hidden){adhanPlaying=false;adhanHrtfStartWall=0;_adhanUpdateBtn();}
+        if(!document.hidden){adhanPlaying=false;adhanHrtfStartWall=0;_adhanUpdateBtn();setTimeout(()=>{if(window._resumeTour)window._resumeTour();},3000);}
         adhanDbg('HRTF buf ended'+(document.hidden?' (bg)':' naturally'));
       }
     };
@@ -751,6 +751,7 @@ function setupAdhanAudioEvents(audio){
     adhanPlaying=false;
     if(adhanPannerInterval){clearInterval(adhanPannerInterval);adhanPannerInterval=null;}
     _adhanUpdateBtn();
+    setTimeout(()=>{if(window._resumeTour)window._resumeTour();},3000);
     adhanDbg('plain audio ended');
   });
   audio.addEventListener('pause',()=>{
@@ -780,6 +781,7 @@ async function playAdhan(btn){
     if(adhanAudio){adhanAudio.pause();adhanAudio=null;}
     adhanHrtfStartWall=0;
     _adhanUpdateBtn();
+    if(window._resumeTour) window._resumeTour();
     return;
   }
 
@@ -792,7 +794,7 @@ async function playAdhan(btn){
   window.addEventListener('deviceorientation',adhanCompassHandler);
   await adhanGetQibla();
 
-  const useHrtf=adhanQiblaAngle!==0;
+  const useHrtf=adhanQiblaAngle!==null;
   adhanDbg('playAdhan hrtf='+useHrtf);
 
   // Kill previous state
@@ -803,6 +805,9 @@ async function playAdhan(btn){
 
   adhanPlaying=true;
   _adhanUpdateBtn();
+  // Pause tour — adhan is sacred, no scrolling during recitation
+  if(window._pauseTour) window._pauseTour();
+  if(window._stopTour) window._stopTour();
 
   // MediaSession metadata
   if('mediaSession' in navigator){
@@ -1318,7 +1323,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=62';
+_cs.type='module';_cs.src='clock.js?v=63';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

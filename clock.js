@@ -2034,13 +2034,14 @@ function animate(){
     const moonBlend = Math.max(0, Math.min(1, (modeBlend - moonThreshold) / 0.5));
     moonGroup.visible = modeBlend > 0.1;
     
-    // Rise from below-right to upper-right
-    const startY = -60, endY = 78;   // above the star arc, crowning the prostration
-    const startX = 0, endX = 0;     // centered — moon crowns the prostration arc
+    // Rise from behind dial top — first appears above the 12 o'clock edge
+    const startY = R * 0.85, endY = 78;  // starts at dial top edge, rises to crown
+    const startZ = -20, endZ = -15;       // starts behind dial, comes forward
     // Ease-out cubic for natural rise
     const eased = 1 - Math.pow(1 - moonBlend, 3);
     moonGroup.position.y = startY + (endY - startY) * eased;
-    moonGroup.position.x = startX + (endX - startX) * eased;
+    moonGroup.position.x = 0;
+    moonGroup.position.z = startZ + (endZ - startZ) * eased;
     
     // Moon glow and emissive
     if(moonMesh) {

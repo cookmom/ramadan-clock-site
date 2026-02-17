@@ -320,7 +320,8 @@ footer a:hover{color:var(--text)}
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
 .clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
 .clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
-.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 72px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65)}
+.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 72px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65);transition:opacity .5s ease}
+.fs-header.hidden{opacity:0}
 .fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
 .fs-header .fs-location{font-size:.6rem;font-weight:200;letter-spacing:.08em;margin-top:2px;opacity:.5}
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
@@ -611,7 +612,23 @@ function setNightMode(on){
   if(pc){pc.style.background=on?'#141418':'#fff';pc.style.borderColor=on?'rgba(255,255,255,.08)':'var(--border)';}
   if(window._clockSetNight) window._clockSetNight(on);
   updateLumeHalo();
+  // Hide header text when night mode starts (stars/moon scene)
+  const fsH=document.getElementById('fsHeader');
+  if(fsH){
+    if(on) fsH.classList.add('hidden');
+    else fsH.classList.remove('hidden');
+  }
 }
+// Tap to show header in fullscreen, auto-hide after 4s
+let _fsHeaderTimer=null;
+document.addEventListener('touchstart',function(){
+  const fsH=document.getElementById('fsHeader');
+  const fsClock=document.getElementById('clockFullscreen');
+  if(!fsH||!fsClock||!fsClock.classList.contains('active'))return;
+  fsH.classList.remove('hidden');
+  clearTimeout(_fsHeaderTimer);
+  _fsHeaderTimer=setTimeout(()=>{if(pageNight)fsH.classList.add('hidden');},4000);
+},{passive:true});
 
 // ══════════════════════════════════════════
 // SPATIAL ADHAN — HRTF with Background/Foreground Handoff (v25)
@@ -1459,7 +1476,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=105';
+_cs.type='module';_cs.src='clock.js?v=106';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

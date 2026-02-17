@@ -2035,7 +2035,7 @@ function animate(){
     moonGroup.visible = modeBlend > 0.1;
     
     // Rise from below-right to upper-right
-    const startY = -60, endY = 72;   // above the star arc, crowning the prostration
+    const startY = -60, endY = 78;   // above the star arc, crowning the prostration
     const startX = 0, endX = 0;     // centered — moon crowns the prostration arc
     // Ease-out cubic for natural rise
     const eased = 1 - Math.pow(1 - moonBlend, 3);

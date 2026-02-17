@@ -352,7 +352,10 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- Nav -->
 <nav>
-  <div class="nav-logo">A Gift of Time</div>
+  <div>
+    <div class="nav-logo">A Gift of Time</div>
+    <div id="navPrayer" style="font-size:.55rem;font-weight:300;letter-spacing:.06em;color:var(--text-muted);opacity:.6;margin-top:1px"></div>
+  </div>
   <a href="#" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem" onclick="openClockFullscreen();return false;">Open Clock</a>
 </nav>
 
@@ -1027,8 +1030,40 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
       const hi=p===nextP;
       return`<span style="${hi?'font-weight:700;color:#c0392b':''}">` +p+' '+t[p]+'</span>';
     }).join(' · ');
+    // Store for nav bar live clock
+    window._prayerTimings=t;
+    startNavClock();
   }catch(e){}
 })();
+
+// ── Nav bar live clock + next prayer ──
+let _navClockTimer=null;
+function startNavClock(){
+  if(_navClockTimer)return;
+  updateNavClock();
+  _navClockTimer=setInterval(updateNavClock,10000);
+}
+function updateNavClock(){
+  const el=document.getElementById('navPrayer');
+  if(!el)return;
+  const t=window._prayerTimings;
+  if(!t)return;
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes();
+  const nowM=h*60+m;
+  const timeStr=(h%12||12)+':'+(m<10?'0':'')+m+(h>=12?' PM':' AM');
+  const t5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  const toMin=s=>{const[hh,mm]=s.split(':').map(Number);return hh*60+mm;};
+  let nextP='',nextM=0;
+  t5.forEach(p=>{const pm=toMin(t[p]);if(!nextP&&pm>nowM){nextP=p;nextM=pm;}});
+  if(nextP){
+    const diff=nextM-nowM;
+    const label=diff>=60?Math.floor(diff/60)+'h '+diff%60+'min':diff+'min';
+    el.textContent=timeStr+' · '+nextP+' in '+label;
+  }else{
+    el.textContent=timeStr;
+  }
+}
 
 // ══════════════════════════════════════════
 // INIT
@@ -1325,7 +1360,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=65';
+_cs.type='module';_cs.src='clock.js?v=66';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

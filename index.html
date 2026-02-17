@@ -908,8 +908,9 @@ function openClockFullscreen() {
   const canvas = document.querySelector('#dialHero canvas');
   if(!canvas) return;
 
-  // Stop tour/idle
+  // Stop tour/idle — pause all landing page animations in fullscreen
   stopDialCycle();
+  if(window._stopTour) window._stopTour();
 
   // Move canvas into overlay
   overlay.appendChild(canvas);
@@ -997,7 +998,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=29';
+_cs.type='module';_cs.src='clock.js?v=30';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1073,6 +1074,7 @@ setTimeout(setupScrollObservers,500);
     // Exit fullscreen
     try{if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});}catch(e){}
   }
+  window._stopTour = stopTour;
 
   function advanceTour(){
     if(!tourActive) return;
@@ -1111,6 +1113,8 @@ setTimeout(setupScrollObservers,500);
   function resetIdle(){
     if(idleTimer) clearTimeout(idleTimer);
     if(tourActive) stopTour();
+    // Don't restart idle timer while clock is fullscreen
+    if(document.getElementById('clockFullscreen').classList.contains('active')) return;
     idleTimer=setTimeout(startTour, IDLE_START);
   }
 

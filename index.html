@@ -377,32 +377,26 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- 2. QIBLA -->
 <section class="scroll-section" id="sec-qibla">
   <div class="reveal">
+    <p class="verse-ar" style="font-size:1.1rem;opacity:.35;margin-bottom:.25rem">فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ</p>
+    <p class="verse-en" style="font-size:.7rem;opacity:.3;margin-bottom:.15rem;font-style:italic">"So turn your face toward al-Masjid al-Haram."</p>
+    <p class="verse-ref" style="margin-bottom:1rem">Al-Baqarah 2:144 <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/151.mp3')" style="background:none;border:none;cursor:pointer;padding:2px 6px;opacity:.4;vertical-align:middle"><i class="ph-thin ph-play" style="font-size:.65rem;color:var(--text)"></i></button></p>
     <p class="section-label">Direction</p>
     <h2 class="section-title">Always facing Qibla.</h2>
     <p class="section-body">The subdial compass finds the direction of al-Masjid al-Haram. Turn your phone, and it turns with you.</p>
-    <div class="verse">
-      <p class="verse-ar">فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ</p>
-      <p class="verse-en">"So turn your face toward al-Masjid al-Haram."</p>
-      <p class="verse-ref">Al-Baqarah 2:144</p>
-      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/151.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
-    </div>
   </div>
 </section>
 
 <!-- 3. PRAYER TIMES -->
 <section class="scroll-section" id="sec-prayer">
   <div class="reveal">
+    <p class="verse-ar" style="font-size:1.1rem;opacity:.35;margin-bottom:.25rem">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
+    <p class="verse-en" style="font-size:.7rem;opacity:.3;margin-bottom:.15rem;font-style:italic">"Indeed, prayer has been decreed upon the believers at specified times."</p>
+    <p class="verse-ref" style="margin-bottom:1rem">An-Nisa 4:103 <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/574.mp3')" style="background:none;border:none;cursor:pointer;padding:2px 6px;opacity:.4;vertical-align:middle"><i class="ph-thin ph-play" style="font-size:.65rem;color:var(--text)"></i></button></p>
     <p class="section-label">Prayer Times</p>
     <h2 class="section-title" style="margin-bottom:0">Come to prayer.</h2>
     <p style="font-size:.75rem;font-weight:300;letter-spacing:.1em;color:var(--text-muted);opacity:.45;margin-bottom:1rem">Hayya 'ala as-salah</p>
     <p class="section-body">Automatic prayer times for your location. From Fajr to Isha, never miss a moment.</p>
     <div id="pcTimes" style="display:inline-block;font-size:.65rem;font-weight:600;letter-spacing:.08em;color:var(--gold);margin-top:1.25rem;padding:.6rem 1.25rem;background:rgba(200,164,78,.08);border:1px solid rgba(200,164,78,.15);border-radius:100px"></div>
-    <div class="verse">
-      <p class="verse-ar">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَـٰبًا مَّوْقُوتًا</p>
-      <p class="verse-en">"Indeed, prayer has been decreed upon the believers at specified times."</p>
-      <p class="verse-ref">An-Nisa 4:103</p>
-      <button onclick="playVerse(this,'https://cdn.islamic.network/quran/audio/128/ar.alafasy/574.mp3')" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.25rem"><i class="ph-thin ph-play"></i> Listen</button>
-    </div>
   </div>
 </section>
 
@@ -1417,7 +1411,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=73';
+_cs.type='module';_cs.src='clock.js?v=74';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

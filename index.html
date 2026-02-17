@@ -815,11 +815,13 @@ addSwipe(document.getElementById('clockFullscreen'));
 
 // Auto-open fullscreen if URL has #clock
 if(location.hash === '#clock') {
-  // Wait for clock.js to initialize, then open fullscreen
   const _waitClock = setInterval(()=>{
-    if(window._clockSetFullscreen) { clearInterval(_waitClock); openClockFullscreen(); }
-  }, 100);
-  setTimeout(()=>clearInterval(_waitClock), 5000); // give up after 5s
+    if(window._clockSetFullscreen && document.querySelector('#dialHero canvas') && typeof openClockFullscreen === 'function') {
+      clearInterval(_waitClock);
+      setTimeout(()=>openClockFullscreen(), 200);
+    }
+  }, 200);
+  setTimeout(()=>clearInterval(_waitClock), 8000);
 }
 
 // Always start at top on refresh

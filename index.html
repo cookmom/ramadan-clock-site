@@ -797,9 +797,9 @@ window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scr
 buildDots();
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 
-// Touch swipe on dial hero
-(function(){
-  const el=document.getElementById('dialHero');let sx=0,locked=false;
+// Touch swipe on dial hero + fullscreen overlay
+function addSwipe(el){
+  let sx=0,locked=false;
   el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;locked=false},{passive:true});
   el.addEventListener('touchmove',e=>{
     const dx=Math.abs(e.touches[0].clientX-sx);
@@ -809,7 +809,9 @@ document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
     const dx=e.changedTouches[0].clientX-sx;
     if(Math.abs(dx)>40){dx<0?dialNext():dialPrev();}
   },{passive:true});
-})();
+}
+addSwipe(document.getElementById('dialHero'));
+addSwipe(document.getElementById('clockFullscreen'));
 
 // Always start at top on refresh
 history.scrollRestoration='manual';

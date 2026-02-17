@@ -304,7 +304,10 @@ footer a:hover{color:var(--text)}
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
 .clock-fs-overlay canvas{width:100%!important;height:100%!important;position:absolute;inset:0}
 .clock-fs-close{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);left:16px;z-index:210;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.5rem;cursor:pointer;padding:8px}
-.fs-prayer-bar{position:fixed;top:calc(env(safe-area-inset-top,12px) + 14px);left:16px;right:56px;font-family:var(--font);font-size:.65rem;font-weight:300;letter-spacing:.12em;text-align:left;z-index:210;pointer-events:none;color:rgba(255,255,255,.55)}
+.fs-header{position:fixed;top:calc(env(safe-area-inset-top,12px) + 14px);left:0;right:0;font-family:var(--font);text-align:center;z-index:210;pointer-events:none;color:rgba(255,255,255,.65)}
+.fs-header .fs-datetime{font-size:.7rem;font-weight:300;letter-spacing:.06em}
+.fs-header .fs-location{font-size:.6rem;font-weight:200;letter-spacing:.08em;margin-top:2px;opacity:.5}
+.fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
 .fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6)}
 .fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
 .fs-info{position:fixed;bottom:env(safe-area-inset-bottom,12px);left:0;right:0;text-align:center;font-family:var(--font);pointer-events:none;z-index:210;padding:0 16px 16px;color:rgba(255,255,255,.7)}
@@ -325,7 +328,11 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- Fullscreen Clock Overlay -->
 <div id="clockFullscreen" class="clock-fs-overlay">
   <button id="clockFsClose" class="clock-fs-close" aria-label="Close">&times;</button>
-  <div id="fsPrayerBar" class="fs-prayer-bar"><span id="fsPrayerTimes"></span></div>
+  <div id="fsHeader" class="fs-header">
+    <div class="fs-datetime" id="fsDateTime"></div>
+    <div class="fs-location" id="fsLocation"></div>
+    <div class="fs-prayer-bar" id="fsPrayerBar"><span id="fsPrayerTimes"></span></div>
+  </div>
   <button id="fsModeToggle" class="fs-mode-toggle" aria-label="Toggle day/night"><svg id="fsModeIcon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
   <div id="fsInfo" class="fs-info"><div class="hijri" id="fsHijri"></div><div class="greg" id="fsGreg"></div></div>
   <div id="fsDialBar" class="fs-dial-bar"></div>
@@ -879,6 +886,24 @@ function fsUpdateModeIcon() {
   document.getElementById('fsModeIcon').innerHTML = fsNight ? SUN_SVG : MOON_SVG;
 }
 
+// Live clock for fullscreen header
+let _fsClockTimer = null;
+function fsUpdateDateTime() {
+  const el = document.getElementById('fsDateTime');
+  if(!el) return;
+  const now = new Date();
+  const date = now.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  const time = now.toLocaleTimeString('en-US',{hour:'numeric', minute:'2-digit', hour12:true});
+  el.textContent = `${date} · ${time}`;
+}
+function fsStartClock() {
+  fsUpdateDateTime();
+  _fsClockTimer = setInterval(fsUpdateDateTime, 10000); // update every 10s
+}
+function fsStopClock() {
+  if(_fsClockTimer) { clearInterval(_fsClockTimer); _fsClockTimer = null; }
+}
+
 async function fsFetchPrayer() {
   try {
     const pos = await new Promise((r,j) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}) : j());
@@ -889,6 +914,14 @@ async function fsFetchPrayer() {
       const t = j.data.timings;
       document.getElementById('fsPrayerTimes').textContent = `Fajr ${t.Fajr} · Dhuhr ${t.Dhuhr} · Asr ${t.Asr} · Maghrib ${t.Maghrib} · Isha ${t.Isha}`;
       document.getElementById('fsHijri').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+      // Reverse geocode for location name
+      try {
+        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+        const geoJ = await geoRes.json();
+        const city = geoJ.city || geoJ.locality || '';
+        const region = geoJ.principalSubdivisionCode ? geoJ.principalSubdivisionCode.split('-').pop() : '';
+        if(city) document.getElementById('fsLocation').textContent = region ? `${city}, ${region}` : city;
+      } catch(ge){}
     }
   } catch(e) {
     try {
@@ -931,8 +964,9 @@ function openClockFullscreen() {
   document.getElementById('fsDialName').textContent = cur.charAt(0).toUpperCase() + cur.slice(1);
   document.getElementById('fsDialSurah').textContent = DIAL_NAMES[cur] || '';
 
-  // Fetch prayer times for fullscreen bar
+  // Fetch prayer times + start live clock
   fsFetchPrayer();
+  fsStartClock();
 
   // Push history state for back button
   history.pushState({clockFs:true}, '', '#clock');
@@ -951,6 +985,7 @@ function closeClockFullscreen() {
 
   // Tell clock engine to go back to contained
   if(window._clockSetFullscreen) window._clockSetFullscreen(false);
+  fsStopClock();
 
   // Restore landing page theme-color + show content
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content='#f8f7f4';
@@ -998,7 +1033,7 @@ document.getElementById('fsListenBtn').addEventListener('click', () => {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=30';
+_cs.type='module';_cs.src='clock.js?v=31';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

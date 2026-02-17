@@ -189,8 +189,7 @@ nav.scrolled{background:var(--bg);opacity:.97;backdrop-filter:blur(12px);box-sha
   transition:color .5s ease,background-color .5s ease,border-color .5s ease;
 }
 .btn-outline:hover{border-color:var(--text)}
-.support-heart{transition:color .6s ease;display:inline-block;animation:heartpulse .833s ease-in-out infinite}
-.support-heart.filled{color:#e74c4c}
+.support-heart{display:inline-block;animation:heartpulse .833s ease-in-out infinite;color:#e74c4c}
 @keyframes heartpulse{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}60%{transform:scale(1)}}
 .sticky-cta{
   position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
@@ -377,7 +376,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <div class="section-header"><p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1></div>
     <p class="section-body">A prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
-    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Keep this free</a>
+    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-fill ph-heart support-heart"></i> Keep this free</a>
   </div>
 </section>
 
@@ -1433,7 +1432,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=81';
+_cs.type='module';_cs.src='clock.js?v=82';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1631,20 +1630,7 @@ setTimeout(setupScrollObservers,500);
   }).catch(()=>{});
 })();
 
-// Heart pulse: alternate thin outline ↔ filled red
-(function(){
-  const h=document.querySelector('.support-heart');
-  if(!h) return;
-  setInterval(()=>{
-    if(h.classList.contains('filled')){
-      h.classList.remove('ph-fill','ph-heart','filled');
-      h.classList.add('ph-thin','ph-heart');
-    }else{
-      h.classList.remove('ph-thin');
-      h.classList.add('ph-fill','ph-heart','filled');
-    }
-  },2000);
-})();
+// Heart pulse handled by CSS animation (heartpulse @ 72bpm)
 </script>
 <a href="support.html" class="sticky-cta">
   <i class="ph-fill ph-heart cta-heart"></i>

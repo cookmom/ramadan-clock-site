@@ -376,7 +376,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
     <div class="section-header"><p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1></div>
     <p class="section-body">A prayer-aware clock for your family. Crafted with intention, rooted in the Quran.</p>
-    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-thin ph-heart support-heart"></i> Keep this free</a>
+    <a href="support.html" class="btn btn-outline" style="margin-top:1rem"><i class="ph-fill ph-heart support-heart"></i> Keep this free</a>
   </div>
 </section>
 
@@ -1432,7 +1432,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=84';
+_cs.type='module';_cs.src='clock.js?v=85';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════
@@ -1634,8 +1634,8 @@ setTimeout(setupScrollObservers,500);
 (function(){
   document.querySelectorAll('.support-heart').forEach(h=>{
     setInterval(()=>{
-      h.classList.remove('ph-thin');h.classList.add('ph-fill');
-      setTimeout(()=>{h.classList.remove('ph-fill');h.classList.add('ph-thin');},400);
+      h.classList.remove('ph-fill');h.classList.add('ph-thin');
+      setTimeout(()=>{h.classList.remove('ph-thin');h.classList.add('ph-fill');},400);
     },833);
   });
 })();

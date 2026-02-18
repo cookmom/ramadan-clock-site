@@ -219,14 +219,7 @@ a{color:inherit;text-decoration:none}
   position:relative;overflow:hidden;
   transition:background 1s ease,color 1s ease;
 }
-/* grain overlays removed — dial only */
-.grain-overlay-UNUSED{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  z-index:1;pointer-events:none;
-  background:url(bauhaus-grain.png) repeat;background-size:200px 200px;
-  mix-blend-mode:multiply;opacity:0.3;
-}
-.scroll-section>*:not(.grain-overlay){position:relative;z-index:2;}
+/* grain texture handled by clock.js material, not CSS */
 .section-header{
   position:sticky;top:calc(var(--clock-size) + 4.5rem);
   z-index:40;padding:.75rem 0 .5rem;
@@ -688,19 +681,22 @@ async function playSurahSpatial(btn,src,label){
   }
   if('audioSession' in navigator){try{navigator.audioSession.type='playback';}catch(e){}}
 
-  // Create plain Audio for background fallback
+  // Create plain Audio for background fallback — unlock silently, don't play yet
   surahPlainAudio=new Audio(src);
   surahPlainAudio._isBackup=true;surahPlainAudio._swapping=false;surahPlainAudio._unlocked=false;
+  surahPlainAudio.volume=0; // silent unlock
   surahPlainAudio.play().then(()=>{
     surahPlainAudio._swapping=true;surahPlainAudio.pause();surahPlainAudio.currentTime=0;
+    surahPlainAudio.volume=1; // restore volume for background use
     surahPlainAudio._unlocked=true;
     setupSurahAudioEvents(surahPlainAudio);
     setTimeout(()=>{surahPlainAudio._swapping=false;},50);
-    surahDbg('plain Audio unlocked, starting HRTF');
+    surahDbg('plain Audio unlocked (silent), starting HRTF');
     startSurahHrtfSequence(src,0);
   }).catch(e=>{
     surahDbg('unlock failed: '+e+', playing plain only');
     surahPlainAudio=new Audio(src);
+    surahPlainAudio.volume=1;
     setupSurahAudioEvents(surahPlainAudio);
     surahPlainAudio.play().catch(()=>{});
     _surahUpdateBtn(true);
@@ -723,11 +719,17 @@ document.addEventListener('visibilitychange',()=>{
     const pos=(surahPlainAudio&&!surahPlainAudio.paused)?surahPlainAudio.currentTime:surahPosition();
     surahDbg('SHOW: pos='+pos.toFixed(2));
     if(surahDecodedBuf&&surahCtx){
+      // Pause plain FIRST to prevent double-playback overlap
+      if(surahPlainAudio&&!surahPlainAudio.paused){surahPlainAudio._swapping=true;surahPlainAudio.pause();}
       if(!surahPanInterval)surahPanInterval=setInterval(updateSurahPanner,200);
       startSurahHrtfBuffer(pos).then(()=>{
-        if(surahPlainAudio&&!surahPlainAudio.paused){surahPlainAudio._swapping=true;surahPlainAudio.pause();setTimeout(()=>{if(surahPlainAudio)surahPlainAudio._swapping=false;},50);}
+        if(surahPlainAudio)setTimeout(()=>{surahPlainAudio._swapping=false;},50);
         surahDbg('SHOW: HRTF restored at pos='+pos.toFixed(2));
-      }).catch(e=>{surahDbg('SHOW: HRTF failed, keeping plain: '+e);});
+      }).catch(e=>{
+        // HRTF failed — resume plain
+        if(surahPlainAudio&&surahPlainAudio._unlocked){surahPlainAudio._swapping=false;surahPlainAudio.currentTime=pos;surahPlainAudio.play().catch(()=>{});}
+        surahDbg('SHOW: HRTF failed, resuming plain: '+e);
+      });
     }
   }
 });
@@ -1645,10 +1647,8 @@ function openClockFullscreen() {
   stopDialCycle();
   if(window._stopTour) window._stopTour();
 
-  // Move canvas + grain overlay into fullscreen overlay
+  // Move canvas into fullscreen overlay
   overlay.appendChild(canvas);
-  const grain = document.getElementById('clockGrainOverlay');
-  if(grain) overlay.appendChild(grain);
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   document.querySelector('nav').style.display = 'none';
@@ -1696,11 +1696,8 @@ function closeClockFullscreen() {
   const canvas = overlay.querySelector('canvas');
   if(!canvas) return;
 
-  // Move canvas + grain overlay back
-  const hero = document.getElementById('dialHero');
-  hero.appendChild(canvas);
-  const grain = document.getElementById('clockGrainOverlay');
-  if(grain) hero.appendChild(grain);
+  // Move canvas back
+  document.getElementById('dialHero').appendChild(canvas);
   overlay.classList.remove('active');
   document.body.style.overflow = '';
   document.querySelector('nav').style.display = '';
@@ -1776,7 +1773,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=173';
+_cs.type='module';_cs.src='clock.js?v=175';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

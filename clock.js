@@ -145,30 +145,28 @@ renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.825;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-const _canvasParent = CONTAINED ? CONTAINER : document.body;
-_canvasParent.appendChild(renderer.domElement);
+(CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
 
-// ── CSS grain overlay — sits on top of the Three.js canvas ──
-// Covers dial+hands+markers with bauhaus vermicular texture
-const _grainOverlay = document.createElement('div');
-_grainOverlay.id = 'clockGrainOverlay';
-_grainOverlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
-  'background:url(bauhaus-grain.png) repeat;background-size:198px 198px;' +
-  'mix-blend-mode:multiply;opacity:0.45;pointer-events:none;z-index:1;';
-// Parent needs positioning context
-_canvasParent.style.position = _canvasParent.style.position || 'relative';
-_canvasParent.style.overflow = 'hidden';
-_canvasParent.appendChild(_grainOverlay);
+// ── Grain normal map — proper PBR surface grain (not CSS overlay) ──
+// Sobel-derived normal map from bauhaus vermicular texture
+let _grainNormalTex = null;
+new THREE.TextureLoader().load('grain-normal-512.png', (t) => {
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(4, 4); // 512px tiled 4x = fine isotropic sandblast grain
+  _grainNormalTex = t;
+  console.log('[clock] grain normal map loaded');
+  if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
+});
 
-// Expose grain overlay so landing page can move it with canvas during fullscreen
-window._clockGrainOverlay = _grainOverlay;
-const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
+let _grainRoughnessTex = null;
+new THREE.TextureLoader().load('grain-roughness-512.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(4, 4);
+  _grainRoughnessTex = t;
 });
 
 const scene = new THREE.Scene();
@@ -217,7 +215,7 @@ let studioEnvMap;
   const envRT = pmrem.fromEquirectangular(hdrTex);
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
-  scene.environmentIntensity = 0.5; // dial is BasicMaterial (unaffected), moderate for PBR subdial visibility
+  scene.environmentIntensity = 1.0; // grain needs env light to be visible through normal map
   scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
@@ -248,6 +246,11 @@ scene.add(specPoint);
 const counterSpec = new THREE.PointLight(0xfff0e0, 1.5, 400, 2);
 counterSpec.position.set(-40, -30, 200);
 scene.add(counterSpec);
+
+// Raking light — grazing angle across dial to reveal grain texture
+const rakeLight = new THREE.DirectionalLight(0xffffff, 3.0);
+rakeLight.position.set(-150, 40, 20); // very low z = strong grazing angle across dial face
+scene.add(rakeLight);
 
 // Subdial spot — wider cone for glass sparkle, boosted
 const subSpot = new THREE.SpotLight(0xffffff, 20, 400, Math.PI/8, 0.5, 1.5);
@@ -390,22 +393,24 @@ function dialMat(color) {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.6, clearcoatRoughness:0.3 },
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
   };
-  const s = special[cd] || { roughness:0.92, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
-  // Dial = PBR with NOMOS sandblasted finish
-  // Grain via contrast-reduced map texture (dial mesh ONLY — not hands/markers)
+  // metalness 0.6 + roughness 0.45 = semi-metallic that shows grain in specular breakup
+  const s = special[cd] || { roughness:0.45, metalness:0.6, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.15, clearcoatRoughness:0.3 };
+  // Dial = PBR with NOMOS galvanized/sandblasted finish
+  // Grain via proper normal map (Sobel-derived from vermicular texture) + roughness map
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    // grain handled by CSS overlay, not material map
     roughness: s.roughness,
     metalness: s.metalness,
     clearcoat: s.clearcoat,
     clearcoatRoughness: s.clearcoatRoughness,
-    normalMap: dialTextures.normalMap,
-    normalScale: new THREE.Vector2(0.35, 0.35),
-    roughnessMap: _bauhausGrainTex || dialTextures.roughnessMap,
+    // Grain normal map for micro-surface detail
+    normalMap: _grainNormalTex || dialTextures.normalMap,
+    normalScale: new THREE.Vector2(2.0, 2.0),
+    // Roughness variation — catches light differently across grain
+    roughnessMap: _grainRoughnessTex || dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
-  m.envMapIntensity = 0.5; // matte dial — env response through the crystal, not direct
+  m.envMapIntensity = 1.5; // high — grain needs strong env reflection to be visible
   return m;
 }
 function metalMat(color) {

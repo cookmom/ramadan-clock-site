@@ -1113,15 +1113,18 @@ function _showAdhanBanner(prayer){
     b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(26,71,42,.95);color:#fff;text-align:center;padding:1rem;font-family:var(--font);font-size:.95rem;font-weight:400;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity .3s';
     document.body.appendChild(b);
   }
-  b.innerHTML='🕌 '+prayer+' — tap to hear the adhan';
+  b.innerHTML='🕌 '+prayer+' Prayer — Tap to hear the Adhan';
   b.style.opacity='1';b.style.pointerEvents='auto';
   b.onclick=function(){
     const btn=document.getElementById('adhanBtn');
     if(btn) playAdhan(btn);
     _hideAdhanBanner();
   };
-  // Auto-hide after 60s
-  setTimeout(()=>_hideAdhanBanner(),60000);
+  // Vibrate device to get attention
+  try{ if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]); }catch(e){}
+  console.log('[adhan] 🕌 Banner shown for '+prayer);
+  // Auto-hide after 2 minutes (not 60s — give more time)
+  setTimeout(()=>_hideAdhanBanner(),120000);
 }
 function _hideAdhanBanner(){
   const b=document.getElementById('adhanBanner');
@@ -1130,53 +1133,64 @@ function _hideAdhanBanner(){
 
 function startAdhanCheck(){
   if(_adhanCheckTimer)return;
-  _adhanCheckTimer=setInterval(checkPrayerAdhan,15000); // check every 15s
+  _adhanCheckTimer=setInterval(checkPrayerAdhan,5000); // check every 5s — don't miss the minute
+  checkPrayerAdhan(); // run immediately too
 }
 function checkPrayerAdhan(){
   const t=window._prayerTimings;
-  if(!t||adhanPlaying)return;
+  if(!t)return;
+  if(adhanPlaying)return;
   const now=new Date();
-  const nowHM=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const nowMin=now.getHours()*60+now.getMinutes();
   const prayers=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
   for(const p of prayers){
-    const pTime=(t[p]||'').split(' ')[0];
-    if(pTime===nowHM && _lastAdhanFired!==p+nowHM){
-      _lastAdhanFired=p+nowHM;
-      console.log('[adhan] Auto-triggering for '+p+' at '+nowHM);
-      // Try auto-play first (works on Android, desktop, or if user interacted)
-      let autoPlayed=false;
-      if(_preUnlockedAudio&&_preUnlockedAudio._isBackup){
-        adhanAudio=_preUnlockedAudio;_preUnlockedAudio=null;
-        adhanAudio.currentTime=0;
-        adhanPlaying=true;
-        setupAdhanAudioEvents(adhanAudio);
-        adhanAudio.play().then(()=>{
-          adhanDbg('Auto-adhan plain playing for '+p);
-          autoPlayed=true;
+    const raw=(t[p]||'').split(' ')[0]; // "HH:MM" from Aladhan
+    if(!raw||!raw.includes(':'))continue;
+    const [h,m]=raw.split(':').map(Number);
+    const pMin=h*60+m;
+    // Trigger if within 0-1 minute of prayer time (covers the full minute window)
+    const diff=nowMin-pMin;
+    if(diff>=0 && diff<=1 && _lastAdhanFired!==p+raw){
+      _lastAdhanFired=p+raw;
+      console.log('[adhan] ⏰ Auto-triggering for '+p+' at '+raw+' (now='+now.toLocaleTimeString()+')');
+      
+      // ALWAYS show the tap banner first — guaranteed visible even if audio fails
+      _showAdhanBanner(p);
+      
+      // Try to auto-play audio (may fail on iOS without gesture)
+      try{
+        const audio=new Audio('https://cookmom.github.io/ramadan-clock/audio/adhan-mishari.mp3');
+        audio.play().then(()=>{
+          console.log('[adhan] ✅ Auto-play succeeded for '+p);
+          adhanAudio=audio;
+          adhanPlaying=true;
+          setupAdhanAudioEvents(audio);
+          _adhanUpdateBtn();
           if(window._pauseTour)window._pauseTour();
           if(window._stopTour)window._stopTour();
-          _adhanUpdateBtn();
+          audio.onended=()=>{
+            adhanPlaying=false;adhanAudio=null;_adhanUpdateBtn();
+            if(window._resumeTour)window._resumeTour();
+          };
           _hideAdhanBanner();
         }).catch(e=>{
-          adhanDbg('Auto-adhan play failed (no gesture): '+e);
-          adhanPlaying=false;
-          _showAdhanBanner(p);
+          console.log('[adhan] ⚠️ Auto-play failed (need gesture): '+e.message);
+          // Banner already showing — user can tap
         });
-      }else{
-        // Try playAdhan directly (works on Android, desktop)
-        const btn=document.getElementById('adhanBtn');
-        if(btn) { try{playAdhan(btn);}catch(e){} }
+      }catch(e){
+        console.log('[adhan] ❌ Audio creation failed: '+e.message);
       }
-      // Always show tap banner on iOS as fallback — user can tap to play
-      if(!autoPlayed) _showAdhanBanner(p);
+      
       // Browser notification
-      if('Notification' in window&&Notification.permission==='granted'){
-        if(swReg){
-          swReg.showNotification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p,renotify:true});
-        }else{
-          new Notification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p});
+      try{
+        if('Notification' in window&&Notification.permission==='granted'){
+          if(swReg){
+            swReg.showNotification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p,renotify:true});
+          }else{
+            new Notification(p+' Prayer',{body:'It\'s time for '+p+' prayer',tag:'prayer-'+p});
+          }
         }
-      }
+      }catch(e){}
       return;
     }
   }
@@ -1542,7 +1556,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=140';
+_cs.type='module';_cs.src='clock.js?v=141';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

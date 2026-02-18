@@ -641,14 +641,7 @@ const fsBgShape = new THREE.Shape();
 fsBgShape.moveTo(-5000, -5000); fsBgShape.lineTo(5000, -5000); fsBgShape.lineTo(5000, 5000); fsBgShape.lineTo(-5000, 5000); fsBgShape.closePath();
 const fsBgGeo = new THREE.ShapeGeometry(fsBgShape, 4);
 function fsBgMaterial(color) {
-  const m = dialMat(color);
-  // Add grain as emissive map — adds light like CSS plus-lighter blend
-  if (_grainColorTex) {
-    m.emissiveMap = _grainColorTex;
-    m.emissive = new THREE.Color(color);
-    m.emissiveIntensity = 0.12; // subtle grain glow — matches Bauhaus opacity 0.2
-  }
-  return m;
+  return dialMat(color);
 }
 let fsBgMat = fsBgMaterial(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860);
 const fsBgPlane = new THREE.Mesh(fsBgGeo, fsBgMat);
@@ -2213,10 +2206,6 @@ function animate(){
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
     const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
     fsBgPlane.material.color.copy(nightBgColor);
-    if(fsBgPlane.material.emissive) {
-      fsBgPlane.material.emissive.copy(nightBgColor);
-      fsBgPlane.material.emissiveIntensity = 0.12 * (1 - modeBlend * 0.7); // dim grain at night
-    }
   }
   
   // Rainbow bezel gems glow at night

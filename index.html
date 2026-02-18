@@ -320,7 +320,7 @@ footer a:hover{color:var(--text)}
 /* ── Fullscreen Clock Overlay ── */
 .clock-fs-overlay{position:fixed;inset:0;z-index:200;background:#585860;display:none;flex-direction:column;align-items:center;justify-content:center}
 .clock-fs-overlay.active{display:flex}
-.clock-fs-overlay::after{display:none}
+.clock-fs-overlay::after{content:'';position:absolute;inset:0;z-index:10;background-image:url(grain-fine.png);background-repeat:repeat;background-size:148.5px auto;mix-blend-mode:soft-light;opacity:0.4;pointer-events:none}
 .clock-fs-overlay canvas{z-index:2}
 /* Hide landing page content instantly when loading #clock */
 html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,.clock-direct footer{display:none!important}
@@ -1777,7 +1777,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=186';
+_cs.type='module';_cs.src='clock.js?v=187';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

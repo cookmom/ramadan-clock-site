@@ -1356,9 +1356,9 @@ function buildQibla() {
   
   const innerR = gaugeR * 0.28;
   const innerMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.65),
-    roughness: 0.08, metalness: 0.8,
-    clearcoat: 0.8, envMapIntensity: 4.0,
+    color: new THREE.Color(d.bg).multiplyScalar(0.75),
+    roughness: 0.45, metalness: 0.2,
+    envMapIntensity: 0.5,
   });
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
   qiblaInnerRotor.add(innerDisc);

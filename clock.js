@@ -601,8 +601,7 @@ window._clockSetFullscreen = function(on) {
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
-    // Snap to day mode instantly on fullscreen exit — no slow lerp
-    modeTarget = 0; modeBlend = 0;
+    // Page-side _fsRestoreSection calls _clockSetNight with snap=true
     if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }
@@ -1647,7 +1646,7 @@ function buildAll(){
 window._clockDebug = { scene, cam, clockGroup, renderer, composer, bgPlane, getAnimCount: () => _animCount };
 // Expose controls for landing page
 window._clockSwitchDial = function(name){ if(DIALS[name]){currentDial=name;buildAll();} };
-window._clockSetNight = function(on){ modeTarget=on?1:0; };
+window._clockSetNight = function(on, snap){ modeTarget=on?1:0; if(snap) modeBlend=modeTarget; };
 window._clockGetDial = function(){ return currentDial; };
 
 // Lock compass at 12 o'clock (resting state) — for dial showcase

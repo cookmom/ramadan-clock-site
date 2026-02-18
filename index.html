@@ -978,6 +978,15 @@ function setupScrollObservers(){
     if(el) io.observe(el);
   });
 
+  // Expose restore function so fullscreen exit can snap back to current section's mode
+  window._fsRestoreSection = ()=>{
+    if(_lastActive && sectionStates[_lastActive]) sectionStates[_lastActive]();
+    // Snap clock blend instantly — no lerp on fullscreen exit
+    const nightSections = ['sec-night','sec-adhan'];
+    const wantNight = nightSections.includes(_lastActive);
+    if(window._clockSetNight) window._clockSetNight(wantNight, true);
+  };
+
   // Stop dial cycle when leaving dials section
   new IntersectionObserver((entries)=>{
     if(!entries[0].isIntersecting) stopDialCycle();
@@ -1450,7 +1459,9 @@ function closeClockFullscreen() {
   document.body.style.overflow = '';
   document.querySelector('nav').style.display = '';
 
-  // Tell clock engine to go back to contained
+  // Snap clock + page back to the mode the current section expects
+  // Re-trigger the active section's state handler before clock exits fullscreen
+  if(window._fsRestoreSection) window._fsRestoreSection();
   if(window._clockSetFullscreen) window._clockSetFullscreen(false);
   fsStopClock();
 

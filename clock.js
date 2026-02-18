@@ -163,18 +163,18 @@ cam.lookAt(0, 0, 0);
 // ══════════════════════════════════════════
 // BLOOM POST-PROCESSING
 // ══════════════════════════════════════════
-// Bloom at half resolution to reduce VRAM (bloom is a blur — doesn't need full res)
-const _bloomScale = 0.5;
+// Bloom — full resolution, with adaptive fallback if GPU process OOMs
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, cam));
 const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(Math.round(W * _bloomScale), Math.round(H * _bloomScale)),
+  new THREE.Vector2(W, H),
   0.0,   // strength — will animate with modeBlend
   0.4,   // radius — soft spread
   0.85   // threshold — only bright emissives bloom
 );
 composer.addPass(bloomPass);
-let _bloomFailed = false; // fallback flag if GPU OOM kills framebuffers
+let _bloomFailed = false; // fallback if GPU OOM kills framebuffers
+let _bloomRetryAt = 0;    // timestamp to retry bloom after failure
 
 // ══════════════════════════════════════════
 // LIGHTING — NOMOS-style watch photography
@@ -2025,7 +2025,9 @@ function onResize(){
   cam.position.z = 280;
   cam.updateProjectionMatrix();
   composer.setSize(W, H);
-  bloomPass.resolution.set(Math.round(W * _bloomScale), Math.round(H * _bloomScale));
+  bloomPass.resolution.set(W, H);
+  // Resize = good time to retry bloom if it failed (GPU process may have recovered)
+  if(_bloomFailed) { _bloomFailed = false; _bloomRetryAt = 0; console.log('[perf] Bloom retry on resize'); }
   bloomPass.resolution.set(W, H);
   // Enforce correct scale — fullscreen=0.50, contained=0.95, embed=0.65
   const targetScale = isFullscreen ? 0.50 : (CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50));
@@ -2273,21 +2275,31 @@ function animate(){
     window._qiblaTriMat.emissiveIntensity += (targetTri - window._qiblaTriMat.emissiveIntensity) * 0.1;
   }
   
-  // Use composer for bloom; in embed+night, render dark bg (no alpha)
-  if(modeBlend > 0.01 && !_bloomFailed) {
-    try {
-      composer.render();
-      // Check for GL errors that indicate GPU OOM / framebuffer death
-      const gl = renderer.getContext();
-      const err = gl.getError();
-      if(err === gl.INVALID_FRAMEBUFFER_OPERATION) {
-        console.warn('[perf] Bloom framebuffer failed (GPU OOM?) — falling back to plain render');
+  // Use composer for bloom; adaptive fallback on GPU OOM
+  if(modeBlend > 0.01) {
+    // Retry bloom every 30s after failure (GPU process may recover)
+    if(_bloomFailed && Date.now() > _bloomRetryAt) {
+      _bloomFailed = false;
+      console.log('[perf] Retrying bloom composer');
+    }
+    if(!_bloomFailed) {
+      try {
+        composer.render();
+        const gl = renderer.getContext();
+        const err = gl.getError();
+        if(err === gl.INVALID_FRAMEBUFFER_OPERATION) {
+          console.warn('[perf] Bloom framebuffer failed — falling back for 30s');
+          _bloomFailed = true;
+          _bloomRetryAt = Date.now() + 30000;
+          renderer.render(scene, cam);
+        }
+      } catch(e) {
+        console.warn('[perf] Bloom error:', e);
         _bloomFailed = true;
+        _bloomRetryAt = Date.now() + 30000;
         renderer.render(scene, cam);
       }
-    } catch(e) {
-      console.warn('[perf] Bloom render error:', e);
-      _bloomFailed = true;
+    } else {
       renderer.render(scene, cam);
     }
   } else {

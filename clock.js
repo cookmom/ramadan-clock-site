@@ -150,12 +150,76 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// Grain: per-section overlays in HTML (Bauhaus pattern) — no body background needed
-// Dial grain: load same Bauhaus texture into Three.js for the dial material
+// Grain: per-section overlays in HTML, dial grain composited INTO dial albedo
+// This means grain renders UNDER hands/markers/crystal — not over them
+
+const _bauhausGrainImg = new Image();
+_bauhausGrainImg.src = 'bauhaus-grain.png';
+let _bauhausGrainReady = false;
+_bauhausGrainImg.onload = () => {
+  _bauhausGrainReady = true;
+  // Rebuild dial to apply grain once image is ready
+  if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
+};
+
+// Also load as Three.js texture for roughnessMap
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(4, 4);
 });
+
+// Composite dial color + grain into a single albedo map
+// Bakes Bauhaus vermicular texture into the dial surface
+function makeDialGrainMap(dialColor, size = 512, grainOpacity = 0.15) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  // Fill with dial base color
+  const col = new THREE.Color(dialColor);
+  ctx.fillStyle = '#' + col.getHexString();
+  ctx.fillRect(0, 0, size, size);
+  // Composite grain with multiply blend
+  if (_bauhausGrainReady) {
+    ctx.globalAlpha = grainOpacity;
+    ctx.globalCompositeOperation = 'multiply';
+    const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, size, size);
+    ctx.globalAlpha = 1.0;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Scene background with grain (for fullscreen mode)
+let _bgGrainCanvas = null, _bgGrainCtx = null, _bgGrainTex = null;
+function makeSceneBgGrain(bgColor) {
+  const size = 512;
+  if (!_bgGrainCanvas) {
+    _bgGrainCanvas = document.createElement('canvas');
+    _bgGrainCanvas.width = _bgGrainCanvas.height = size;
+    _bgGrainCtx = _bgGrainCanvas.getContext('2d');
+    _bgGrainTex = new THREE.CanvasTexture(_bgGrainCanvas);
+    _bgGrainTex.colorSpace = THREE.SRGBColorSpace;
+  }
+  const ctx = _bgGrainCtx;
+  const col = bgColor instanceof THREE.Color ? bgColor : new THREE.Color(bgColor);
+  ctx.fillStyle = '#' + col.getHexString();
+  ctx.fillRect(0, 0, size, size);
+  if (_bauhausGrainReady) {
+    ctx.globalAlpha = 0.12;
+    ctx.globalCompositeOperation = 'multiply';
+    const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, size, size);
+    ctx.globalAlpha = 1.0;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  _bgGrainTex.needsUpdate = true;
+  return _bgGrainTex;
+}
 
 const scene = new THREE.Scene();
 
@@ -377,15 +441,16 @@ function dialMat(color) {
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
   };
   const s = special[cd] || { roughness:0.92, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
-  // Dial = PBR with NOMOS sandblasted finish
+  // Dial = PBR with NOMOS sandblasted finish + Bauhaus grain baked into albedo
+  const grainMap = makeDialGrainMap(color, 512, 0.15);
   const m = new THREE.MeshPhysicalMaterial({
-    color,
+    map: grainMap,           // grain composited into dial color — renders UNDER hands/markers
     roughness: s.roughness,
     metalness: s.metalness,
     clearcoat: s.clearcoat,
     clearcoatRoughness: s.clearcoatRoughness,
     normalMap: dialTextures.normalMap,
-    normalScale: new THREE.Vector2(0.35, 0.35), // subtle sandblast — uniform, not aggressive
+    normalScale: new THREE.Vector2(0.35, 0.35),
     roughnessMap: _bauhausGrainTex || dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
@@ -1753,7 +1818,7 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = (isFullscreen && _bauhausGrainReady) ? makeSceneBgGrain(dialBg) : dialBg.clone();
   // Ensure bgPlane is hidden in fullscreen
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
@@ -2234,9 +2299,16 @@ function animate(){
   }
   
   // BG color blend
-  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend); // deep midnight — not void black
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = nightBg;
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
   bgPlaneMat.color.copy(nightBg);
+  if(!EMBED || CONTAINED || isFullscreen) {
+    if (isFullscreen && _bauhausGrainReady) {
+      // Only regenerate grain texture when color changes (throttle: every 4th frame)
+      if ((_animCount & 3) === 0) scene.background = makeSceneBgGrain(nightBg);
+    } else {
+      scene.background = nightBg;
+    }
+  }
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
@@ -2308,7 +2380,8 @@ function animate(){
   
   // Compute bg color from scene.background directly (no GPU readPixels stall)
   if(!CONTAINED || isFullscreen) {
-    const _bgHex = '#' + scene.background.getHexString();
+    const _bgObj = scene.background;
+    const _bgHex = _bgObj && _bgObj.isColor ? '#' + _bgObj.getHexString() : '#' + bgPlaneMat.color.getHexString();
     if(_bgHex !== _lastBgHex) {
       _lastBgHex = _bgHex;
       const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;

@@ -170,7 +170,7 @@ const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t)
 
 // Composite dial color + grain into a single albedo map
 // Bakes Bauhaus vermicular texture into the dial surface
-function makeDialGrainMap(dialColor, size = 512, grainOpacity = 0.15) {
+function makeDialGrainMap(dialColor, size = 512, grainOpacity = 0.35) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
@@ -209,7 +209,7 @@ function makeSceneBgGrain(bgColor) {
   ctx.fillStyle = '#' + col.getHexString();
   ctx.fillRect(0, 0, size, size);
   if (_bauhausGrainReady) {
-    ctx.globalAlpha = 0.12;
+    ctx.globalAlpha = 0.20;
     ctx.globalCompositeOperation = 'multiply';
     const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
     ctx.fillStyle = pat;

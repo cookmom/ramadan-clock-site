@@ -222,7 +222,7 @@ a{color:inherit;text-decoration:none}
   position:absolute;top:0;left:0;right:0;bottom:0;
   z-index:1;pointer-events:none;
   background:url(bauhaus-grain.png) repeat;background-size:200px 200px;
-  mix-blend-mode:plus-lighter;opacity:0.2;
+  mix-blend-mode:multiply;opacity:0.3;
 }
 .scroll-section>*:not(.grain-overlay){position:relative;z-index:2;}
 .section-header{
@@ -1776,7 +1776,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=164';
+_cs.type='module';_cs.src='clock.js?v=165';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

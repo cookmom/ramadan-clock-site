@@ -144,11 +144,17 @@ renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.825;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-(CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
+const _host = CONTAINED ? CONTAINER : document.body;
+_host.appendChild(renderer.domElement);
 if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
+// CSS grain overlay — sandblast texture tiled over canvas (zero GPU cost)
+const _grainDiv = document.createElement('div');
+_grainDiv.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background-image:url(grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.18;mix-blend-mode:multiply;';
+_host.style.position = _host.style.position || 'relative';
+_host.appendChild(_grainDiv);
 
 const scene = new THREE.Scene();
 

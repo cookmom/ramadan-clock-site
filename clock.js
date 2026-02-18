@@ -151,7 +151,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = CONTAINED ? 0.74 : 0.825; // compensate for simultaneous contrast on light bg
+renderer.toneMappingExposure = CONTAINED ? 0.74 : 0.825; // contained: compensate for simultaneous contrast on light bg
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -2200,7 +2200,7 @@ function animate(){
   topLight.intensity = 1.5 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = (CONTAINED ? 0.74 : 0.825) - modeBlend * 0.25;
+  renderer.toneMappingExposure = (CONTAINED && !isFullscreen ? 0.74 : 0.825) - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;

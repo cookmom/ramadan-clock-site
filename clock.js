@@ -1027,46 +1027,7 @@ function buildBrandText() {
     brandLumeMats.push(mat);
   }
 
-  // "AGIFTOFTIME.APP" — canvas-rendered arc text below 6 o'clock (like NOMOS "MADE IN GERMANY")
-  {
-    const text = 'A G I F T O F T I M E . A P P';
-    const dpr = 3;
-    const cW = 512, cH = 512;
-    const cvs = document.createElement('canvas');
-    cvs.width = cW * dpr; cvs.height = cH * dpr;
-    const ctx = cvs.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, cW, cH);
-    
-    const lumeCol = '#' + new THREE.Color(mk).getHexString();
-    ctx.fillStyle = lumeCol;
-    ctx.globalAlpha = 0.5;
-    ctx.font = "600 16px 'Inter', 'Helvetica Neue', system-ui, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.letterSpacing = '3px';
-    
-    // Draw text along a circular arc
-    // Straight spaced text — clean, minimal
-    const plainText = 'A G I F T O F T I M E . A P P';
-    ctx.fillText(plainText, cW / 2, cH / 2);
-    
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.anisotropy = 4;
-    const pw = R * 0.9;
-    const ph = R * 0.1;
-    const geo = new THREE.PlaneGeometry(pw, ph);
-    const mat = new THREE.MeshBasicMaterial({
-      map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
-    });
-    mat._isBrandTex = true;
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, -R * 0.82, 4);
-    clockGroup.add(mesh);
-    brandMeshes.push(mesh);
-    mesh.userData.brandCanvas = { cvs, ctx, text: plainText, fontSpec: "600 16px Inter", alpha: 0.5, cW, cH, dpr, isArc: true };
-    brandLumeMats.push(mat);
-  }
+  // "AGIFTOFTIME.APP" — hidden for now (revisit later)
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)

@@ -15,18 +15,19 @@ if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.client
 const DIALS = {
   // ── NOMOS Club Campus palette ── (extracted from nomos-glashuette.com product photography)
   // All Campus dials: warm white rhodium hands/lume + neon orange seconds hand
-  deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah'},   // NOMOS deep pink — bold magenta
-  red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams'},     // NOMOS nonstop red — vivid coral
-  coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā'},      // NOMOS cream coral — warm peach
-  starlight:  {bg:0xd8d580, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — soft lemon (desaturated from ref)
-  green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān'},     // NOMOS electric green — mint emerald
-  teal:       {bg:0x63afb9, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj'},      // NOMOS endless blue — turquoise
-  slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl'},       // NOMOS blue purple — muted slate-blue
-  navy:       {bg:0x132653, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm'},       // NOMOS night sky — deep navy
-  white:      {bg:0xe0e0e0, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar'},      // NOMOS white — silver-white
+  // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
+  deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
+  red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
+  coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
+  starlight:  {bg:0xd8d580, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},
+  green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
+  teal:       {bg:0x63afb9, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
+  slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
+  navy:       {bg:0x132653, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
+  white:      {bg:0xe0e0e0, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
   // ── Special dials (custom behavior) ──
-  kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar'},        // strawberry + rose gold
-  rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true}, // Rolex Rainbow — black dial + rose gold
+  kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
+  rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},
 };
 // Night lume palettes — modeled after real SuperLuminova variants
 // Each matches the daytime lume character but amplified for glow
@@ -204,49 +205,37 @@ let studioEnvMap;
   const envRT = pmrem.fromEquirectangular(hdrTex);
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
-  scene.environmentIntensity = 0.7; // balanced — grain visible without washing out
+  scene.environmentIntensity = 0.5; // controlled — HDRI for reflections not illumination
   scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
 }
 
-// Ambient — minimal shadow fill
-const ambLight = new THREE.AmbientLight(0xffffff, 0.12);
+// ── NOMOS product photography lighting ──
+// Clean, even illumination. Soft upper-left key creates subtle dial gradient.
+// Minimal shadows — watch photography is about material quality, not drama.
+
+// Ambient — gentle shadow fill
+const ambLight = new THREE.AmbientLight(0xffffff, 0.25);
 scene.add(ambLight);
 
-// Key light — soft rect from upper-left (warm, even illumination)
-const keyLight = new THREE.RectAreaLight(0xfff8f0, 2.5, 300, 300);
-keyLight.position.set(-80, 180, 250);
+// Key light — large soft rect from upper-left (NOMOS product photo style)
+const keyLight = new THREE.RectAreaLight(0xfff8f0, 3.0, 400, 400);
+keyLight.position.set(-60, 120, 280);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Strip light — narrow rect for hand specular streaks
-const stripLight = new THREE.RectAreaLight(0xffffff, 4.0, 20, 200);
-stripLight.position.set(40, 80, 200);
-stripLight.lookAt(0, 0, 0);
-scene.add(stripLight);
+// Fill light — opposite side, cooler, lower intensity for depth
+const fillLight = new THREE.RectAreaLight(0xf0f4ff, 1.0, 300, 300);
+fillLight.position.set(80, -40, 220);
+fillLight.lookAt(0, 0, 0);
+scene.add(fillLight);
 
-// Spec point — accent highlight on hands, boosted
-const specPoint = new THREE.PointLight(0xffffff, 6, 350, 2);
-specPoint.position.set(30, 60, 180);
-scene.add(specPoint);
-
-// Counter spec — opposite warmth for depth
-const counterSpec = new THREE.PointLight(0xfff0e0, 1.5, 400, 2);
-counterSpec.position.set(-40, -30, 200);
-scene.add(counterSpec);
-
-// Raking light — grazing angle reveals grain through specular breakup
-const rakeLight = new THREE.DirectionalLight(0xffffff, 1.2);
-rakeLight.position.set(-100, 60, 80);
-scene.add(rakeLight);
-
-// Subdial spot — wider cone for glass sparkle, boosted
-const subSpot = new THREE.SpotLight(0xffffff, 20, 400, Math.PI/8, 0.5, 1.5);
-subSpot.position.set(5, -R*0.5 + 20, 150);
-subSpot.target.position.set(0, -R*0.5, 0);
-scene.add(subSpot);
-scene.add(subSpot.target);
+// Top light — even overhead wash (prevents dark spots)
+const topLight = new THREE.RectAreaLight(0xffffff, 1.5, 350, 350);
+topLight.position.set(0, 0, 300);
+topLight.lookAt(0, 0, 0);
+scene.add(topLight);
 
 
 // ══════════════════════════════════════════
@@ -357,22 +346,23 @@ function metalMat(color) {
   m.envMapIntensity = precious ? 4.0 : 3.5;
   return m;
 }
-// Brushed aluminum — directional anisotropic highlights along hand length
+// Rhodium-plated hands — NOMOS Club Campus reference
+// Bright polished silver with fine satin finish, not mirror-chrome
 function brushedHandMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(color).lerp(new THREE.Color(0xD6D6D6), 0.3), // aluminum tint
-    roughness: 0.33,        // brushed aluminum: split the difference
+    color: new THREE.Color(color).lerp(new THREE.Color(0xE8E8EC), 0.4), // rhodium tint — bright silver
+    roughness: 0.18,        // polished but not mirror (satin rhodium)
     metalness: 1.0,
-    anisotropy: 0.8,        // strong directional brushing
-    anisotropyRotation: 0,  // brushing along hand length (Y axis)
-    clearcoat: 0.15,        // subtle protective coat
-    clearcoatRoughness: 0.1,
-    reflectivity: 0.9,
-    polygonOffset: true,     // prevent z-fighting with lume channel
+    anisotropy: 0.4,        // subtle brushing (NOMOS hands are more polished than brushed)
+    anisotropyRotation: 0,
+    clearcoat: 0.6,         // visible clear protective coat (see macro shots)
+    clearcoatRoughness: 0.04,
+    reflectivity: 0.95,
+    polygonOffset: true,
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1,
   });
-  m.envMapIntensity = 2.15;
+  m.envMapIntensity = 2.5;
   return m;
 }
 function lumeMat(color) {
@@ -633,7 +623,7 @@ function buildDial() {
   if(mainCrystalMesh) clockGroup.remove(mainCrystalMesh);
   
   const subY = -R*0.5;
-  cutoutR = R*0.38;
+  cutoutR = R*0.342; // 10% smaller subdial (was 0.38)
   
   // Lower disc — solid, darker, recessed
   const lowerGeo = new THREE.CylinderGeometry(caseR, caseR, DIAL_THICKNESS, 128);
@@ -656,6 +646,17 @@ function buildDial() {
   dialMesh = new THREE.Mesh(geo, dialMat(DIALS[currentDial].bg));
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
+  
+  // Subdial recess wall — thin ring showing the step down
+  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.3, cutoutR + 0.3, 64);
+  const recessWallMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.55),
+    roughness: 0.5, metalness: 0.3,
+  });
+  const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
+  recessWall.position.set(0, subY, -1);
+  clockGroup.add(recessWall);
+  markerMeshes.push(recessWall);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {
@@ -823,26 +824,38 @@ function buildMarkers() {
         lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
-      // NOMOS proportion: applied metal base + lume top (two-layer index)
+      // NOMOS two-layer applied index: metal base (darker) + lume top (bright, clearcoated)
       if(isHour && !isNumeralPos){
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: wider lume base plate
-        const baseGeo = new THREE.BoxGeometry(mW*1.6, mH*1.05, depth*0.5);
-        const baseMesh = new THREE.Mesh(baseGeo, lumeMat(c.lume));
-        baseMesh.position.set(px, py, depth*0.3);
+        // Layer 1: metal base — wider, darker, matte nickel
+        const baseGeo = new THREE.BoxGeometry(mW*1.5, mH*1.02, depth*0.4);
+        const baseMatl = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color(c.lume).multiplyScalar(0.6), // darker base
+          roughness: 0.45, metalness: 0.8,
+          emissive: c.lume, emissiveIntensity: 0,
+        });
+        baseMatl.envMapIntensity = 1.5;
+        const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
+        baseMesh.position.set(px, py, depth*0.2);
         baseMesh.rotation.z = ang + Math.PI/2;
         baseMesh.castShadow = true;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Layer 2: lume on top
-        const lumeGeo = new THREE.BoxGeometry(mW, mH, depth*0.6);
-        const lumeMesh = new THREE.Mesh(lumeGeo, lumeMat(c.lume));
-        lumeMesh.position.set(px, py, depth*0.5 + 0.5);
-        lumeMesh.rotation.z = ang + Math.PI/2;
-        clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
-        lumeMeshes.push(lumeMesh);
+        // Layer 2: lume top — bright, clearcoated (SuperLuminova under lacquer)
+        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.5);
+        const topMatl = new THREE.MeshPhysicalMaterial({
+          color: c.lume, roughness: 0.3, metalness: 0.0,
+          clearcoat: 0.8, clearcoatRoughness: 0.06,
+          emissive: c.lume, emissiveIntensity: 0,
+        });
+        topMatl.envMapIntensity = 0.5;
+        const topMesh = new THREE.Mesh(topGeo, topMatl);
+        topMesh.position.set(px, py, depth*0.4 + 0.8);
+        topMesh.rotation.z = ang + Math.PI/2;
+        clockGroup.add(topMesh); markerMeshes.push(topMesh);
+        lumeMeshes.push(topMesh);
       }
     }
   }
@@ -889,9 +902,6 @@ function buildNumerals() {
     const geo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
     geo.computeVertexNormals();
     
-    // Same lume paint finish as minute markers (SuperLuminova)
-    const faceMat = lumeMat(c.lume);
-    
     const nx = Math.cos(ang) * r, ny = Math.sin(ang) * r;
     
     // Center geometry at its visual midpoint for proper two-layer alignment
@@ -901,23 +911,34 @@ function buildNumerals() {
     const gcy = (gbb.max.y + gbb.min.y) / 2;
     geo.translate(-gcx, -gcy, 0);
     
-    // Layer 1: lume base — clone, scale 110% from center, sits behind
+    // Layer 1: metal base — darker, slightly larger, matte nickel
     const baseGeo = geo.clone();
-    const baseFaceMat = lumeMat(c.lume);
-    const baseMesh = new THREE.Mesh(baseGeo, baseFaceMat);
-    baseMesh.position.set(nx, ny, 3.3);
-    baseMesh.scale.setScalar(1.1);
+    const baseMatl = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(c.lume).multiplyScalar(0.6),
+      roughness: 0.45, metalness: 0.8,
+      emissive: c.lume, emissiveIntensity: 0,
+    });
+    baseMatl.envMapIntensity = 1.5;
+    const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
+    baseMesh.position.set(nx, ny, 2.5);
+    baseMesh.scale.setScalar(1.08);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
     numeralSprites.push(baseMesh);
-    numeralMats.push(baseFaceMat);
+    numeralMats.push(baseMatl);
     
-    // Layer 2: lume on top
-    const mesh = new THREE.Mesh(geo, faceMat);
+    // Layer 2: lume top — bright, clearcoated (SuperLuminova under lacquer)
+    const topMatl = new THREE.MeshPhysicalMaterial({
+      color: c.lume, roughness: 0.3, metalness: 0.0,
+      clearcoat: 0.8, clearcoatRoughness: 0.06,
+      emissive: c.lume, emissiveIntensity: 0,
+    });
+    topMatl.envMapIntensity = 0.5;
+    const mesh = new THREE.Mesh(geo, topMatl);
     mesh.position.set(nx, ny, 3.5);
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
-    numeralMats.push(faceMat);
+    numeralMats.push(topMatl);
   }
 }
 
@@ -1161,7 +1182,7 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = 0; // flush with dial — cutout prevents z-fighting
+  qiblaGroup.position.z = -2; // physically recessed below dial surface (NOMOS reference)
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
@@ -1416,7 +1437,7 @@ function buildQibla() {
   glassMesh.rotation.x = 0;
   glassMesh.renderOrder = 10;
   glassMesh.material.depthWrite = false;
-  glassMesh.visible = true;
+  glassMesh.visible = false; // hidden for now — revisiting later
   clockGroup.add(glassMesh);
   bezelMeshes.push(glassMesh);
 }
@@ -2347,13 +2368,18 @@ function animate(){
         const ov=document.getElementById('clockFullscreen');
         if(ov) {
           ov.style.background=_bgHex;
-          // Adjust grain overlay for light vs dark backgrounds
-          // soft-light loses contrast on light bgs — boost opacity or switch blend
-          const c=new THREE.Color(_bgHex);
-          const lum=c.r*0.299+c.g*0.587+c.b*0.114;
-          if(lum>0.65) { ov.style.setProperty('--grain-blend','multiply'); ov.style.setProperty('--grain-opacity','0.25'); }
-          else if(lum<0.15) { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.6'); }
-          else { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.4'); }
+          // Per-dial grain — use dial overrides if set, otherwise adaptive fallback
+          const dialData = DIALS[currentDial];
+          if(dialData && dialData.grainBlend) {
+            ov.style.setProperty('--grain-blend', dialData.grainBlend);
+            ov.style.setProperty('--grain-opacity', String(dialData.grainOpacity));
+          } else {
+            const c=new THREE.Color(_bgHex);
+            const lum=c.r*0.299+c.g*0.587+c.b*0.114;
+            if(lum>0.65) { ov.style.setProperty('--grain-blend','multiply'); ov.style.setProperty('--grain-opacity','0.25'); }
+            else if(lum<0.15) { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.6'); }
+            else { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.4'); }
+          }
         }
       }
     }

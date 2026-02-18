@@ -454,6 +454,9 @@ function brushedHandMat(color) {
     clearcoat: 0.15,        // subtle protective coat
     clearcoatRoughness: 0.1,
     reflectivity: 0.9,
+    polygonOffset: true,     // prevent z-fighting with lume channel
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
   });
   m.envMapIntensity = 2.15;
   return m;
@@ -1094,7 +1097,7 @@ function buildHands() {
   const hlGeo = nomosLume(hL, hW, hD);
   hLumeMat_ = lumeMat(c.lume);
   const hlMesh = new THREE.Mesh(hlGeo, hLumeMat_);
-  hlMesh.position.z = 3.5;
+  hlMesh.position.z = 4.5; // above hand body top face (depth=4) to prevent z-fighting
   hourGroup.add(hlMesh);
   hourGroup.position.z = 15;
   clockGroup.add(hourGroup);
@@ -1110,7 +1113,7 @@ function buildHands() {
   const mlGeo = nomosLume(mL, mW, mD);
   mLumeMat_ = lumeMat(c.lume);
   const mlMesh = new THREE.Mesh(mlGeo, mLumeMat_);
-  mlMesh.position.z = 4.5;
+  mlMesh.position.z = 5.5; // above hand body top face (depth=5) to prevent z-fighting
   minGroup.add(mlMesh);
   minGroup.position.z = 17;
   clockGroup.add(minGroup);

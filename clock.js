@@ -150,12 +150,20 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// CSS grain overlay — JS div over everything (this is what actually works)
-{
+// CSS grain on page background only (not over WebGL canvas)
+if(!CONTAINED) {
   const _grainDiv = document.createElement('div');
-  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.4;mix-blend-mode:multiply;';
+  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.4;mix-blend-mode:multiply;';
   document.body.appendChild(_grainDiv);
+  // Push canvas above grain layer
+  renderer.domElement.style.position = 'relative';
+  renderer.domElement.style.zIndex = '2';
 }
+// Dial grain: load same Bauhaus texture into Three.js for the dial material
+const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(4, 4);
+});
 
 const scene = new THREE.Scene();
 
@@ -386,7 +394,7 @@ function dialMat(color) {
     clearcoatRoughness: s.clearcoatRoughness,
     normalMap: dialTextures.normalMap,
     normalScale: new THREE.Vector2(0.35, 0.35), // subtle sandblast — uniform, not aggressive
-    roughnessMap: dialTextures.roughnessMap,
+    roughnessMap: _bauhausGrainTex || dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
   m.envMapIntensity = 0.5; // matte dial — env response through the crystal, not direct

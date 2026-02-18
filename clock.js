@@ -1085,13 +1085,24 @@ function buildHands() {
   clockGroup.add(secGroup);
   
   // Center cap (3D cylinder) — must sit ON TOP of all hands including second hand
-  const capGeo = new THREE.CylinderGeometry(R*0.04, R*0.04, 8, 32);
-  const capMesh = new THREE.Mesh(capGeo, brushedHandMat(c.hand));
+  // Center cap — stepped cylinder like NOMOS pinion
+  const capGeo = new THREE.CylinderGeometry(R*0.04, R*0.04, 6, 32);
+  const capMat = brushedHandMat(c.hand);
+  const capMesh = new THREE.Mesh(capGeo, capMat);
   capMesh.rotation.x = Math.PI/2;
-  capMesh.position.z = 26;  // above second hand (z=23 + depth 2 = z=25)
+  capMesh.position.z = 26;
   capMesh.castShadow = true;
   clockGroup.add(capMesh);
-  markerMeshes.push(capMesh); // for cleanup
+  markerMeshes.push(capMesh);
+  // Rivet — smaller raised dome on top (like NOMOS reference)
+  const rivetGeo = new THREE.SphereGeometry(R*0.018, 24, 16, 0, Math.PI*2, 0, Math.PI/2);
+  const rivetMat = new THREE.MeshPhysicalMaterial({color:c.hand, metalness:0.95, roughness:0.1, clearcoat:1.0, clearcoatRoughness:0.05});
+  const rivetMesh = new THREE.Mesh(rivetGeo, rivetMat);
+  rivetMesh.position.z = 29; // sits on top of cap
+  rivetMesh.rotation.x = -Math.PI/2; // dome faces camera
+  rivetMesh.castShadow = true;
+  clockGroup.add(rivetMesh);
+  markerMeshes.push(rivetMesh);
 }
 
 // ══════════════════════════════════════════

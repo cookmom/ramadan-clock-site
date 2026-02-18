@@ -221,7 +221,7 @@ a{color:inherit;text-decoration:none}
 }
 /* Ensure section content paints above any positioned ancestors */
 .scroll-section>*{position:relative;z-index:2;}
-.scroll-section::after{content:'';position:absolute;inset:0;z-index:1;background-image:url(grain-fine.png);background-repeat:repeat;background-size:148.5px auto;mix-blend-mode:soft-light;opacity:0.35;pointer-events:none}
+.clock-sticky::after{content:'';position:absolute;inset:0;z-index:1;background-image:url(grain-fine.png);background-repeat:repeat;background-size:148.5px auto;mix-blend-mode:soft-light;opacity:0.35;pointer-events:none}
 .section-header{
   padding:.75rem 0 .5rem;
   transition:background 1s ease;
@@ -1764,7 +1764,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=237';
+_cs.type='module';_cs.src='clock.js?v=238';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

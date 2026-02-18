@@ -155,18 +155,18 @@ if(CONTAINED) {
 // Sobel-derived normal map from bauhaus vermicular texture
 // Turing reaction-diffusion vermicular pattern — organic flowing grain
 let _grainNormalTex = null;
-new THREE.TextureLoader().load('turing-normal.png', (t) => {
+new THREE.TextureLoader().load('grain-fine-normal.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(4, 4); // 512px tiled 4x — grain reads as texture, not pattern
+  t.repeat.set(6, 6); // 512px tiled 6x — fine eggshell grain
   _grainNormalTex = t;
-  console.log('[clock] turing grain normal loaded');
+  console.log('[clock] fine grain normal loaded');
   if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
 });
 
 let _grainRoughnessTex = null;
-new THREE.TextureLoader().load('turing-roughness.png', (t) => {
+new THREE.TextureLoader().load('grain-fine-roughness.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(4, 4);
+  t.repeat.set(6, 6);
   _grainRoughnessTex = t;
 });
 
@@ -407,7 +407,7 @@ function dialMat(color) {
     clearcoatRoughness: s.clearcoatRoughness,
     // Grain normal map for micro-surface detail
     normalMap: _grainNormalTex || dialTextures.normalMap,
-    normalScale: new THREE.Vector2(0.5, 0.5), // Turing patterns: smoother gradients allow higher scale
+    normalScale: new THREE.Vector2(0.3, 0.3), // Fine grain: subtle eggshell texture
     // Roughness variation — catches light differently across grain
     roughnessMap: _grainRoughnessTex || dialTextures.roughnessMap,
   });

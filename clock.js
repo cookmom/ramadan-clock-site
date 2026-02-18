@@ -153,19 +153,20 @@ if(CONTAINED) {
 
 // ── Grain normal map — proper PBR surface grain (not CSS overlay) ──
 // Sobel-derived normal map from bauhaus vermicular texture
+// Turing reaction-diffusion vermicular pattern — organic flowing grain
 let _grainNormalTex = null;
-new THREE.TextureLoader().load('grain-normal-512.png', (t) => {
+new THREE.TextureLoader().load('turing-normal.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(6, 6); // finer grain — more tiles = smaller pattern
+  t.repeat.set(4, 4); // 512px tiled 4x — grain reads as texture, not pattern
   _grainNormalTex = t;
-  console.log('[clock] grain normal map loaded');
+  console.log('[clock] turing grain normal loaded');
   if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
 });
 
 let _grainRoughnessTex = null;
-new THREE.TextureLoader().load('grain-roughness-512.png', (t) => {
+new THREE.TextureLoader().load('turing-roughness.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(6, 6);
+  t.repeat.set(4, 4);
   _grainRoughnessTex = t;
 });
 
@@ -247,9 +248,9 @@ const counterSpec = new THREE.PointLight(0xfff0e0, 1.5, 400, 2);
 counterSpec.position.set(-40, -30, 200);
 scene.add(counterSpec);
 
-// Raking light — gentle grazing angle to reveal grain without harshness
-const rakeLight = new THREE.DirectionalLight(0xffffff, 1.0);
-rakeLight.position.set(-120, 40, 50);
+// Raking light — grazing angle reveals grain through specular breakup
+const rakeLight = new THREE.DirectionalLight(0xffffff, 1.2);
+rakeLight.position.set(-100, 60, 80);
 scene.add(rakeLight);
 
 // Subdial spot — wider cone for glass sparkle, boosted
@@ -393,8 +394,9 @@ function dialMat(color) {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.6, clearcoatRoughness:0.3 },
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
   };
-  // Matte with just enough metalness for grain to catch light
-  const s = special[cd] || { roughness:0.78, metalness:0.12, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.1, clearcoatRoughness:0.35 };
+  // Galvanized dial: dielectric (not metal), semi-matte with lacquer clearcoat
+  // Turing vermicular normalMap needs roughness 0.3-0.4 to show grain in specular
+  const s = special[cd] || { roughness:0.35, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.3, clearcoatRoughness:0.4 };
   // Dial = PBR with NOMOS galvanized/sandblasted finish
   // Grain via proper normal map (Sobel-derived from vermicular texture) + roughness map
   const m = new THREE.MeshPhysicalMaterial({
@@ -405,12 +407,12 @@ function dialMat(color) {
     clearcoatRoughness: s.clearcoatRoughness,
     // Grain normal map for micro-surface detail
     normalMap: _grainNormalTex || dialTextures.normalMap,
-    normalScale: new THREE.Vector2(0.6, 0.6),  // subtle — just enough to read as texture
+    normalScale: new THREE.Vector2(0.5, 0.5), // Turing patterns: smoother gradients allow higher scale
     // Roughness variation — catches light differently across grain
     roughnessMap: _grainRoughnessTex || dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
-  m.envMapIntensity = 0.8; // enough env for grain visibility without looking metallic
+  m.envMapIntensity = 1.0; // grain needs env reflections to be visible through clearcoat
   return m;
 }
 function metalMat(color) {

@@ -1003,7 +1003,7 @@ function buildBrandText() {
       ctx.scale(dpr, dpr);
       ctx.fillStyle = '#' + lumeCol.getHexString();
       ctx.globalAlpha = 0.45;
-      ctx.font = "400 28px Inter, system-ui, sans-serif";
+      ctx.font = "700 28px Inter, system-ui, sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text[i], cS / 2, cS / 2);
@@ -2105,7 +2105,7 @@ function animate(){
     const blended = dayCol.lerp(nightCol, modeBlend);
     ctx.fillStyle = '#' + blended.getHexString();
     ctx.globalAlpha = 0.45;
-    ctx.font = "400 28px Inter, system-ui, sans-serif";
+    ctx.font = "700 28px Inter, system-ui, sans-serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(ch, cS / 2, cS / 2);

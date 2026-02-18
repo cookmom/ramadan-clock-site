@@ -1047,11 +1047,12 @@ function buildBrandText() {
     ctx.letterSpacing = '3px';
     
     // Draw text along a circular arc
-    const arcR = 220; // canvas-space arc radius
-    const cx = cW / 2, cy = 80; // center the arc near the top of the canvas so text draws at the bottom
+    // Simple centered arc — text curves gently below subdial
     const plainText = 'AGIFTOFTIME.APP';
-    const charAngle = 0.032; // radians per character — wider spread
-    const startAng = Math.PI / 2 - (plainText.length - 1) * charAngle / 2; // arc opens downward
+    const arcR = 350; // large radius = gentle curve (like NOMOS "MADE IN GERMANY")
+    const cx = cW / 2, cy = cH / 2 - arcR + 60; // arc center above canvas center
+    const charAngle = 0.022; // tight radians per character
+    const startAng = Math.PI / 2 - (plainText.length - 1) * charAngle / 2;
     
     for (let i = 0; i < plainText.length; i++) {
       const ang = startAng + i * charAngle;
@@ -1059,21 +1060,22 @@ function buildBrandText() {
       const y = cy + Math.sin(ang) * arcR;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(ang - Math.PI / 2); // letters upright along bottom arc
+      ctx.rotate(ang - Math.PI / 2);
       ctx.fillText(plainText[i], 0, 0);
       ctx.restore();
     }
     
     const tex = new THREE.CanvasTexture(cvs);
     tex.anisotropy = 4;
-    const pw = R * 1.2;
-    const geo = new THREE.PlaneGeometry(pw, pw * 0.3);
+    const pw = R * 0.8;
+    const ph = R * 0.12;
+    const geo = new THREE.PlaneGeometry(pw, ph);
     const mat = new THREE.MeshBasicMaterial({
       map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
     });
     mat._isBrandTex = true;
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, -R * 0.78, 4); // below subdial, between it and 6 o'clock
+    mesh.position.set(0, -R * 0.88, 4); // well below subdial
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
     mesh.userData.brandCanvas = { cvs, ctx, text: plainText, fontSpec: "600 16px Inter", alpha: 0.5, cW, cH, dpr, isArc: true };

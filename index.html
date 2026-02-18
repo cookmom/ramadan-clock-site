@@ -1514,13 +1514,16 @@ function fsPlaySurah() {
   fsSurahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
   fsSurahAudio.play().catch(()=>{});
   btn.innerHTML=FS_PAUSE_SVG+'Playing — al-Afasy';
-  fsSurahAudio.onended=()=>{fsSurahAudio=null;btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah';};
+  // Hide chrome for immersive listening — show again when ended or tapped
+  const fsClock=document.getElementById('clockFullscreen');
+  if(fsClock) fsClock.classList.add('fs-chrome-hidden');
+  fsSurahAudio.onended=()=>{fsSurahAudio=null;btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah'; if(fsClock) fsClock.classList.remove('fs-chrome-hidden');};
 }
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=120';
+_cs.type='module';_cs.src='clock.js?v=121';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

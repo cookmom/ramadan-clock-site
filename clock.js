@@ -927,10 +927,10 @@ function buildBrandText() {
   
   const c = DIALS[currentDial];
   
-  function makeLine(text, fontSize, yPos) {
+  function makeLine(text, fontSize, yPos, isSubtitle) {
     const shapes = _brandFont.generateShapes(text, fontSize);
     
-    // Compute bounds for centering — single reference for both layers
+    // Compute bounds for centering
     const tempGeo = new THREE.ShapeGeometry(shapes);
     tempGeo.computeBoundingBox();
     const bb = tempGeo.boundingBox;
@@ -938,42 +938,26 @@ function buildBrandText() {
     const cy = (bb.max.y + bb.min.y) / 2;
     tempGeo.dispose();
     
-    // Layer 1: metal base — same shapes, scaled 110% from center via mesh.scale
-    const baseGeo = new THREE.ExtrudeGeometry(shapes, {
-      depth: EXTRUDE_DEPTH * 0.5, bevelEnabled: true,
-      bevelThickness: 0.1, bevelSize: 0.08, bevelOffset: 0, bevelSegments: 2
+    // Single layer — clean lume material, no double-layer offset issues
+    const geo = new THREE.ExtrudeGeometry(shapes, {
+      depth: isSubtitle ? 1 : 2,
+      bevelEnabled: true,
+      bevelThickness: 0.1, bevelSize: 0.06, bevelOffset: 0, bevelSegments: 2
     });
-    baseGeo.computeVertexNormals();
-    const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-    baseGeo.translate(-cx, -cy, 0); // center geometry at origin
-    baseMesh.position.set(0, yPos, 3.5);
-    baseMesh.scale.setScalar(1.1); // 110% from centered origin — perfectly aligned
-    baseMesh.castShadow = true;
-    clockGroup.add(baseMesh);
-    brandMeshes.push(baseMesh);
-    
-    // Layer 2: lume top — normal scale
-    const lumeGeo = new THREE.ExtrudeGeometry(shapes, {
-      depth: EXTRUDE_DEPTH, bevelEnabled: true,
-      bevelThickness: 0.15, bevelSize: 0.1, bevelOffset: 0, bevelSegments: 3
-    });
-    lumeGeo.computeVertexNormals();
-    lumeGeo.translate(-cx, -cy, 0); // center geometry at origin
+    geo.computeVertexNormals();
+    geo.translate(-cx, -cy, 0);
     const lMat = lumeMat(c.lume);
-    const lumeMesh = new THREE.Mesh(lumeGeo, lMat);
-    lumeMesh.position.set(0, yPos, 3.5);
-    clockGroup.add(lumeMesh);
-    brandMeshes.push(lumeMesh);
+    const mesh = new THREE.Mesh(geo, lMat);
+    mesh.position.set(0, yPos, 3.5);
+    clockGroup.add(mesh);
+    brandMeshes.push(mesh);
     brandLumeMats.push(lMat);
   }
   
-  // 12 marker bottom ≈ R*0.82 - R*0.08 = R*0.74
-  // Subdial top ≈ -R*0.5 + R*0.38 = -R*0.12
-  // Midpoint ≈ R*0.31
-  // Main brand text
-  makeLine('A GIFT OF TIME', R * 0.055, R * 0.33);
+  // Main brand text — centered between 12 marker bottom and subdial top
+  makeLine('A GIFT OF TIME', R * 0.055, R * 0.33, false);
   // Subtitle
-  makeLine('agiftoftime.app', R * 0.032, R * 0.22);
+  makeLine('agiftoftime.app', R * 0.032, R * 0.22, true);
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)

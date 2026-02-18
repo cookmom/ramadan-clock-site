@@ -219,7 +219,8 @@ a{color:inherit;text-decoration:none}
   position:relative;overflow:hidden;
   transition:background 1s ease,color 1s ease;
 }
-/* grain texture handled by clock.js material, not CSS */
+/* Ensure section content paints above any positioned ancestors */
+.scroll-section>*{position:relative;z-index:2;}
 .section-header{
   position:sticky;top:calc(var(--clock-size) + 4.5rem);
   z-index:40;padding:.75rem 0 .5rem;
@@ -1421,6 +1422,8 @@ startNavClock=function(){_origStartNav();startAdhanCheck();};
 // ══════════════════════════════════════════
 buildDots();
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+// Safety: force all reveals visible after 3s in case IntersectionObserver doesn't fire
+setTimeout(()=>{document.querySelectorAll('.reveal:not(.visible)').forEach(el=>el.classList.add('visible'));},3000);
 
 // Touch swipe on dial hero + fullscreen overlay
 function addSwipe(el){
@@ -1773,7 +1776,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=177';
+_cs.type='module';_cs.src='clock.js?v=178';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

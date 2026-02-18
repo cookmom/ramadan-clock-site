@@ -903,6 +903,59 @@ function buildNumerals() {
   }
 }
 
+// Brand text — "A GIFT OF TIME" positioned like NOMOS/GLASHÜTTE at ~3 o'clock
+let brandMeshes = [];
+function buildBrandText() {
+  brandMeshes.forEach(m => clockGroup.remove(m));
+  brandMeshes = [];
+  if(currentDial === 'kawthar' || currentDial === 'rainbow') return;
+  
+  const c = DIALS[currentDial];
+  const cvs = document.createElement('canvas');
+  const dpr = 2;
+  const cW = 512, cH = 160;
+  cvs.width = cW * dpr; cvs.height = cH * dpr;
+  const ctx = cvs.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cW, cH);
+  
+  // Match dial text color — use hand color with reduced opacity for subtlety
+  const handCol = '#' + new THREE.Color(c.hand).getHexString();
+  
+  // Line 1: "A GIFT OF TIME" — main brand, NOMOS-weight tracking
+  ctx.fillStyle = handCol;
+  ctx.font = '500 28px Inter, system-ui, sans-serif';
+  ctx.letterSpacing = '4px';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('A GIFT OF TIME', cW/2, cH * 0.38);
+  
+  // Line 2: "agiftoftime.app" — subtitle, like GLASHÜTTE
+  ctx.font = '300 16px Inter, system-ui, sans-serif';
+  ctx.letterSpacing = '2px';
+  ctx.globalAlpha = 0.6;
+  ctx.fillText('agiftoftime.app', cW/2, cH * 0.68);
+  ctx.globalAlpha = 1;
+  
+  const tex = new THREE.CanvasTexture(cvs);
+  tex.anisotropy = 4;
+  
+  // Plane size in world units — proportional to dial
+  const planeW = R * 0.44;
+  const planeH = planeW * (cH / cW);
+  const geo = new THREE.PlaneGeometry(planeW, planeH);
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex, transparent: true, depthWrite: false,
+    side: THREE.FrontSide
+  });
+  
+  const mesh = new THREE.Mesh(geo, mat);
+  // Position: 3 o'clock area, between center and 2 marker — same as NOMOS
+  mesh.position.set(R * 0.32, R * 0.12, 4);
+  clockGroup.add(mesh);
+  brandMeshes.push(mesh);
+}
+
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)
 let hourGroup, minGroup, secGroup;
 let hourMat_, minMat_, secMat_, hLumeMat_, mLumeMat_;
@@ -1627,7 +1680,7 @@ function buildAll(){
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
   if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
-  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
+  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
   if(!CONTAINED) {
     // Update dial info panel

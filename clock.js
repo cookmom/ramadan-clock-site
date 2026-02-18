@@ -138,7 +138,7 @@ const R = 80; // world-space radius
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
 renderer.samples = 4;
-renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 3));
+renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 2));
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;

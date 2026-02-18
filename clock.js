@@ -1936,88 +1936,23 @@ fetchPrayer();
 // INTERACTIONS (standalone only)
 // ══════════════════════════════════════════
 if(!CONTAINED){
-// ── Surah audio (Alafasy via QuranCDN) — HRTF spatial toward Qibla ──
+// ── Surah audio (Alafasy via QuranCDN) — delegates to landing page HRTF pipeline ──
 const SURAH_MAP = {
   'Ar-Raḥmān': 55, 'An-Nūr': 24, 'Ash-Shams': 91, 'Al-Layl': 92,
   'Al-Burūj': 85, 'Al-Kawthar': 108, 'Aḍ-Ḍuḥā': 93, 'An-Najm': 53,
   'Al-Qamar': 54, 'Al-Wāqiʿah': 56, 'Al-Mulk': 67, 'Al-Insān': 76,
 };
-let surahAudio = null;
-let surahCtx = null, surahSource = null, surahPanner = null, surahGainNode = null;
-let surahPannerInterval = null, surahCurrentPan = 0;
-const PLAY_SVG = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><polygon points="5,3 19,12 5,21"/></svg>';
-const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-
-function surahSetBtn(playing) {
-  const btn = document.getElementById('listenBtn');
-  if (btn) btn.innerHTML = playing ? PAUSE_SVG + 'Playing — al-Afasy' : PLAY_SVG + 'Listen to this Surah';
-}
-
-function stopSurahSpatial() {
-  if (surahPannerInterval) { clearInterval(surahPannerInterval); surahPannerInterval = null; }
-  if (surahSource) { try { surahSource.disconnect(); } catch(e){} surahSource = null; }
-  if (surahPanner) { try { surahPanner.disconnect(); } catch(e){} surahPanner = null; }
-  if (surahGainNode) { try { surahGainNode.disconnect(); } catch(e){} surahGainNode = null; }
-  if (surahAudio) { surahAudio.pause(); surahAudio = null; }
-  surahCurrentPan = 0;
-}
-
-function updateSurahPanner() {
-  if (!surahPanner || !adhanHasCompass || !adhanQiblaAngle) return;
-  const h = adhanDeviceHeading || 0;
-  const ra = adhanQiblaAngle - h;
-  const targetPan = Math.max(-1, Math.min(1, Math.sin(ra)));
-  surahCurrentPan += (targetPan - surahCurrentPan) * 0.15;
-  surahPanner.pan.value = surahCurrentPan;
-}
-
 const _listenBtn = document.getElementById('listenBtn');
 if(_listenBtn) _listenBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   const surahName = DIALS[currentDial].surah;
   const num = SURAH_MAP[surahName];
   if (!num) return;
-
-  // Toggle off if playing
-  if (surahAudio && !surahAudio.paused) {
-    stopSurahSpatial();
-    surahSetBtn(false);
-    if(window._resumeTour) window._resumeTour();
-    return;
+  const src = `https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`;
+  // Use the shared HRTF pipeline from index.html (playSurahSpatial)
+  if (typeof playSurahSpatial === 'function') {
+    playSurahSpatial(_listenBtn, src, 'Listen to this Surah');
   }
-
-  // Ensure qibla angle is available (reuse adhan's function)
-  if (!adhanQiblaAngle && typeof adhanGetQibla === 'function') adhanGetQibla();
-
-  // Create spatial audio chain: Audio → MediaElementSource → StereoPanner → Gain → Destination
-  surahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
-  surahAudio.crossOrigin = 'anonymous';
-
-  try {
-    surahCtx = surahCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if (surahCtx.state === 'suspended') surahCtx.resume();
-    surahSource = surahCtx.createMediaElementSource(surahAudio);
-    surahPanner = surahCtx.createStereoPanner();
-    surahGainNode = surahCtx.createGain();
-    surahGainNode.gain.value = 1.0;
-    surahSource.connect(surahPanner).connect(surahGainNode).connect(surahCtx.destination);
-
-    // Start panner updates (reuses adhan compass variables)
-    surahPannerInterval = setInterval(updateSurahPanner, 50);
-  } catch (err) {
-    // Fallback: play without spatial if AudioContext fails (CORS etc)
-    console.warn('[surah] spatial fallback:', err);
-  }
-
-  surahAudio.play().catch(() => {});
-  surahSetBtn(true);
-  if(window._pauseTour) window._pauseTour();
-
-  surahAudio.addEventListener('ended', () => {
-    stopSurahSpatial();
-    surahSetBtn(false);
-    setTimeout(() => { if(window._resumeTour) window._resumeTour(); }, 2000);
-  }, {once:true});
 });
 
 let infoTimer;

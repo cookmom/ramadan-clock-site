@@ -532,42 +532,218 @@ let adhanAudio=null, adhanPlaying=false;
 let dialCycleTimer=null;
 
 // ══════════════════════════════════════════
-// SPATIAL AUDIO HELPER — Quran toward Qibla
+// SPATIAL QURAN — HRTF with Background/Foreground Handoff
 // ══════════════════════════════════════════
-let _spatialCtx=null;
-function _getSpatialCtx(){
-  if(!_spatialCtx) _spatialCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(_spatialCtx.state==='suspended') _spatialCtx.resume();
-  return _spatialCtx;
-}
-function _spatializeAudio(audio){
-  try{
-    const ctx=_getSpatialCtx();
-    const src=ctx.createMediaElementSource(audio);
-    const pan=ctx.createStereoPanner();
-    src.connect(pan).connect(ctx.destination);
-    let currentPan=0;
-    const iv=setInterval(()=>{
-      const q=window._spatialQibla&&window._spatialQibla();
-      if(!q||!q.hasCompass||!q.qiblaAngle)return;
-      const ra=q.qiblaAngle-q.deviceHeading;
-      const target=Math.max(-1,Math.min(1,Math.sin(ra)));
-      currentPan+=(target-currentPan)*0.15;
-      pan.pan.value=currentPan;
-    },50);
-    audio._spatialCleanup=()=>clearInterval(iv);
-  }catch(e){console.warn('[spatial] fallback:',e)}
+// Same architecture as adhan HRTF:
+//   - Foreground: AudioBufferSourceNode + StereoPanner (HRTF)
+//   - Background: plain Audio via MediaSession
+//   - HIDE: position → kill HRTF → resume plain Audio
+//   - SHOW: position → kill plain → restart HRTF
+let surahCtx=null, surahBufSrc=null, surahPanNode=null, surahGainNode=null;
+let surahDecodedBuf=null, surahPanInterval=null;
+let surahHrtfStartCtxTime=0, surahHrtfStartOffset=0, surahHrtfStartWall=0;
+let surahPlainAudio=null, surahCurrentPan=0;
+let surahIsPlaying=false, surahCurrentSrc=null;
+let _surahActiveBtn=null; // tracks which button triggered playback
+
+function surahDbg(){console.log('[surah]',...arguments);}
+
+function surahPosition(){
+  if(surahPlainAudio&&!surahPlainAudio.paused) return surahPlainAudio.currentTime;
+  if(surahHrtfStartWall>0&&surahIsPlaying)
+    return surahHrtfStartOffset+(Date.now()-surahHrtfStartWall)/1000;
+  return surahHrtfStartOffset;
 }
 
+function updateSurahPanner(){
+  if(!surahPanNode||!adhanHasCompass||!surahCtx||surahCtx.state!=='running') return;
+  const h=adhanDeviceHeading||0;
+  const ra=(adhanQiblaAngle||0)-h;
+  const target=Math.max(-1,Math.min(1,Math.sin(ra)));
+  surahCurrentPan+=(target-surahCurrentPan)*0.15;
+  surahPanNode.pan.value=surahCurrentPan;
+}
+
+function startSurahHrtfBuffer(pos){
+  if(surahBufSrc){try{surahBufSrc.stop();}catch(e){}surahBufSrc=null;}
+  if(!surahCtx||!surahDecodedBuf||!surahIsPlaying) return Promise.reject('no ctx/buf');
+  return surahCtx.resume().then(()=>{
+    const bufSrc=surahCtx.createBufferSource();
+    bufSrc.buffer=surahDecodedBuf;
+    surahBufSrc=bufSrc;
+    surahPanNode=surahCtx.createStereoPanner();
+    updateSurahPanner();
+    surahGainNode=surahCtx.createGain();
+    surahGainNode.gain.value=1.0;
+    bufSrc.connect(surahGainNode).connect(surahPanNode).connect(surahCtx.destination);
+    surahHrtfStartOffset=pos;
+    surahHrtfStartCtxTime=surahCtx.currentTime;
+    surahHrtfStartWall=Date.now();
+    if(surahPlainAudio&&!surahPlainAudio.paused){surahPlainAudio._swapping=true;surahPlainAudio.pause();setTimeout(()=>{if(surahPlainAudio)surahPlainAudio._swapping=false;},50);}
+    bufSrc.start(0,pos);
+    bufSrc.onended=()=>{
+      if(surahBufSrc===bufSrc){
+        surahBufSrc=null;
+        if(!document.hidden){surahIsPlaying=false;surahHrtfStartWall=0;_surahUpdateBtn(false);setTimeout(()=>{if(window._resumeTour)window._resumeTour();},2000);}
+        surahDbg('HRTF buf ended'+(document.hidden?' (bg)':' naturally'));
+      }
+    };
+    surahDbg('HRTF started pos='+pos.toFixed(2));
+  });
+}
+
+function startSurahHrtfSequence(src,startOffset){
+  const offset=startOffset||0;
+  surahCtx=surahCtx||new(window.AudioContext||window.webkitAudioContext)();
+  if(surahCtx.state==='suspended')surahCtx.resume();
+  surahPanInterval=setInterval(updateSurahPanner,200);
+  surahIsPlaying=true;
+  fetch(src).then(r=>r.arrayBuffer())
+    .then(buf=>surahCtx.decodeAudioData(buf))
+    .then(decoded=>{
+      surahDecodedBuf=decoded;
+      surahDbg('decoded '+decoded.duration.toFixed(1)+'s, starting HRTF from '+offset.toFixed(2));
+      return startSurahHrtfBuffer(offset);
+    })
+    .catch(e=>{
+      surahDbg('HRTF failed: '+e+', falling back to plain');
+      if(surahPlainAudio){surahPlainAudio.currentTime=0;surahPlainAudio.play().catch(()=>{});}
+    });
+}
+
+function _surahUpdateBtn(playing){
+  if(!_surahActiveBtn)return;
+  if(playing){
+    _surahActiveBtn.innerHTML=adhanHasCompass
+      ?'<i class="ph-thin ph-pause"></i> Playing toward Qibla'
+      :'<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+  }else{
+    // Restore original label
+    const orig=_surahActiveBtn.dataset.label||'Listen';
+    _surahActiveBtn.innerHTML='<i class="ph-thin ph-play"></i> '+orig;
+  }
+}
+
+function setupSurahAudioEvents(audio){
+  audio.addEventListener('ended',()=>{
+    surahIsPlaying=false;
+    if(surahPanInterval){clearInterval(surahPanInterval);surahPanInterval=null;}
+    _surahUpdateBtn(false);
+    setTimeout(()=>{if(window._resumeTour)window._resumeTour();},2000);
+    surahDbg('plain audio ended');
+  });
+  audio.addEventListener('pause',()=>{
+    if(audio._swapping)return;
+    surahIsPlaying=false;
+    if(surahPanInterval){clearInterval(surahPanInterval);surahPanInterval=null;}
+    _surahUpdateBtn(false);
+  });
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:'Quran',artist:'Mishari Rashid al-Afasy',album:'A Gift of Time'
+    });
+  }
+}
+
+function stopSurahAll(){
+  surahIsPlaying=false;
+  if(surahPanInterval){clearInterval(surahPanInterval);surahPanInterval=null;}
+  if(surahBufSrc){try{surahBufSrc.stop();}catch(e){}surahBufSrc=null;}
+  if(surahPlainAudio){surahPlainAudio.pause();surahPlainAudio=null;}
+  surahHrtfStartWall=0;surahDecodedBuf=null;surahCurrentSrc=null;
+  _surahUpdateBtn(false);
+}
+
+async function playSurahSpatial(btn,src,label){
+  _surahActiveBtn=btn;
+  btn.dataset.label=label||'Listen';
+
+  // Toggle off if already playing same source
+  if(surahIsPlaying&&surahCurrentSrc===src){
+    stopSurahAll();
+    if(window._resumeTour)window._resumeTour();
+    return;
+  }
+  // Stop any existing playback first
+  if(surahIsPlaying) stopSurahAll();
+
+  surahCurrentSrc=src;
+  btn.innerHTML='<i class="ph-thin ph-circle-notch"></i> Loading...';
+
+  // Request compass (reuses adhan's handler — already registered if adhan played)
+  if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){
+    try{await DeviceOrientationEvent.requestPermission();}catch(e){}
+  }
+  window.addEventListener('deviceorientation',adhanCompassHandler);
+  if(!adhanQiblaAngle) await adhanGetQibla();
+
+  // Clean slate
+  if(surahCtx){try{surahCtx.close();}catch(e){}}
+  surahCtx=null;surahPanNode=null;surahGainNode=null;surahDecodedBuf=null;
+
+  surahIsPlaying=true;
+  _surahUpdateBtn(true);
+  if(window._pauseTour)window._pauseTour();
+
+  // MediaSession
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:'Quran',artist:'Mishari Rashid al-Afasy',album:'A Gift of Time'
+    });
+  }
+  if('audioSession' in navigator){try{navigator.audioSession.type='playback';}catch(e){}}
+
+  // Create plain Audio for background fallback
+  surahPlainAudio=new Audio(src);
+  surahPlainAudio._isBackup=true;surahPlainAudio._swapping=false;surahPlainAudio._unlocked=false;
+  surahPlainAudio.play().then(()=>{
+    surahPlainAudio._swapping=true;surahPlainAudio.pause();surahPlainAudio.currentTime=0;
+    surahPlainAudio._unlocked=true;
+    setupSurahAudioEvents(surahPlainAudio);
+    setTimeout(()=>{surahPlainAudio._swapping=false;},50);
+    surahDbg('plain Audio unlocked, starting HRTF');
+    startSurahHrtfSequence(src,0);
+  }).catch(e=>{
+    surahDbg('unlock failed: '+e+', playing plain only');
+    surahPlainAudio=new Audio(src);
+    setupSurahAudioEvents(surahPlainAudio);
+    surahPlainAudio.play().catch(()=>{});
+    _surahUpdateBtn(true);
+  });
+}
+
+// ── Visibility swap for Surah (same pattern as adhan) ──
+document.addEventListener('visibilitychange',()=>{
+  if(!surahIsPlaying||!surahDecodedBuf) return;
+  if(document.hidden){
+    const pos=surahPosition();
+    surahDbg('HIDE: pos='+pos.toFixed(2));
+    if(surahBufSrc){try{surahBufSrc.stop();}catch(e){}surahBufSrc=null;}
+    if(surahPlainAudio&&surahPlainAudio._unlocked){
+      surahPlainAudio._swapping=true;
+      surahPlainAudio.currentTime=pos;
+      surahPlainAudio.play().then(()=>{surahPlainAudio._swapping=false;surahDbg('HIDE: plain resumed');}).catch(e=>{surahPlainAudio._swapping=false;surahDbg('HIDE: plain fail: '+e);});
+    }
+  }else{
+    const pos=(surahPlainAudio&&!surahPlainAudio.paused)?surahPlainAudio.currentTime:surahPosition();
+    surahDbg('SHOW: pos='+pos.toFixed(2));
+    if(surahDecodedBuf&&surahCtx){
+      if(!surahPanInterval)surahPanInterval=setInterval(updateSurahPanner,200);
+      startSurahHrtfBuffer(pos).then(()=>{
+        if(surahPlainAudio&&!surahPlainAudio.paused){surahPlainAudio._swapping=true;surahPlainAudio.pause();setTimeout(()=>{if(surahPlainAudio)surahPlainAudio._swapping=false;},50);}
+        surahDbg('SHOW: HRTF restored at pos='+pos.toFixed(2));
+      }).catch(e=>{surahDbg('SHOW: HRTF failed, keeping plain: '+e);});
+    }
+  }
+});
+
 // ══════════════════════════════════════════
-// VERSE AUDIO HELPER
+// VERSE AUDIO HELPER (short ayah clips — spatial but no handoff needed)
 // ══════════════════════════════════════════
 function playVerse(btn,url){
   if(!btn._a){
     btn._a=new Audio(url);
-    btn._a.crossOrigin='anonymous';
-    _spatializeAudio(btn._a);
-    btn._a.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen';if(btn._a._spatialCleanup)btn._a._spatialCleanup()};
+    btn._a.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'};
   }
   if(btn._a.paused){btn._a.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing'}
   else{btn._a.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'}
@@ -622,18 +798,8 @@ function playDialSurah(){
   const num=DIAL_SURAHS[DIALS[dialIdx]];
   if(!num)return;
   const btn=document.getElementById('dialListen');
-  if(dialPlaying&&dialAudio&&!dialAudio.paused){
-    dialAudio.pause();dialPlaying=false;
-    if(dialAudio._spatialCleanup)dialAudio._spatialCleanup();
-    btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
-  }
-  dialPlaying=true;
-  dialAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/'+num+'.mp3');
-  dialAudio.crossOrigin='anonymous';
-  _spatializeAudio(dialAudio);
-  dialAudio.onended=()=>{dialPlaying=false;if(dialAudio._spatialCleanup)dialAudio._spatialCleanup();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah'};
-  dialAudio.play().catch(()=>{});
-  btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
+  const src='https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/'+num+'.mp3';
+  playSurahSpatial(btn,src,'Listen to this Surah');
 }
 
 // ══════════════════════════════════════════
@@ -1610,7 +1776,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=162';
+_cs.type='module';_cs.src='clock.js?v=163';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

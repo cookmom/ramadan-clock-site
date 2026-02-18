@@ -18,7 +18,7 @@ const DIALS = {
   deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah'},   // NOMOS deep pink — bold magenta
   red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams'},     // NOMOS nonstop red — vivid coral
   coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā'},      // NOMOS cream coral — warm peach
-  starlight:  {bg:0xe9e872, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — bright lemon
+  starlight:  {bg:0xd8d580, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — soft lemon (desaturated from ref)
   green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān'},     // NOMOS electric green — mint emerald
   teal:       {bg:0x63afb9, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj'},      // NOMOS endless blue — turquoise
   slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl'},       // NOMOS blue purple — muted slate-blue

@@ -137,7 +137,7 @@ let W = CONTAINED ? CONTAINER.clientWidth : window.innerWidth;
 let H = CONTAINED ? CONTAINER.clientHeight : window.innerHeight;
 const R = 80; // world-space radius
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: true });
 renderer.samples = 4;
 renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 2));
 renderer.setSize(W, H);
@@ -655,10 +655,12 @@ window._clockSetFullscreen = function(on, snapNight) {
   isFullscreen = on;
   if(on) {
     CLOCK_SCALE = 0.50;
-    // No bgPlane cutout in fullscreen — PBR fsBgPlane IS the dial surface
+    // Transparent canvas — CSS background + grain shows through, only clock elements render
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
-    fsBgPlane.visible = true; // continuous textured surface — the dial IS the background
-    // Hide dial geometry — elements sit directly on the PBR background
+    fsBgPlane.visible = false;
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
+    // Hide dial geometry — elements sit directly on the CSS background
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
@@ -1821,7 +1823,8 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
+  if(isFullscreen) { scene.background = null; renderer.setClearColor(0x000000, 0); }
+  else if(!EMBED || CONTAINED) scene.background = dialBg.clone();
   // Ensure bgPlane is hidden in fullscreen
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
@@ -2310,7 +2313,12 @@ function animate(){
   // BG color blend
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
   bgPlaneMat.color.copy(nightBg);
-  if(!EMBED || CONTAINED || isFullscreen) {
+  if(isFullscreen) {
+    scene.background = null; // transparent canvas — CSS bg + grain shows through
+    // Sync CSS overlay background color with day/night blend
+    const ov = document.getElementById('clockFullscreen');
+    if(ov) ov.style.background = '#' + nightBg.getHexString();
+  } else if(!EMBED || CONTAINED) {
     scene.background = nightBg;
   }
   

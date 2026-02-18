@@ -941,22 +941,23 @@ function buildNumerals() {
     });
     baseMatl.envMapIntensity = 0.3;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-    baseMesh.position.set(nx, ny, 0.5);
+    baseMesh.position.set(nx, ny, 1.5); // border sits ABOVE lume
     baseMesh.scale.setScalar(1.15);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
     numeralSprites.push(baseMesh);
     numeralMats.push(baseMatl);
     
-    // Layer 2: lume fill — recessed inside base (lower z, smaller scale)
+    // Layer 2: lume fill — recessed BELOW base border
     const topMatl = new THREE.MeshPhysicalMaterial({
-      color: mk, roughness: 0.35, metalness: 0.0,
+      color: mk, roughness: 0.08, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.03,
       emissive: mk, emissiveIntensity: 0,
     });
-    topMatl.envMapIntensity = 0.3;
+    topMatl.envMapIntensity = 0.8;
     const mesh = new THREE.Mesh(geo, topMatl);
-    mesh.position.set(nx, ny, 0.8); // inside base, not on top
-    mesh.scale.setScalar(1.0); // smaller than base (1.15) = visible border
+    mesh.position.set(nx, ny, 0.3); // recessed below base
+    mesh.scale.setScalar(1.0);
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(topMatl);

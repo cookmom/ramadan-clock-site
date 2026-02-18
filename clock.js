@@ -983,9 +983,11 @@ function buildBrandText() {
   if(!_brandFont) return;
   
   const c = DIALS[currentDial];
-  
-  // Canvas-based text rendering — supports Arabic glyphs with proper RTL/shaping
-  function makeCanvasLine(text, fontSpec, yPos, planeW, planeH, alpha) {
+  const mk = c.marker || c.lume;
+  const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
+
+  // Canvas-based Arabic brand — هدية الوقت (Arabic can't use TextGeometry/latin font)
+  {
     const dpr = 3;
     const cW = 512, cH = 128;
     const cvs = document.createElement('canvas');
@@ -993,87 +995,80 @@ function buildBrandText() {
     const ctx = cvs.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, cW, cH);
-    
-    // Use marker color for text (matches printed indices)
-    const lumeCol = '#' + new THREE.Color(c.marker || c.lume).getHexString();
+    const lumeCol = '#' + new THREE.Color(mk).getHexString();
     ctx.fillStyle = lumeCol;
-    ctx.globalAlpha = alpha !== undefined ? alpha : 1;
-    ctx.font = fontSpec;
+    ctx.globalAlpha = 1;
+    ctx.font = "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, cW / 2, cH / 2);
-    
+    ctx.fillText('هدية الوقت', cW / 2, cH / 2);
     const tex = new THREE.CanvasTexture(cvs);
     tex.anisotropy = 4;
-    const geo = new THREE.PlaneGeometry(planeW, planeH);
+    const pw = R * 1.2;
+    const geo = new THREE.PlaneGeometry(pw, pw * 0.25);
     const mat = new THREE.MeshBasicMaterial({
-      map: tex, transparent: true, depthWrite: false,
-      side: THREE.FrontSide
+      map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
     });
-    mat._isBrandTex = true; // flag for night mode color updates
+    mat._isBrandTex = true;
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, yPos, 4);
+    mesh.position.set(0, R * 0.33, 4);
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
-    // Store canvas+ctx for night mode redraws
-    mesh.userData.brandCanvas = { cvs, ctx, text, fontSpec, alpha, cW, cH, dpr };
+    mesh.userData.brandCanvas = { cvs, ctx, text: 'هدية الوقت', fontSpec: "600 52px 'Noto Naskh Arabic'", alpha: 1, cW, cH, dpr };
     brandLumeMats.push(mat);
   }
-  
-  const pw = R * 1.2; // plane width
-  // Main: Arabic brand name — هدية الوقت (A Gift of Time)
-  makeCanvasLine('هدية الوقت', "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif", R * 0.33, pw, pw * 0.25, 1);
-  
-  // Arched subtitle: "AGIFTOFTIME.APP" below 6 o'clock (like NOMOS "MADE IN GERMANY")
-  // Use individual letter sprites placed along a world-space arc — no canvas mapping issues
+
+  // Extruded "AGIFTOFTIME.APP" — arched below 6 o'clock (like NOMOS "MADE IN GERMANY")
   {
     const text = 'AGIFTOFTIME.APP';
-    const lumeCol = new THREE.Color(c.marker || c.lume);
-    // Arc center = dial center (0,0), radius outside minute markers
-    const arcCX = 0, arcCY = 0;
-    const arcRadius = R * 1.02; // outside minute markers, near dial rim
-    const totalAngle = 0.55; // radians — tighter arc
-    // Letters arc along bottom of dial, reading left-to-right
-    // At 6 o'clock (bottom): first letter on the LEFT side, last on the RIGHT
-    // Angles: 0=right, π/2=top, π=left, -π/2=bottom (standard math)
-    // Left of 6 o'clock = angles between -π/2 and -π (3rd quadrant)
-    // Right of 6 o'clock = angles between -π/2 and 0 (4th quadrant)
-    // Sweep from left (-π/2 - half) to right (-π/2 + half) = clockwise visually
-    const midAngle = -Math.PI / 2; // 6 o'clock
-    const startAngle = midAngle - totalAngle / 2; // left of 6
-    
+    const arcRadius = R * 1.02;
+    const totalAngle = 0.55;
+    const midAngle = -Math.PI / 2;
+    const startAngle = midAngle - totalAngle / 2;
+    const letterH = R * 0.04; // target letter height
+
     for (let i = 0; i < text.length; i++) {
       const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-      const ang = startAngle + t * totalAngle; // sweep left-to-right (increasing angle)
-      const wx = arcCX + Math.cos(ang) * arcRadius;
-      const wy = arcCY + Math.sin(ang) * arcRadius;
-      
-      // Tiny canvas per letter
-      const dpr = 3;
-      const cS = 64;
-      const cvs = document.createElement('canvas');
-      cvs.width = cS * dpr; cvs.height = cS * dpr;
-      const ctx = cvs.getContext('2d');
-      ctx.scale(dpr, dpr);
-      ctx.fillStyle = '#' + lumeCol.getHexString();
-      ctx.globalAlpha = 0.45;
-      ctx.font = "700 28px Inter, system-ui, sans-serif";
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text[i], cS / 2, cS / 2);
-      
-      const tex = new THREE.CanvasTexture(cvs);
-      const sz = R * 0.06;
-      const geo = new THREE.PlaneGeometry(sz, sz);
-      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(wx, wy, 4);
-      // Rotate letter to follow arc tangent
-      mesh.rotation.z = ang + Math.PI / 2; // tops point outward — standard bottom-arc watch text
-      clockGroup.add(mesh);
-      brandMeshes.push(mesh);
-      mesh.userData.brandLetter = { cvs, ctx, ch: text[i], cS, dpr };
-      brandLumeMats.push(mat);
+      const ang = startAngle + t * totalAngle;
+      const wx = Math.cos(ang) * arcRadius;
+      const wy = Math.sin(ang) * arcRadius;
+
+      // Extruded 3D letter
+      const shapes = _brandFont.generateShapes(text[i], letterH);
+      if (!shapes.length) continue;
+      const geo = new THREE.ExtrudeGeometry(shapes, {
+        depth: 1.2, bevelEnabled: true,
+        bevelThickness: 0.1, bevelSize: 0.05, bevelSegments: 2,
+      });
+      geo.computeBoundingBox();
+      const bb = geo.boundingBox;
+      geo.translate(-(bb.max.x+bb.min.x)/2, -(bb.max.y+bb.min.y)/2, 0);
+
+      // Two-layer: base (complementary) + lume fill
+      const baseMatl = new THREE.MeshPhysicalMaterial({
+        color: mkBase, roughness: 0.45, metalness: 0.0,
+        emissive: mk, emissiveIntensity: 0,
+      });
+      baseMatl.envMapIntensity = 0.3;
+      const baseMesh = new THREE.Mesh(geo, baseMatl);
+      baseMesh.position.set(wx, wy, 0.3);
+      baseMesh.rotation.z = ang + Math.PI / 2;
+      baseMesh.scale.setScalar(1.15);
+      clockGroup.add(baseMesh);
+      brandMeshes.push(baseMesh);
+      brandLumeMats.push(baseMatl);
+
+      const lumeMatl = new THREE.MeshPhysicalMaterial({
+        color: mk, roughness: 0.35, metalness: 0.0,
+        emissive: mk, emissiveIntensity: 0,
+      });
+      lumeMatl.envMapIntensity = 0.3;
+      const lumeMesh = new THREE.Mesh(geo, lumeMatl);
+      lumeMesh.position.set(wx, wy, 0.5);
+      lumeMesh.rotation.z = ang + Math.PI / 2;
+      clockGroup.add(lumeMesh);
+      brandMeshes.push(lumeMesh);
+      brandLumeMats.push(lumeMatl);
     }
   }
 }
@@ -2161,23 +2156,11 @@ function animate(){
     }
     mesh.material.map.needsUpdate = true;
   });
-  // Brand letter sprites (arched AGIFTOFTIME.APP)
-  brandMeshes.forEach(mesh=>{
-    const bl = mesh.userData.brandLetter;
-    if(!bl) return;
-    const {cvs, ctx, ch, cS, dpr} = bl;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, cS, cS);
-    const dayCol = new THREE.Color(DIALS[currentDial].lume);
-    const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
-    const blended = dayCol.lerp(nightCol, modeBlend);
-    ctx.fillStyle = '#' + blended.getHexString();
-    ctx.globalAlpha = 0.45;
-    ctx.font = "700 28px Inter, system-ui, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(ch, cS / 2, cS / 2);
-    mesh.material.map.needsUpdate = true;
+  // Extruded brand letters — night mode emissive glow
+  brandLumeMats.forEach(m=>{
+    if(m._isBrandTex) return; // skip canvas-based Arabic text
+    m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
+    m.emissiveIntensity = lumeIntensity * 0.7;
   });
   
   // Dial surface picks up faint lume ambient bounce

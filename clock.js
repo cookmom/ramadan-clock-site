@@ -376,9 +376,8 @@ function brushedHandMat(color) {
   return m;
 }
 function lumeMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0,
-    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,  // push lume forward to prevent z-fighting with hand body
-  }); m.envMapIntensity = 0; return m; // lume = paint, no reflections
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0 });
+  m.envMapIntensity = 0; return m; // lume = paint, no reflections — recessed in channel so no z-fighting
 }
 function secMat(color) {
   const m = new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.4, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 3.0; return m; // second hand — glossy lacquer finish
@@ -408,24 +407,37 @@ function extrudedLeaf(len, maxW, tailLen, depth, baseScale=1.0) {
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled:true, bevelThickness:0.4, bevelSize:0.3, bevelSegments:3 });
 }
 
-// NOMOS Club Campus hands — straight parallel baton, tiny pointed tip
+// NOMOS Club Campus hands — straight parallel baton with recessed lume channel
+// Hand is built as outer shape with hole punched for the lume groove
 function nomosHand(len, baseW, tailLen, depth) {
   const s = new THREE.Shape();
   const hw = baseW / 2;
-  const tipStart = len * 0.96;  // parallel for 96%, point only at very end
+  const tipStart = len * 0.96;
   s.moveTo(-hw * 0.55, -tailLen);
   s.lineTo(-hw, 0);
-  s.lineTo(-hw, tipStart);       // perfectly straight parallel sides
-  s.lineTo(0, len);              // short sharp point
+  s.lineTo(-hw, tipStart);
+  s.lineTo(0, len);
   s.lineTo(hw, tipStart);
   s.lineTo(hw, 0);
   s.lineTo(hw * 0.55, -tailLen);
   s.closePath();
+  // Cut lume channel as a hole in the hand shape
+  const chW = baseW * 0.22;  // channel half-width
+  const chStart = len * 0.12;
+  const chEnd = len * 0.93;
+  const hole = new THREE.Path();
+  hole.moveTo(-chW, chStart);
+  hole.lineTo(-chW, chEnd);
+  hole.lineTo(chW, chEnd);
+  hole.lineTo(chW, chStart);
+  hole.closePath();
+  s.holes.push(hole);
   return new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.15, bevelSegments: 2 });
 }
 
-// Lume channel — thin recessed center strip, parallel like the hand
-function nomosLume(len, baseW, depth) {
+// Lume fill — sits recessed inside the channel cut into the hand
+// depth < hand depth so it reads as inlaid, not flush
+function nomosLume(len, baseW, handDepth) {
   const s = new THREE.Shape();
   const hw = baseW * 0.22;
   const startY = len * 0.12;
@@ -435,7 +447,9 @@ function nomosLume(len, baseW, depth) {
   s.lineTo(hw, endY);
   s.lineTo(hw, startY);
   s.closePath();
-  return new THREE.ExtrudeGeometry(s, { depth: 1.2, bevelEnabled: false });
+  // Lume is thinner than hand — recessed by ~30%
+  const lumeDepth = handDepth * 0.65;
+  return new THREE.ExtrudeGeometry(s, { depth: lumeDepth, bevelEnabled: false });
 }
 
 function makeTextSprite(text, font, size, color) {
@@ -1046,7 +1060,7 @@ function buildHands() {
   const hlGeo = nomosLume(hL, hW, hD);
   hLumeMat_ = lumeMat(c.lume);
   const hlMesh = new THREE.Mesh(hlGeo, hLumeMat_);
-  hlMesh.position.z = 4.8; // above hand body top face + bevel (depth=4, bevel=0.25)
+  hlMesh.position.z = 0.2; // sits at bottom of channel (hand has hole, lume fills it recessed)
   hourGroup.add(hlMesh);
   hourGroup.position.z = 8;
   clockGroup.add(hourGroup);
@@ -1062,7 +1076,7 @@ function buildHands() {
   const mlGeo = nomosLume(mL, mW, mD);
   mLumeMat_ = lumeMat(c.lume);
   const mlMesh = new THREE.Mesh(mlGeo, mLumeMat_);
-  mlMesh.position.z = 5.8; // above hand body top face + bevel (depth=5, bevel=0.25)
+  mlMesh.position.z = 0.2; // sits at bottom of channel (hand has hole, lume fills it recessed)
   minGroup.add(mlMesh);
   minGroup.position.z = 17;
   clockGroup.add(minGroup);

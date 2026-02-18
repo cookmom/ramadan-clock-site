@@ -178,13 +178,13 @@ function makeDialGrainMap(dialColor, size = 512) {
   const col = new THREE.Color(dialColor);
   ctx.fillStyle = '#' + col.getHexString();
   ctx.fillRect(0, 0, size, size);
-  // Composite grain — use 'overlay' blend which preserves both lights and darks
-  // Adaptive opacity: lighter dials get more grain, darker dials get less
+  // Composite grain — soft-light blend preserves dial tone across all luminances
+  // Adaptive: dark dials get very subtle grain, light dials get full texture
   if (_bauhausGrainReady) {
     const luminance = col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
-    const grainOpacity = 0.15 + luminance * 0.25; // 0.15 (dark dials) → 0.40 (light dials)
+    const grainOpacity = 0.05 + luminance * 0.35; // 0.05 (dark) → 0.40 (light)
     ctx.globalAlpha = grainOpacity;
-    ctx.globalCompositeOperation = 'overlay'; // overlay preserves tone better than multiply
+    ctx.globalCompositeOperation = 'soft-light'; // gentle texture without crushing shadows
     const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
     ctx.fillStyle = pat;
     ctx.fillRect(0, 0, size, size);
@@ -213,8 +213,8 @@ function makeSceneBgGrain(bgColor) {
   ctx.fillRect(0, 0, size, size);
   if (_bauhausGrainReady) {
     const lum = col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
-    ctx.globalAlpha = 0.12 + lum * 0.18; // 0.12 (dark) → 0.30 (light)
-    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.05 + lum * 0.25;
+    ctx.globalCompositeOperation = 'soft-light';
     const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
     ctx.fillStyle = pat;
     ctx.fillRect(0, 0, size, size);

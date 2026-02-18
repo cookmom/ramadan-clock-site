@@ -592,7 +592,7 @@ if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
 
 // Fullscreen API for landing page
-window._clockSetFullscreen = function(on) {
+window._clockSetFullscreen = function(on, snapNight) {
   isFullscreen = on;
   if(on) {
     CLOCK_SCALE = 0.50;
@@ -601,7 +601,8 @@ window._clockSetFullscreen = function(on) {
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
-    // Page-side _fsRestoreSection calls _clockSetNight with snap=true
+    // Snap day/night blend instantly on exit — no lerp
+    if(snapNight !== undefined) { modeTarget = snapNight ? 1 : 0; modeBlend = modeTarget; }
     if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }

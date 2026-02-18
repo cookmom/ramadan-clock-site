@@ -980,10 +980,13 @@ function setupScrollObservers(){
 
   // Expose restore function so fullscreen exit can snap back to current section's mode
   window._fsRestoreSection = ()=>{
-    if(_lastActive && sectionStates[_lastActive]) sectionStates[_lastActive]();
+    // Default to sec-hook (day) if observer hasn't fired yet
+    const active = _lastActive || 'sec-hook';
+    if(sectionStates[active]) sectionStates[active]();
     // Snap clock blend instantly — no lerp on fullscreen exit
     const nightSections = ['sec-night','sec-adhan'];
-    const wantNight = nightSections.includes(_lastActive);
+    const wantNight = nightSections.includes(active);
+    window._fsLastNight = wantNight;
     if(window._clockSetNight) window._clockSetNight(wantNight, true);
   };
 
@@ -1460,9 +1463,10 @@ function closeClockFullscreen() {
   document.querySelector('nav').style.display = '';
 
   // Snap clock + page back to the mode the current section expects
-  // Re-trigger the active section's state handler before clock exits fullscreen
   if(window._fsRestoreSection) window._fsRestoreSection();
-  if(window._clockSetFullscreen) window._clockSetFullscreen(false);
+  // Pass snap night mode to clock engine so it snaps blend before buildAll
+  const wantNight = window._fsLastNight || false;
+  if(window._clockSetFullscreen) window._clockSetFullscreen(false, wantNight);
   fsStopClock();
 
   // Restore landing page theme-color + show content

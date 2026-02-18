@@ -574,7 +574,7 @@ window._clockSetFullscreen = function(on, snapNight) {
     CLOCK_SCALE = 0.50;
     // PBR background for depth + CSS grain overlay for visible texture
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
-    fsBgPlane.visible = true; // flat color surface — grain via CSS overlay
+    fsBgPlane.visible = false; // CSS background + grain overlay handle this now
     // Hide dial geometry — elements sit directly on the PBR background
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
@@ -1738,7 +1738,12 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
+  if(isFullscreen) {
+    scene.background = null; // transparent canvas — grain CSS layer shows through behind 3D elements
+    renderer.setClearColor(0x000000, 0);
+  } else if(!EMBED || CONTAINED) {
+    scene.background = dialBg.clone();
+  }
   // Ensure bgPlane is hidden in fullscreen
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
@@ -2227,7 +2232,9 @@ function animate(){
   // BG color blend
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
   bgPlaneMat.color.copy(nightBg);
-  if(!EMBED || CONTAINED || isFullscreen) {
+  if(isFullscreen) {
+    scene.background = null; // keep canvas transparent in fullscreen
+  } else if(!EMBED || CONTAINED) {
     scene.background = nightBg;
   }
   

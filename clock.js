@@ -165,13 +165,16 @@ if(CONTAINED) {
 
 const scene = new THREE.Scene();
 
-// ── Orthographic camera — true top-down (no perspective distortion on markers)
+// ── Perspective camera — subtle product-photography angle (~7° off perpendicular)
+// Matches NOMOS reference: near top-down with slight tilt toward 12 o'clock
+// Medium telephoto FOV minimizes barrel distortion (like 100mm lens)
 const aspect = W/H;
-const camZ = 280;
-const frustumH = 76; // world units visible vertically — dial fills the view
-const frustumW = frustumH * aspect;
-const cam = new THREE.OrthographicCamera(-frustumW, frustumW, frustumH, -frustumH, 1, 2000);
-cam.position.set(0, 0, camZ);
+const camFOV = 18; // narrow FOV = telephoto = minimal distortion
+const camDist = 320;
+const camTiltDeg = 7; // degrees off perpendicular — subtle, just enough for reflections
+const camTiltRad = camTiltDeg * Math.PI / 180;
+const cam = new THREE.PerspectiveCamera(camFOV, aspect, 1, 2000);
+cam.position.set(0, Math.sin(camTiltRad) * camDist, Math.cos(camTiltRad) * camDist);
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════
@@ -2111,10 +2114,7 @@ function onResize(){
   H=(CONTAINED && !isFullscreen)?CONTAINER.clientHeight:window.innerHeight;
   renderer.setSize(W,H);
   const a=W/H;
-  const fH = 76;
-  const fW = fH * a;
-  cam.left = -fW; cam.right = fW; cam.top = fH; cam.bottom = -fH;
-  cam.position.z = 280;
+  cam.aspect = a;
   cam.updateProjectionMatrix();
   composer.setSize(W, H);
   bloomPass.resolution.set(W, H);
@@ -2329,10 +2329,13 @@ function animate(){
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
   // gyro debug dot removed
-  // Camera parallax — skip when contained (unless fullscreen)
-  if(!CONTAINED || isFullscreen) { cam.position.x = 0; }
-  cam.position.y = (CONTAINED && !isFullscreen) ? -2 : -3;
-  cam.lookAt(0,0,0);
+  // Camera parallax — perspective cam with subtle tilt
+  const baseY = Math.sin(camTiltRad) * camDist;
+  const baseZ = Math.cos(camTiltRad) * camDist;
+  if(!CONTAINED || isFullscreen) { cam.position.x = gx * 8; }
+  cam.position.y = baseY + gy * 5;
+  cam.position.z = baseZ;
+  cam.lookAt(0, 0, 0);
   
   // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
   if(scene.environmentRotation) {

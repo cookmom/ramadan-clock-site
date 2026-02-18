@@ -969,8 +969,63 @@ function buildBrandText() {
   const pw = R * 1.2; // plane width
   // Main: Arabic brand name — هدية الوقت (A Gift of Time)
   makeCanvasLine('هدية الوقت', "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif", R * 0.33, pw, pw * 0.25, 1);
-  // Subtitle
-  makeCanvasLine('agiftoftime.app', "300 24px Inter, system-ui, sans-serif", R * 0.20, pw, pw * 0.18, 0.6);
+  
+  // Arched subtitle: "AGIFTOFTIME.APP" below 6 o'clock (like NOMOS "MADE IN GERMANY")
+  {
+    const dpr = 3;
+    const cW = 512, cH = 512;
+    const cvs = document.createElement('canvas');
+    cvs.width = cW * dpr; cvs.height = cH * dpr;
+    const ctx = cvs.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cW, cH);
+    
+    const lumeCol = '#' + new THREE.Color(c.lume).getHexString();
+    ctx.fillStyle = lumeCol;
+    ctx.globalAlpha = 0.5;
+    ctx.font = "400 14px Inter, system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    const text = 'AGIFTOFTIME.APP';
+    const arcR = cW * 0.42; // arc radius
+    const centerX = cW / 2;
+    const centerY = cW * 0.08; // center above canvas — arc curves downward
+    // Spread letters along bottom arc
+    const totalAngle = 0.65; // radians of arc span
+    const startAngle = Math.PI / 2 - totalAngle / 2; // centered at bottom (π/2)
+    
+    for (let i = 0; i < text.length; i++) {
+      const t = text.length === 1 ? 0.5 : i / (text.length - 1);
+      const ang = startAngle + t * totalAngle;
+      const x = centerX + Math.cos(ang) * arcR;
+      const y = centerY + Math.sin(ang) * arcR;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang - Math.PI / 2); // orient letter tangent to arc
+      // Add letter spacing
+      ctx.letterSpacing = '3px';
+      ctx.fillText(text[i], 0, 0);
+      ctx.restore();
+    }
+    
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.anisotropy = 4;
+    const planeS = R * 1.8;
+    const geo = new THREE.PlaneGeometry(planeS, planeS);
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, depthWrite: false,
+      side: THREE.FrontSide
+    });
+    mat._isBrandTex = true;
+    const mesh = new THREE.Mesh(geo, mat);
+    // Position: below 6 o'clock, just inside minute marker ring
+    mesh.position.set(0, -R * 0.62, 4);
+    clockGroup.add(mesh);
+    brandMeshes.push(mesh);
+    mesh.userData.brandCanvas = { cvs, ctx, text, fontSpec: "400 14px Inter, system-ui, sans-serif", alpha: 0.5, cW, cH, dpr, arched: true };
+    brandLumeMats.push(mat);
+  }
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)
@@ -2033,7 +2088,27 @@ function animate(){
     ctx.font = fontSpec;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, cW / 2, cH / 2);
+    if(bd.arched) {
+      // Redraw arched text
+      const arcR = cW * 0.42;
+      const centerX = cW / 2;
+      const centerY = cW * 0.08;
+      const totalAngle = 0.65;
+      const startAngle = Math.PI / 2 - totalAngle / 2;
+      for (let i = 0; i < text.length; i++) {
+        const t = text.length === 1 ? 0.5 : i / (text.length - 1);
+        const ang = startAngle + t * totalAngle;
+        const x = centerX + Math.cos(ang) * arcR;
+        const y = centerY + Math.sin(ang) * arcR;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang - Math.PI / 2);
+        ctx.fillText(text[i], 0, 0);
+        ctx.restore();
+      }
+    } else {
+      ctx.fillText(text, cW / 2, cH / 2);
+    }
     mesh.material.map.needsUpdate = true;
   });
   

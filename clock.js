@@ -879,21 +879,23 @@ function buildNumerals() {
     const faceMat = lumeMat(c.lume);
     
     const nx = Math.cos(ang) * r, ny = Math.sin(ang) * r;
-    // Layer 1: metal base — same numeral shape, ~10% larger scale
-    const baseScale = scale * 1.1;
-    const baseShapes = pathToShapes(pd, baseScale);
-    if(baseShapes.length) {
-      const baseGeo = new THREE.ExtrudeGeometry(baseShapes, {
-        depth: EXTRUDE_DEPTH * 0.5, bevelEnabled: true,
-        bevelThickness: 0.15, bevelSize: 0.12, bevelOffset: 0, bevelSegments: 2
-      });
-      baseGeo.computeVertexNormals();
-      const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-      baseMesh.position.set(nx, ny, 2.5);
-      baseMesh.castShadow = true;
-      clockGroup.add(baseMesh);
-      numeralSprites.push(baseMesh);
-    }
+    
+    // Center geometry at its visual midpoint for proper two-layer alignment
+    geo.computeBoundingBox();
+    const gbb = geo.boundingBox;
+    const gcx = (gbb.max.x + gbb.min.x) / 2;
+    const gcy = (gbb.max.y + gbb.min.y) / 2;
+    geo.translate(-gcx, -gcy, 0);
+    
+    // Layer 1: metal base — clone lume geo, scale mesh 110%
+    const baseGeo = geo.clone();
+    const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
+    baseMesh.position.set(nx, ny, 2.5);
+    baseMesh.scale.setScalar(1.1);
+    baseMesh.castShadow = true;
+    clockGroup.add(baseMesh);
+    numeralSprites.push(baseMesh);
+    
     // Layer 2: lume numeral on top
     const mesh = new THREE.Mesh(geo, faceMat);
     mesh.position.set(nx, ny, 3.5);
@@ -921,94 +923,57 @@ function buildBrandText() {
   brandMeshes.forEach(m => clockGroup.remove(m));
   brandMeshes = []; brandLumeMats = [];
   if(currentDial === 'kawthar' || currentDial === 'rainbow') return;
-  if(!_brandFont) return; // font not loaded yet
+  if(!_brandFont) return;
   
   const c = DIALS[currentDial];
-  const { TextGeometry } = THREE; // check if available
   
-  // Helper: create extruded text line, centered, two-layer
-  function makeLine(text, fontSize, yPos, tracking) {
-    // Use TextGeometry from addons — loaded dynamically
+  function makeLine(text, fontSize, yPos) {
     const shapes = _brandFont.generateShapes(text, fontSize);
     
-    // Apply letter spacing by shifting each shape
-    if(tracking && shapes.length > 1) {
-      // Compute bounding to find per-char offsets — simple approach: uniform shift
-      let accum = 0;
-      const charWidths = [];
-      // Group shapes by approximate x position clusters
-      shapes.forEach((s, i) => {
-        if(i > 0) {
-          // Shift all points in this shape by accumulated tracking
-          const shift = tracking * i;
-          s.curves.forEach(curve => {
-            if(curve.v1) { curve.v1.x += shift; curve.v2.x += shift; }
-            if(curve.aX !== undefined) { curve.aX += shift; }
-            if(curve.points) curve.points.forEach(p => p.x += shift);
-          });
-          if(s.holes) s.holes.forEach(hole => {
-            hole.curves.forEach(curve => {
-              if(curve.v1) { curve.v1.x += shift; curve.v2.x += shift; }
-              if(curve.aX !== undefined) { curve.aX += shift; }
-              if(curve.points) curve.points.forEach(p => p.x += shift);
-            });
-          });
-        }
-      });
-    }
-    
-    // Compute bounds for centering
+    // Compute bounds for centering — single reference for both layers
     const tempGeo = new THREE.ShapeGeometry(shapes);
     tempGeo.computeBoundingBox();
     const bb = tempGeo.boundingBox;
-    const offsetX = -(bb.max.x + bb.min.x) / 2;
-    const offsetY = -(bb.max.y + bb.min.y) / 2;
+    const cx = (bb.max.x + bb.min.x) / 2;
+    const cy = (bb.max.y + bb.min.y) / 2;
     tempGeo.dispose();
     
-    // Layer 1: metal base (slightly larger)
-    const baseScale = 1.08;
-    const baseShapes = _brandFont.generateShapes(text, fontSize * baseScale);
-    const baseTempGeo = new THREE.ShapeGeometry(baseShapes);
-    baseTempGeo.computeBoundingBox();
-    const bbb = baseTempGeo.boundingBox;
-    const baseOffsetX = -(bbb.max.x + bbb.min.x) / 2;
-    const baseOffsetY = -(bbb.max.y + bbb.min.y) / 2;
-    baseTempGeo.dispose();
-    
-    const baseGeo = new THREE.ExtrudeGeometry(baseShapes, {
+    // Layer 1: metal base — same shapes, scaled 110% from center via mesh.scale
+    const baseGeo = new THREE.ExtrudeGeometry(shapes, {
       depth: EXTRUDE_DEPTH * 0.5, bevelEnabled: true,
       bevelThickness: 0.1, bevelSize: 0.08, bevelOffset: 0, bevelSegments: 2
     });
     baseGeo.computeVertexNormals();
     const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-    baseMesh.position.set(baseOffsetX, yPos + baseOffsetY, 2.5);
+    baseGeo.translate(-cx, -cy, 0); // center geometry at origin
+    baseMesh.position.set(0, yPos, 2.5);
+    baseMesh.scale.setScalar(1.1); // 110% from centered origin — perfectly aligned
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
     brandMeshes.push(baseMesh);
     
-    // Layer 2: lume top
+    // Layer 2: lume top — normal scale
     const lumeGeo = new THREE.ExtrudeGeometry(shapes, {
       depth: EXTRUDE_DEPTH, bevelEnabled: true,
       bevelThickness: 0.15, bevelSize: 0.1, bevelOffset: 0, bevelSegments: 3
     });
     lumeGeo.computeVertexNormals();
+    lumeGeo.translate(-cx, -cy, 0); // center geometry at origin
     const lMat = lumeMat(c.lume);
     const lumeMesh = new THREE.Mesh(lumeGeo, lMat);
-    lumeMesh.position.set(offsetX, yPos + offsetY, 3.5);
+    lumeMesh.position.set(0, yPos, 3.5);
     clockGroup.add(lumeMesh);
     brandMeshes.push(lumeMesh);
     brandLumeMats.push(lMat);
   }
   
-  // Position: centered on 12 o'clock line, between bottom of 12 marker and top of subdial
-  const brandY = R * 0.27;
-  const subY = R * 0.18; // subtitle slightly below
-  
-  // Main: "A GIFT OF TIME" — size to match dial proportion
-  makeLine('A GIFT OF TIME', R * 0.055, brandY, 0);
-  
-  // Subtitle: "agiftoftime.app" — smaller, like GLASHÜTTE
-  makeLine('agiftoftime.app', R * 0.032, subY, 0);
+  // 12 marker bottom ≈ R*0.82 - R*0.08 = R*0.74
+  // Subdial top ≈ -R*0.5 + R*0.38 = -R*0.12
+  // Midpoint ≈ R*0.31
+  // Main brand text
+  makeLine('A GIFT OF TIME', R * 0.055, R * 0.33);
+  // Subtitle
+  makeLine('agiftoftime.app', R * 0.032, R * 0.22);
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)

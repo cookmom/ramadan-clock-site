@@ -890,7 +890,7 @@ function buildNumerals() {
     // Layer 1: metal base — clone lume geo, scale mesh 110%
     const baseGeo = geo.clone();
     const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-    baseMesh.position.set(nx, ny, 2.5);
+    baseMesh.position.set(nx, ny, 3.5);
     baseMesh.scale.setScalar(1.1);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
@@ -946,7 +946,7 @@ function buildBrandText() {
     baseGeo.computeVertexNormals();
     const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
     baseGeo.translate(-cx, -cy, 0); // center geometry at origin
-    baseMesh.position.set(0, yPos, 2.5);
+    baseMesh.position.set(0, yPos, 3.5);
     baseMesh.scale.setScalar(1.1); // 110% from centered origin — perfectly aligned
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);

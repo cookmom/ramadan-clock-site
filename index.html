@@ -163,7 +163,7 @@ body::after{display:none;
 #dialHero{
   position:relative;
   width:var(--clock-size);height:var(--clock-size);
-  overflow:hidden;
+  border-radius:50%;overflow:hidden;
   background:#585860;
   flex-shrink:0;
   transition:box-shadow 1.5s ease;
@@ -1764,7 +1764,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=256';
+_cs.type='module';_cs.src='clock.js?v=257';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

@@ -12,6 +12,8 @@ if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.client
 // ══════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════
+// Early debug flag
+window._clockReady = false;
 const DIALS = {
   // ── NOMOS Club Campus palette ── (extracted from product photography)
   // marker = printed marker/numeral color (NOT metal — painted applied indices)
@@ -30,6 +32,7 @@ const DIALS = {
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},
 };
+window.DIALS = DIALS;
 // Night lume palettes — modeled after real SuperLuminova variants
 // Each matches the daytime lume character but amplified for glow
 const NIGHT_LUME = {
@@ -941,14 +944,15 @@ function buildNumerals() {
     });
     baseMatl.envMapIntensity = 0.3;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-    baseMesh.position.set(nx, ny, 1.5); // border sits ABOVE lume
-    baseMesh.scale.setScalar(1.15);
+    baseMesh.position.set(nx, ny, 0.5);
+    baseMesh.scale.setScalar(1.18); // 18% larger = visible border
     baseMesh.castShadow = true;
+    baseMesh.renderOrder = 1;
     clockGroup.add(baseMesh);
     numeralSprites.push(baseMesh);
     numeralMats.push(baseMatl);
     
-    // Layer 2: lume fill — recessed BELOW base border
+    // Layer 2: lume fill — same position but smaller + higher renderOrder
     const topMatl = new THREE.MeshPhysicalMaterial({
       color: mk, roughness: 0.08, metalness: 0.0,
       clearcoat: 1.0, clearcoatRoughness: 0.03,
@@ -956,7 +960,7 @@ function buildNumerals() {
     });
     topMatl.envMapIntensity = 0.8;
     const mesh = new THREE.Mesh(geo, topMatl);
-    mesh.position.set(nx, ny, 0.3); // recessed below base
+    mesh.position.set(nx, ny, 0.5 + EXTRUDE_DEPTH + 0.5); // above base extrusion top
     mesh.scale.setScalar(1.0);
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
@@ -1024,14 +1028,29 @@ function buildBrandText() {
   {
     const text = 'AGIFTOFTIME.APP';
     const arcRadius = R * 1.02;
-    const totalAngle = 0.55;
-    const midAngle = -Math.PI / 2;
-    const startAngle = midAngle - totalAngle / 2;
     const letterH = R * 0.04; // target letter height
-
+    const midAngle = -Math.PI / 2;
+    
+    // Measure each letter width for proportional spacing
+    const widths = text.split('').map(ch => {
+      const s = _brandFont.generateShapes(ch, letterH);
+      if(!s.length) return letterH * 0.3; // space/dot fallback
+      const g = new THREE.ShapeGeometry(s); g.computeBoundingBox();
+      const w = g.boundingBox.max.x - g.boundingBox.min.x;
+      g.dispose();
+      return w;
+    });
+    const gap = letterH * 0.15; // inter-letter gap
+    const totalArc = widths.reduce((a,w) => a + w, 0) + gap * (text.length - 1);
+    const totalAngle = totalArc / arcRadius; // arc length → angle
+    const startAngle = midAngle - totalAngle / 2;
+    
+    // Place each letter at cumulative position
+    let cumArc = 0;
     for (let i = 0; i < text.length; i++) {
-      const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-      const ang = startAngle + t * totalAngle;
+      const letterCenter = cumArc + widths[i] / 2;
+      const ang = startAngle + letterCenter / arcRadius;
+      cumArc += widths[i] + gap;
       const wx = Math.cos(ang) * arcRadius;
       const wy = Math.sin(ang) * arcRadius;
 
@@ -1053,9 +1072,9 @@ function buildBrandText() {
       });
       baseMatl.envMapIntensity = 0.3;
       const baseMesh = new THREE.Mesh(geo, baseMatl);
-      baseMesh.position.set(wx, wy, 1.5); // base ON TOP
+      baseMesh.position.set(wx, wy, 0.3); // base BEHIND
       baseMesh.rotation.z = ang + Math.PI / 2;
-      baseMesh.scale.setScalar(1.15);
+      baseMesh.scale.setScalar(1.2); // 20% border
       clockGroup.add(baseMesh);
       brandMeshes.push(baseMesh);
       brandLumeMats.push(baseMatl);
@@ -1067,7 +1086,7 @@ function buildBrandText() {
       });
       lumeMatl.envMapIntensity = 0.8;
       const lumeMesh = new THREE.Mesh(geo, lumeMatl);
-      lumeMesh.position.set(wx, wy, 0.3); // recessed below base
+      lumeMesh.position.set(wx, wy, 0.3 + 1.2 + 0.3); // above base extrusion
       lumeMesh.rotation.z = ang + Math.PI / 2;
       clockGroup.add(lumeMesh);
       brandMeshes.push(lumeMesh);
@@ -1801,6 +1820,17 @@ function buildBezel() {
   bezelMeshes.push(ring);
 }
 
+// ── Debug globals for lookdev QA ──
+window.DIALS = DIALS;
+window.scene = scene;
+window.renderer = renderer;
+window.switchDial = function(i){ dialIdx = i; currentDial = Object.keys(DIALS)[i]; buildAll(); };
+window.buildAll = buildAll;
+window.clockGroup = clockGroup;
+window.currentDial = undefined; // getter below
+Object.defineProperty(window, 'currentDial', { get(){ return currentDial; }, set(v){ currentDial = v; } });
+Object.defineProperty(window, 'dialIdx', { get(){ return dialIdx; }, set(v){ dialIdx = v; } });
+
 function buildAll(){
   if(CONTAINED) console.log('[clock] buildAll, dial:', currentDial, 'scale:', clockGroup.scale.x);
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
@@ -1878,6 +1908,8 @@ function updateQiblaDemo(){
 // Wait for fonts then build (Lateef for Arabic numerals)
 document.fonts.ready.then(()=>{
   buildAll();
+  window._clockReady = true;
+  window.currentDial = currentDial;
   if(CONTAINED) {
     const initBg = new THREE.Color(DIALS[currentDial].bg);
     scene.background = initBg;

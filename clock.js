@@ -178,13 +178,10 @@ function makeDialGrainMap(dialColor, size = 512) {
   const col = new THREE.Color(dialColor);
   ctx.fillStyle = '#' + col.getHexString();
   ctx.fillRect(0, 0, size, size);
-  // Composite grain — soft-light blend preserves dial tone across all luminances
-  // Adaptive: dark dials get very subtle grain, light dials get full texture
+  // Composite grain — subtle texture baked once per dial change, zero per-frame cost
   if (_bauhausGrainReady) {
-    const luminance = col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
-    const grainOpacity = 0.05 + luminance * 0.35; // 0.05 (dark) → 0.40 (light)
-    ctx.globalAlpha = grainOpacity;
-    ctx.globalCompositeOperation = 'soft-light'; // gentle texture without crushing shadows
+    ctx.globalAlpha = 0.08; // very subtle — texture not color shift
+    ctx.globalCompositeOperation = 'soft-light';
     const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
     ctx.fillStyle = pat;
     ctx.fillRect(0, 0, size, size);
@@ -196,34 +193,8 @@ function makeDialGrainMap(dialColor, size = 512) {
   return tex;
 }
 
-// Scene background with grain (for fullscreen mode)
-let _bgGrainCanvas = null, _bgGrainCtx = null, _bgGrainTex = null;
-function makeSceneBgGrain(bgColor) {
-  const size = 512;
-  if (!_bgGrainCanvas) {
-    _bgGrainCanvas = document.createElement('canvas');
-    _bgGrainCanvas.width = _bgGrainCanvas.height = size;
-    _bgGrainCtx = _bgGrainCanvas.getContext('2d');
-    _bgGrainTex = new THREE.CanvasTexture(_bgGrainCanvas);
-    _bgGrainTex.colorSpace = THREE.SRGBColorSpace;
-  }
-  const ctx = _bgGrainCtx;
-  const col = bgColor instanceof THREE.Color ? bgColor : new THREE.Color(bgColor);
-  ctx.fillStyle = '#' + col.getHexString();
-  ctx.fillRect(0, 0, size, size);
-  if (_bauhausGrainReady) {
-    const lum = col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
-    ctx.globalAlpha = 0.05 + lum * 0.25;
-    ctx.globalCompositeOperation = 'soft-light';
-    const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
-    ctx.fillStyle = pat;
-    ctx.fillRect(0, 0, size, size);
-    ctx.globalAlpha = 1.0;
-    ctx.globalCompositeOperation = 'source-over';
-  }
-  _bgGrainTex.needsUpdate = true;
-  return _bgGrainTex;
-}
+// No per-frame bg grain — performance matters. Dial grain is baked once per dial change.
+// Fullscreen background uses solid scene.background color (no grain overhead).
 
 const scene = new THREE.Scene();
 
@@ -1822,7 +1793,7 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = (isFullscreen && _bauhausGrainReady) ? makeSceneBgGrain(dialBg) : dialBg.clone();
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = dialBg.clone();
   // Ensure bgPlane is hidden in fullscreen
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
@@ -2306,12 +2277,7 @@ function animate(){
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
   bgPlaneMat.color.copy(nightBg);
   if(!EMBED || CONTAINED || isFullscreen) {
-    if (isFullscreen && _bauhausGrainReady) {
-      // Only regenerate grain texture when color changes (throttle: every 4th frame)
-      if ((_animCount & 3) === 0) scene.background = makeSceneBgGrain(nightBg);
-    } else {
-      scene.background = nightBg;
-    }
+    scene.background = nightBg;
   }
   
   // Parallax + interactive spec light

@@ -215,9 +215,16 @@ a{color:inherit;text-decoration:none}
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   text-align:center;
   padding:0 2rem 6rem;
-  position:relative;
+  position:relative;overflow:hidden;
   transition:background 1s ease,color 1s ease;
 }
+.grain-overlay{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  z-index:1;pointer-events:none;
+  background:url(bauhaus-grain.png) repeat;background-size:200px 200px;
+  mix-blend-mode:plus-lighter;opacity:0.2;
+}
+.scroll-section>*:not(.grain-overlay){position:relative;z-index:2;}
 .section-header{
   position:sticky;top:calc(var(--clock-size) + 4.5rem);
   z-index:40;padding:.75rem 0 .5rem;
@@ -376,6 +383,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 1. THE HOOK -->
 <section class="scroll-section" id="sec-hook">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1></div>
@@ -386,6 +394,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 2. QIBLA -->
 <section class="scroll-section" id="sec-qibla">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Direction</p>
     <h2 class="section-title">Always facing Qibla.</h2></div>
@@ -401,6 +410,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 3. PRAYER TIMES -->
 <section class="scroll-section" id="sec-prayer">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Prayer Times</p>
     <h2 class="section-title" style="margin-bottom:0">Come to prayer.</h2>
@@ -418,6 +428,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 4. ELEVEN DIALS -->
 <section class="scroll-section" id="sec-dials">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Dial Themes</p>
     <h2 class="section-title">Eleven stars, eleven dials.</h2></div>
@@ -442,6 +453,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 5. NIGHT MODE -->
 <section class="scroll-section" id="sec-night">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Night Mode</p>
     <h2 class="section-title">The lume reveals itself.</h2></div>
@@ -457,6 +469,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 6. ADHAN -->
 <section class="scroll-section" id="sec-adhan">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Adhan</p>
     <h2 class="section-title">Hear the call to prayer.</h2></div>
@@ -468,6 +481,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 7. INSTALL -->
 <section class="scroll-section" id="sec-install">
+<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Install</p>
     <h2 class="section-title">Add to your home screen.</h2></div>
@@ -1563,7 +1577,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=160';
+_cs.type='module';_cs.src='clock.js?v=161';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

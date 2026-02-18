@@ -150,14 +150,7 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// Grain: baked into body background via CSS multiple backgrounds
-// No overlay div needed — grain is part of the background itself
-if(!CONTAINED) {
-  document.body.style.backgroundImage = 'url(bauhaus-grain.png)';
-  document.body.style.backgroundSize = '200px 200px';
-  document.body.style.backgroundRepeat = 'repeat';
-  document.body.style.backgroundBlendMode = 'multiply';
-}
+// Grain: per-section overlays in HTML (Bauhaus pattern) — no body background needed
 // Dial grain: load same Bauhaus texture into Three.js for the dial material
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;

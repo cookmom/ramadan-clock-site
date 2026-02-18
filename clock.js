@@ -975,20 +975,24 @@ function buildBrandText() {
   {
     const text = 'AGIFTOFTIME.APP';
     const lumeCol = new THREE.Color(c.lume);
-    // Arc center = subdial center (0, -R*0.5), arc radius slightly larger than subdial
-    const arcCX = 0, arcCY = -R * 0.5;
-    const arcRadius = R * 0.45; // just outside subdial edge (subdial R = 0.38)
-    const totalAngle = 0.75; // radians
-    // Arc centered at bottom (270° from arc center = 6 o'clock direction)
-    const midAngle = Math.PI / 2; // pointing down from arc center
-    const startAngle = midAngle - totalAngle / 2;
+    // Arc center = dial center (0,0), radius outside minute markers
+    const arcCX = 0, arcCY = 0;
+    const arcRadius = R * 0.96; // just outside minute markers, inside dial edge
+    const totalAngle = 0.55; // radians — tighter arc
+    // Letters arc along bottom of dial, reading left-to-right
+    // At 6 o'clock (bottom): first letter on the LEFT side, last on the RIGHT
+    // Angles: 0=right, π/2=top, π=left, -π/2=bottom (standard math)
+    // Left of 6 o'clock = angles between -π/2 and -π (3rd quadrant)
+    // Right of 6 o'clock = angles between -π/2 and 0 (4th quadrant)
+    // Sweep from left (-π/2 - half) to right (-π/2 + half) = clockwise visually
+    const midAngle = -Math.PI / 2; // 6 o'clock
+    const startAngle = midAngle - totalAngle / 2; // left of 6
     
     for (let i = 0; i < text.length; i++) {
       const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-      const ang = startAngle + t * totalAngle;
-      // Position on arc (ang=0 is right, π/2 is down)
+      const ang = startAngle + t * totalAngle; // sweep left-to-right (increasing angle)
       const wx = arcCX + Math.cos(ang) * arcRadius;
-      const wy = arcCY - Math.sin(ang) * arcRadius; // flip Y for 3D coords
+      const wy = arcCY + Math.sin(ang) * arcRadius;
       
       // Tiny canvas per letter
       const dpr = 3;
@@ -1011,7 +1015,7 @@ function buildBrandText() {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(wx, wy, 4);
       // Rotate letter to follow arc tangent
-      mesh.rotation.z = -(ang - Math.PI / 2);
+      mesh.rotation.z = ang + Math.PI / 2; // tops point outward — standard bottom-arc watch text
       clockGroup.add(mesh);
       brandMeshes.push(mesh);
       mesh.userData.brandLetter = { cvs, ctx, ch: text[i], cS, dpr };

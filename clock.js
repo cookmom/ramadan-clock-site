@@ -376,7 +376,9 @@ function brushedHandMat(color) {
   return m;
 }
 function lumeMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 0; return m; // lume = paint, no reflections
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.0, emissive: color, emissiveIntensity: 0,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,  // push lume forward to prevent z-fighting with hand body
+  }); m.envMapIntensity = 0; return m; // lume = paint, no reflections
 }
 function secMat(color) {
   const m = new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.4, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 3.0; return m; // second hand — glossy lacquer finish
@@ -1044,9 +1046,9 @@ function buildHands() {
   const hlGeo = nomosLume(hL, hW, hD);
   hLumeMat_ = lumeMat(c.lume);
   const hlMesh = new THREE.Mesh(hlGeo, hLumeMat_);
-  hlMesh.position.z = 4.2; // slightly above hand body top face (depth=4)
+  hlMesh.position.z = 4.8; // above hand body top face + bevel (depth=4, bevel=0.25)
   hourGroup.add(hlMesh);
-  hourGroup.position.z = 12;
+  hourGroup.position.z = 8;
   clockGroup.add(hourGroup);
   
   // Minute — NOMOS Club Campus sword hand (slimmed to match reference)
@@ -1060,7 +1062,7 @@ function buildHands() {
   const mlGeo = nomosLume(mL, mW, mD);
   mLumeMat_ = lumeMat(c.lume);
   const mlMesh = new THREE.Mesh(mlGeo, mLumeMat_);
-  mlMesh.position.z = 5.5; // above hand body top face (depth=5) to prevent z-fighting
+  mlMesh.position.z = 5.8; // above hand body top face + bevel (depth=5, bevel=0.25)
   minGroup.add(mlMesh);
   minGroup.position.z = 17;
   clockGroup.add(minGroup);

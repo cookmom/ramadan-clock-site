@@ -1047,12 +1047,14 @@ function buildBrandText() {
     ctx.letterSpacing = '3px';
     
     // Draw text along a circular arc
-    // Simple centered arc — text curves gently below subdial
+    // Gentle arc text — NOMOS "MADE IN GERMANY" style
     const plainText = 'AGIFTOFTIME.APP';
-    const arcR = 350; // large radius = gentle curve (like NOMOS "MADE IN GERMANY")
-    const cx = cW / 2, cy = cH / 2 - arcR + 60; // arc center above canvas center
-    const charAngle = 0.022; // tight radians per character
-    const startAng = Math.PI / 2 - (plainText.length - 1) * charAngle / 2;
+    // Draw on a small focused canvas
+    const arcR = cW * 0.9; // large radius for gentle curve
+    const cx = cW / 2, cy = cH / 2 - arcR + cH * 0.45;
+    const charAngle = 0.018;
+    const midAng = Math.PI / 2;
+    const startAng = midAng - (plainText.length - 1) * charAngle / 2;
     
     for (let i = 0; i < plainText.length; i++) {
       const ang = startAng + i * charAngle;
@@ -1067,15 +1069,15 @@ function buildBrandText() {
     
     const tex = new THREE.CanvasTexture(cvs);
     tex.anisotropy = 4;
-    const pw = R * 0.8;
-    const ph = R * 0.12;
+    const pw = R * 0.9;
+    const ph = R * 0.15;
     const geo = new THREE.PlaneGeometry(pw, ph);
     const mat = new THREE.MeshBasicMaterial({
       map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
     });
     mat._isBrandTex = true;
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, -R * 0.88, 4); // well below subdial
+    mesh.position.set(0, -R * 0.82, 4); // between subdial bottom and 6 marker
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
     mesh.userData.brandCanvas = { cvs, ctx, text: plainText, fontSpec: "600 16px Inter", alpha: 0.5, cW, cH, dpr, isArc: true };

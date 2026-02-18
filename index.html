@@ -510,7 +510,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 // ══════════════════════════════════════════
 // DIAL DATA
 // ══════════════════════════════════════════
-const DIALS=['deep_pink','red','coral','starlight','green','teal','slate','navy','white','kawthar','rainbow'];
+const DIALS=['deep_pink','red','coral','starlight','green','teal','slate','navy','white','kawthar'];
 const DIAL_NAMES={'deep_pink':'Al-Wāqiʿah','red':'Ash-Shams','coral':'Aḍ-Ḍuḥā','starlight':'An-Nūr','green':'Ar-Raḥmān','teal':'Al-Burūj','slate':'Al-Layl','navy':'An-Najm','white':'Al-Qamar','kawthar':'Al-Kawthar','rainbow':'Al-Insān'};
 const DIAL_COLORS={'deep_pink':'#bc4b79','red':'#df473a','coral':'#e8967a','starlight':'#d8d580','green':'#30b080','teal':'#63afb9','slate':'#5d6278','navy':'#132653','white':'#e0e0e0','kawthar':'#f2dce0','rainbow':'#1a1a1a'};
 const DIAL_LUMES={'deep_pink':'#80c0ff','red':'#80c0ff','coral':'#80c0ff','starlight':'#80c0ff','green':'#80c0ff','teal':'#80c0ff','slate':'#80c0ff','navy':'#80c0ff','white':'#80c0ff','kawthar':'#ffa0c0','rainbow':'#f0d8a0'};
@@ -1474,7 +1474,7 @@ const FS_DIALS_DATA = [
   {name:'deep_pink',color:'#bc4b79'},{name:'red',color:'#df473a'},{name:'coral',color:'#e8967a'},
   {name:'starlight',color:'#d8d580'},{name:'green',color:'#30b080'},{name:'teal',color:'#63afb9'},
   {name:'slate',color:'#5d6278'},{name:'navy',color:'#132653'},{name:'white',color:'#e0e0e0'},
-  {name:'kawthar',color:'#f2dce0'},{name:'rainbow',color:'#1a1a1a'}
+  {name:'kawthar',color:'#f2dce0'}
 ];
 const FS_SURAH_MAP = {deep_pink:56,red:91,coral:93,starlight:24,green:55,teal:85,slate:92,navy:53,white:54,kawthar:108,rainbow:76};
 const FS_DIAL_NAMES_MAP = {deep_pink:'Al-Wāqiʿah',red:'Ash-Shams',coral:'Aḍ-Ḍuḥā',starlight:'An-Nūr',green:'Ar-Raḥmān',teal:'Al-Burūj',slate:'Al-Layl',navy:'An-Najm',white:'Al-Qamar',kawthar:'Al-Kawthar',rainbow:'Al-Insān'};
@@ -1764,7 +1764,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=251';
+_cs.type='module';_cs.src='clock.js?v=252';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

@@ -554,7 +554,7 @@ initGyro();
 // Background plane (fills screen, matches dial color)
 // Background surround plane — flush with dial face, hole cut for gap
 let isFullscreen = false;
-let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
+let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.58);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background plane — MeshBasicMaterial (unlit) so it always matches scene.background exactly
 const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e });
@@ -587,7 +587,7 @@ scene.add(fsBgPlane); // always in scene, visibility toggled by fullscreen
 window._clockSetFullscreen = function(on, snapNight) {
   isFullscreen = on;
   if(on) {
-    CLOCK_SCALE = 0.50;
+    CLOCK_SCALE = 0.58;
     // PBR background for depth + CSS grain overlay for visible texture
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
     fsBgPlane.visible = false; // CSS background + grain overlay handle this now
@@ -2054,7 +2054,7 @@ function onResize(){
   if(_bloomFailed) { _bloomFailed = false; _bloomRetryAt = 0; console.log('[perf] Bloom retry on resize'); }
   bloomPass.resolution.set(W, H);
   // Enforce correct scale — fullscreen=0.50, contained=0.95, embed=0.65
-  const targetScale = isFullscreen ? 0.50 : (CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50));
+  const targetScale = isFullscreen ? 0.58 : (CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.58));
   if(CLOCK_SCALE !== targetScale) {
     CLOCK_SCALE = targetScale;
     clockGroup.scale.setScalar(CLOCK_SCALE);

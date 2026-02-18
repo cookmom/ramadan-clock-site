@@ -150,9 +150,9 @@ body{
 }
 body::after{
   content:'';position:fixed;top:0;left:0;width:100vw;height:100vh;
-  pointer-events:none;z-index:1;
+  pointer-events:none;z-index:9999;
   background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;
-  opacity:0.4;mix-blend-mode:multiply;
+  opacity:0.28;mix-blend-mode:multiply;
 }
 
 /* ── Sticky clock ── */
@@ -219,7 +219,6 @@ a{color:inherit;text-decoration:none}
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   text-align:center;
   padding:0 2rem 6rem;
-  position:relative;z-index:2;
   position:relative;
   transition:background 1s ease,color 1s ease;
 }
@@ -1568,7 +1567,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=154';
+_cs.type='module';_cs.src='clock.js?v=155';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

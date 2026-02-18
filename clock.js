@@ -150,20 +150,13 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// Grain: page background only (not over WebGL canvas)
-// Wrap all body children in a z-index:2 container, grain at z-index:1
+// Grain: baked into body background via CSS multiple backgrounds
+// No overlay div needed — grain is part of the background itself
 if(!CONTAINED) {
-  const _grainDiv = document.createElement('div');
-  _grainDiv.id = 'grainOverlay';
-  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.35;mix-blend-mode:multiply;';
-  // Insert grain as first child of body so it's behind everything
-  document.body.insertBefore(_grainDiv, document.body.firstChild);
-  // Ensure all other body children stack above
-  Array.from(document.body.children).forEach(el => {
-    if(el === _grainDiv) return;
-    if(!el.style.position || el.style.position === 'static') el.style.position = 'relative';
-    if(!el.style.zIndex) el.style.zIndex = '2';
-  });
+  document.body.style.backgroundImage = 'url(bauhaus-grain.png)';
+  document.body.style.backgroundSize = '200px 200px';
+  document.body.style.backgroundRepeat = 'repeat';
+  document.body.style.backgroundBlendMode = 'multiply';
 }
 // Dial grain: load same Bauhaus texture into Three.js for the dial material
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
@@ -1771,7 +1764,7 @@ function buildAll(){
   // Ensure bgPlane is hidden in fullscreen
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
-  if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
+  if(!CONTAINED) document.documentElement.style.backgroundColor = document.body.style.backgroundColor = '#' + dialBg.getHexString();
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
   if(!CONTAINED) {
@@ -2333,7 +2326,7 @@ function animate(){
     if(_bgHex !== _lastBgHex) {
       _lastBgHex = _bgHex;
       const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;
-      if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = _bgHex; }
+      if(!CONTAINED) { document.documentElement.style.backgroundColor = document.body.style.backgroundColor = _bgHex; }
       if(isFullscreen) {
         const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=_bgHex;
       }

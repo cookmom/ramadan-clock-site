@@ -1044,9 +1044,9 @@ function buildHands() {
   const hlGeo = nomosLume(hL, hW, hD);
   hLumeMat_ = lumeMat(c.lume);
   const hlMesh = new THREE.Mesh(hlGeo, hLumeMat_);
-  hlMesh.position.z = 4.5; // above hand body top face (depth=4) to prevent z-fighting
+  hlMesh.position.z = 4.2; // slightly above hand body top face (depth=4)
   hourGroup.add(hlMesh);
-  hourGroup.position.z = 15;
+  hourGroup.position.z = 12;
   clockGroup.add(hourGroup);
   
   // Minute — NOMOS Club Campus sword hand (slimmed to match reference)

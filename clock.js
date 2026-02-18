@@ -601,6 +601,8 @@ window._clockSetFullscreen = function(on) {
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
+    // Snap to day mode instantly on fullscreen exit — no slow lerp
+    modeTarget = 0; modeBlend = 0;
     if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }

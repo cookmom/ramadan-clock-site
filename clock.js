@@ -977,7 +977,7 @@ function buildBrandText() {
     const lumeCol = new THREE.Color(c.lume);
     // Arc center = dial center (0,0), radius outside minute markers
     const arcCX = 0, arcCY = 0;
-    const arcRadius = R * 0.96; // just outside minute markers, inside dial edge
+    const arcRadius = R * 1.02; // outside minute markers, near dial rim
     const totalAngle = 0.55; // radians — tighter arc
     // Letters arc along bottom of dial, reading left-to-right
     // At 6 o'clock (bottom): first letter on the LEFT side, last on the RIGHT

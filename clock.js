@@ -17,15 +17,15 @@ const DIALS = {
   // marker = printed marker/numeral color (NOT metal — painted applied indices)
   // lume = night glow base color (SuperLuminova)
   // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
-  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0xd7a8b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
-  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0xe5a69e, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
-  coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0xe8c6b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
-  starlight:  {bg:0xd8d580, marker:0xe08850, markerBase:0xdca663, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},
-  green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0x9fd0ba, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
-  teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0xb3d0d1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
-  slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0xb1b1b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
-  navy:       {bg:0x132653, marker:0xf0ecf0, markerBase:0x979cb1, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
-  white:      {bg:0xe0e0e0, marker:0xd8907a, markerBase:0xdbb0a2, lume:0xd8907a, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
+  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0xd4749e, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},   // pink base
+  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0xe07060, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},   // warm red base
+  coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0xe0a890, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},      // peach base
+  starlight:  {bg:0xd8d580, marker:0xe08850, markerBase:0xc0b060, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},        // olive base
+  green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0x60c8a0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},    // green base
+  teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0x88c8d0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},    // teal base
+  slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0x8890a0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},      // slate base
+  navy:       {bg:0x132653, marker:0xf0ecf0, markerBase:0x4060a0, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},     // deep blue base
+  white:      {bg:0xe0e0e0, marker:0xd8907a, markerBase:0xc0b0a8, lume:0xd8907a, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},      // warm gray base
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},

@@ -955,9 +955,9 @@ function buildBrandText() {
   }
   
   // Main brand text — centered between 12 marker bottom and subdial top
-  makeLine('A GIFT OF TIME', R * 0.055, R * 0.33, false);
+  makeLine('A GIFT OF TIME', R * 0.0715, R * 0.33, false);
   // Subtitle
-  makeLine('agiftoftime.app', R * 0.032, R * 0.22, true);
+  makeLine('agiftoftime.app', R * 0.0416, R * 0.20, true);
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)

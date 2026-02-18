@@ -151,33 +151,9 @@ if(CONTAINED) {
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
 
-// ── Grain normal map — proper PBR surface grain (not CSS overlay) ──
-// Sobel-derived normal map from bauhaus vermicular texture
-// Turing reaction-diffusion vermicular pattern — organic flowing grain
-let _grainNormalTex = null;
-new THREE.TextureLoader().load('grain-fine-normal.png', (t) => {
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(6, 6); // 512px tiled 6x — fine eggshell grain
-  _grainNormalTex = t;
-  console.log('[clock] fine grain normal loaded');
-  if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
-});
+// Grain texture loaders removed — grain is now CSS overlay only (Bauhaus approach)
 
-let _grainRoughnessTex = null;
-new THREE.TextureLoader().load('grain-fine-roughness.png', (t) => {
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(6, 6);
-  _grainRoughnessTex = t;
-});
-
-// Grain color texture — used as emissiveMap on fullscreen background for visible grain
-let _grainColorTex = null;
-new THREE.TextureLoader().load('grain-fine.png', (t) => {
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(12, 12); // 198px tiled 12x — matches ~148px CSS tile density
-  _grainColorTex = t;
-  console.log('[clock] grain color texture loaded');
-});
+// Grain color texture loader removed — CSS overlay handles grain
 
 const scene = new THREE.Scene();
 
@@ -349,79 +325,20 @@ function makeNumeralBumpMap(numerals, font, size = 512) {
 }
 const numeralBumpTex = makeNumeralBumpMap();
 
-// ── Procedural NOMOS-style sandblasted dial texture ──
-// Reference: NOMOS Campus closeup shows uniform fine-grain matte finish.
-// Sandblasted/galvanized surface — tiny random micro-bumps that scatter
-// light evenly, giving that velvety matte quality.
-function makeDialTextures() {
-  const sz = 1024;
-  const nCvs = document.createElement('canvas'); nCvs.width = nCvs.height = sz;
-  const nCtx = nCvs.getContext('2d');
-  const nData = nCtx.createImageData(sz, sz);
-  const rCvs = document.createElement('canvas'); rCvs.width = rCvs.height = sz;
-  const rCtx = rCvs.getContext('2d');
-  const rData = rCtx.createImageData(sz, sz);
-  
-  let seed = 42;
-  function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
-  
-  for (let i = 0; i < sz * sz; i++) {
-    const idx = i * 4;
-    const nx = (rand() - 0.5) * 0.10;
-    const ny = (rand() - 0.5) * 0.10;
-    nData.data[idx]     = Math.floor((nx + 0.5) * 255);
-    nData.data[idx + 1] = Math.floor((ny + 0.5) * 255);
-    nData.data[idx + 2] = 255;
-    nData.data[idx + 3] = 255;
-    
-    const rv = 0.88 + rand() * 0.06;
-    const rvByte = Math.floor(rv * 255);
-    rData.data[idx] = rvByte;
-    rData.data[idx + 1] = rvByte;
-    rData.data[idx + 2] = rvByte;
-    rData.data[idx + 3] = 255;
-  }
-  
-  nCtx.putImageData(nData, 0, 0);
-  rCtx.putImageData(rData, 0, 0);
-  
-  const normalMap = new THREE.CanvasTexture(nCvs);
-  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(4, 4);
-  
-  const roughnessMap = new THREE.CanvasTexture(rCvs);
-  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
-  roughnessMap.repeat.set(4, 4);
-  
-  return { normalMap, roughnessMap };
-}
-const dialTextures = makeDialTextures();
-
+// ── Dial material — clean flat surface, grain handled by CSS overlay ──
 function dialMat(color) {
   const cd = currentDial;
   const special = {
-    kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3, clearcoat:0.6, clearcoatRoughness:0.3 },
-    qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
+    kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3 },
+    qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 },
   };
-  // Galvanized dial: dielectric (not metal), semi-matte with lacquer clearcoat
-  // Turing vermicular normalMap needs roughness 0.3-0.4 to show grain in specular
-  const s = special[cd] || { roughness:0.35, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.3, clearcoatRoughness:0.4 };
-  // Dial = PBR with NOMOS galvanized/sandblasted finish
-  // Grain via proper normal map (Sobel-derived from vermicular texture) + roughness map
+  const s = special[cd] || { roughness:0.4, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 };
   const m = new THREE.MeshPhysicalMaterial({
     color,
     roughness: s.roughness,
     metalness: s.metalness,
-    clearcoat: s.clearcoat,
-    clearcoatRoughness: s.clearcoatRoughness,
-    // Grain normal map for micro-surface detail
-    normalMap: _grainNormalTex || dialTextures.normalMap,
-    normalScale: new THREE.Vector2(0.3, 0.3), // Fine grain: subtle eggshell texture
-    // Roughness variation — catches light differently across grain
-    roughnessMap: _grainRoughnessTex || dialTextures.roughnessMap,
   });
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
-  m.envMapIntensity = 1.0; // grain needs env reflections to be visible through clearcoat
   return m;
 }
 function metalMat(color) {
@@ -641,7 +558,7 @@ const fsBgShape = new THREE.Shape();
 fsBgShape.moveTo(-5000, -5000); fsBgShape.lineTo(5000, -5000); fsBgShape.lineTo(5000, 5000); fsBgShape.lineTo(-5000, 5000); fsBgShape.closePath();
 const fsBgGeo = new THREE.ShapeGeometry(fsBgShape, 4);
 function fsBgMaterial(color) {
-  return dialMat(color);
+  return new THREE.MeshBasicMaterial({ color });
 }
 let fsBgMat = fsBgMaterial(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860);
 const fsBgPlane = new THREE.Mesh(fsBgGeo, fsBgMat);
@@ -657,7 +574,7 @@ window._clockSetFullscreen = function(on, snapNight) {
     CLOCK_SCALE = 0.50;
     // PBR background for depth + CSS grain overlay for visible texture
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
-    fsBgPlane.visible = true; // PBR surface with normalMap = depth from lighting
+    fsBgPlane.visible = true; // flat color surface — grain via CSS overlay
     // Hide dial geometry — elements sit directly on the PBR background
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;

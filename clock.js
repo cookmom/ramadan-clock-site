@@ -150,22 +150,43 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// ── Grain overlay — CSS div on top of the 3D canvas (same look as v158) ──
-// Pure CSS: sibling of the canvas, pointer-events:none
-// Covers the entire 3D render (dial + hands + markers) but NOT the HTML sections
-// Moves with the canvas between landing page (#dialHero) and fullscreen (#clockFullscreen)
-const _clockGrainOverlay = document.createElement('div');
-_clockGrainOverlay.id = 'clockGrain';
-_clockGrainOverlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.35;mix-blend-mode:multiply;';
-{
-  const parent = CONTAINED ? CONTAINER : document.body;
-  if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
-  parent.appendChild(_clockGrainOverlay);
-}
-// Expose for index.html fullscreen canvas moves
-window._clockGrainOverlay = _clockGrainOverlay;
+// ── Bauhaus grain — baked into dial mesh material only (not hands/markers) ──
+// Pre-process: reduce grain contrast so map×color doesn't crush dark dials
+// Math: outputPixel = 1 - GRAIN_STRENGTH × (1 - grainPixel)
+// At 35%: white stays 1.0, black becomes 0.65 — same as CSS multiply at 35%
+const GRAIN_STRENGTH = 0.35;
+let _dialGrainMap = null; // CanvasTexture, created once on image load
 
-// Bauhaus texture for dial roughnessMap (subtle specular variation)
+const _grainImg = new Image();
+_grainImg.src = 'bauhaus-grain.png';
+_grainImg.onload = () => {
+  // Bake contrast-reduced grain into a tiling texture (one-time cost)
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  // Tile the 198px grain across 512px canvas
+  const pat = ctx.createPattern(_grainImg, 'repeat');
+  ctx.fillStyle = pat;
+  ctx.fillRect(0, 0, size, size);
+  // Reduce contrast: push dark values toward white
+  const imgData = ctx.getImageData(0, 0, size, size);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = 255 - GRAIN_STRENGTH * (255 - d[i]);   // R
+    d[i+1] = 255 - GRAIN_STRENGTH * (255 - d[i+1]); // G
+    d[i+2] = 255 - GRAIN_STRENGTH * (255 - d[i+2]); // B
+  }
+  ctx.putImageData(imgData, 0, 0);
+  _dialGrainMap = new THREE.CanvasTexture(c);
+  _dialGrainMap.wrapS = _dialGrainMap.wrapT = THREE.RepeatWrapping;
+  _dialGrainMap.colorSpace = THREE.SRGBColorSpace;
+  // Apply grain to bgPlane and rebuild dial
+  if (typeof bgPlaneMat !== 'undefined') bgPlaneMat.map = _dialGrainMap;
+  if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
+};
+
+// Also load raw version for roughnessMap (subtle specular variation)
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(4, 4);
@@ -392,9 +413,10 @@ function dialMat(color) {
   };
   const s = special[cd] || { roughness:0.92, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
   // Dial = PBR with NOMOS sandblasted finish
-  // Grain via roughnessMap only — subtle specular variation, no albedo darkening
+  // Grain via contrast-reduced map texture (dial mesh ONLY — not hands/markers)
   const m = new THREE.MeshPhysicalMaterial({
     color,
+    map: _dialGrainMap || null, // baked grain: white areas=no change, speckles=up to 35% darker
     roughness: s.roughness,
     metalness: s.metalness,
     clearcoat: s.clearcoat,
@@ -604,7 +626,7 @@ let isFullscreen = false;
 let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.50);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background plane — MeshBasicMaterial (unlit) so it always matches scene.background exactly
-const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e });
+const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e, map: _dialGrainMap || null });
 const bgShape = new THREE.Shape();
 bgShape.moveTo(-5000, -5000); bgShape.lineTo(5000, -5000); bgShape.lineTo(5000, 5000); bgShape.lineTo(-5000, 5000); bgShape.closePath();
 const bgHole = new THREE.Path();

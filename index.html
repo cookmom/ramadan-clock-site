@@ -165,7 +165,6 @@ body::after{display:none;
   border-radius:50%;overflow:hidden;
   background:#585860;
   flex-shrink:0;
-  position:relative; /* positioning context for grain overlay */
   transition:box-shadow 1.5s ease;
 }
 
@@ -1651,9 +1650,8 @@ function openClockFullscreen() {
   stopDialCycle();
   if(window._stopTour) window._stopTour();
 
-  // Move canvas + grain overlay into fullscreen overlay
+  // Move canvas into fullscreen overlay
   overlay.appendChild(canvas);
-  if(window._clockGrainOverlay) overlay.appendChild(window._clockGrainOverlay);
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   document.querySelector('nav').style.display = 'none';
@@ -1701,10 +1699,8 @@ function closeClockFullscreen() {
   const canvas = overlay.querySelector('canvas');
   if(!canvas) return;
 
-  // Move canvas + grain overlay back
-  const hero = document.getElementById('dialHero');
-  hero.appendChild(canvas);
-  if(window._clockGrainOverlay) hero.appendChild(window._clockGrainOverlay);
+  // Move canvas back
+  document.getElementById('dialHero').appendChild(canvas);
   overlay.classList.remove('active');
   document.body.style.overflow = '';
   document.querySelector('nav').style.display = '';
@@ -1780,7 +1776,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=170';
+_cs.type='module';_cs.src='clock.js?v=171';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

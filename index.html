@@ -327,7 +327,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 .fs-prayer-bar{font-size:.6rem;font-weight:300;letter-spacing:.1em;margin-top:6px;opacity:.55}
 .fs-mode-toggle{position:fixed;top:calc(env(safe-area-inset-top,12px) + 12px);right:16px;z-index:210;cursor:pointer;background:none;border:none;padding:8px;color:rgba(255,255,255,.6);transition:opacity .5s ease}
 .fs-mode-toggle svg{width:20px;height:20px;stroke-width:1;fill:none;stroke:currentColor}
-.fs-dial-picker{position:fixed;bottom:calc(env(safe-area-inset-bottom,12px) + 16px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7);transition:opacity .5s ease}
+.fs-dial-picker{position:fixed;bottom:calc(env(safe-area-inset-bottom,12px) + 80px);left:0;right:0;text-align:center;font-family:var(--font);z-index:210;pointer-events:auto;color:rgba(255,255,255,.7);transition:opacity .5s ease}
 .fs-dial-bar{display:flex;justify-content:center;gap:7px}
 .fs-dial-bar .dial-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;transition:all .3s;background:none;padding:0}
 .fs-dial-bar .dial-dot.active{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.4)}
@@ -1505,7 +1505,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=115';
+_cs.type='module';_cs.src='clock.js?v=116';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

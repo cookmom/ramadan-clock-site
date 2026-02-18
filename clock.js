@@ -815,17 +815,17 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: wider polished metal base plate
+        // Layer 1: wider polished metal base plate — sits just behind lume
         const baseGeo = new THREE.BoxGeometry(mW*1.6, mH*1.05, depth*0.5);
         const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-        baseMesh.position.set(px, py, depth*0.25);
+        baseMesh.position.set(px, py, depth*0.5);
         baseMesh.rotation.z = ang + Math.PI/2;
         baseMesh.castShadow = true;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
-        // Layer 2: lume on top
+        // Layer 2: lume on top — flush, slightly forward to prevent z-fighting
         const lumeGeo = new THREE.BoxGeometry(mW, mH, depth*0.6);
         const lumeMesh = new THREE.Mesh(lumeGeo, lumeMat(c.lume));
-        lumeMesh.position.set(px, py, depth*0.5 + depth*0.3);
+        lumeMesh.position.set(px, py, depth*0.5 + 0.5);
         lumeMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
         lumeMeshes.push(lumeMesh);

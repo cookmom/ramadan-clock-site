@@ -17,15 +17,15 @@ const DIALS = {
   // marker = printed marker/numeral color (NOT metal — painted applied indices)
   // lume = night glow base color (SuperLuminova)
   // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
-  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
-  red:        {bg:0xdf473a, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
-  coral:      {bg:0xe8967a, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
-  starlight:  {bg:0xd8d580, marker:0xe08850, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},       // orange markers
-  green:      {bg:0x30b080, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
-  teal:       {bg:0x63afb9, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
-  slate:      {bg:0x5d6278, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
-  navy:       {bg:0x132653, marker:0xf0ecf0, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
-  white:      {bg:0xe0e0e0, marker:0xd8907a, lume:0xd8907a, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},     // salmon pink markers
+  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0xd7a8b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
+  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0xe5a69e, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
+  coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0xe8c6b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
+  starlight:  {bg:0xd8d580, marker:0xe08850, markerBase:0xdca663, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},
+  green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0x9fd0ba, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
+  teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0xb3d0d1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
+  slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0xb1b1b7, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
+  navy:       {bg:0x132653, marker:0xf0ecf0, markerBase:0x979cb1, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
+  white:      {bg:0xe0e0e0, marker:0xd8907a, markerBase:0xdbb0a2, lume:0xd8907a, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},
@@ -162,12 +162,13 @@ if(CONTAINED) {
 
 const scene = new THREE.Scene();
 
-// ── Perspective camera (slight top-down angle for depth)
-// Adjust camera distance based on aspect ratio so clock fits both portrait and landscape
+// ── Orthographic camera — true top-down (no perspective distortion on markers)
 const aspect = W/H;
 const camZ = 280;
-const cam = new THREE.PerspectiveCamera(32, aspect, 1, 2000);
-cam.position.set(0, -3, camZ);
+const frustumH = 105; // world units visible vertically (R=80, case ~90)
+const frustumW = frustumH * aspect;
+const cam = new THREE.OrthographicCamera(-frustumW, frustumW, frustumH, -frustumH, 1, 2000);
+cam.position.set(0, 0, camZ);
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════
@@ -830,11 +831,12 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: painted base — slightly wider, slightly darker tone
+        // Layer 1: complementary base — wider, tinted with dial color
         const mk = c.marker || c.lume;
+        const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
         const baseGeo = new THREE.BoxGeometry(mW*1.35, mH*1.02, depth*0.35);
         const baseMatl = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color(mk).multiplyScalar(0.75), // darker base
+          color: mkBase,
           roughness: 0.5, metalness: 0.0,
           emissive: mk, emissiveIntensity: 0,
         });
@@ -913,10 +915,11 @@ function buildNumerals() {
     geo.translate(-gcx, -gcy, 0);
     
     const mk = c.marker || c.lume;
-    // Layer 1: painted base — slightly larger, darker tone
+    const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
+    // Layer 1: complementary base — slightly larger, tinted with dial color
     const baseGeo = geo.clone();
     const baseMatl = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(mk).multiplyScalar(0.75),
+      color: mkBase,
       roughness: 0.5, metalness: 0.0,
       emissive: mk, emissiveIntensity: 0,
     });
@@ -2063,7 +2066,9 @@ function onResize(){
   H=(CONTAINED && !isFullscreen)?CONTAINER.clientHeight:window.innerHeight;
   renderer.setSize(W,H);
   const a=W/H;
-  cam.aspect=a;
+  const fH = 105;
+  const fW = fH * a;
+  cam.left = -fW; cam.right = fW; cam.top = fH; cam.bottom = -fH;
   cam.position.z = 280;
   cam.updateProjectionMatrix();
   composer.setSize(W, H);

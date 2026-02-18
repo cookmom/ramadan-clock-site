@@ -45,12 +45,19 @@ const sections = [
   {title:'Reference', textures:[
     {file:'grain-fine.png',name:'Bauhaus (current)',size:'200×200',kb:'5.7KB',note:'Their vermiculate grain tile — our current production texture',badge:'ref'},
   ]},
-  {title:'Custom Generated — Matte Watch Dial', textures:[
-    {file:'gen-turing-256.png',name:'Turing Vermiculate',size:'256×256',kb:'~8KB',note:'Reaction-diffusion — organic worm-like grain, closest to Bauhaus ref',badge:'gen'},
-    {file:'gen-stipple-200.png',name:'Stipple (Bead-Blasted)',size:'200×200',kb:'~3KB',note:'Sparse random dots — sandblasted/bead-blasted metal finish',badge:'gen'},
-    {file:'gen-sandblast-200.png',name:'Sandblasted (Soft)',size:'200×200',kb:'~5KB',note:'Gaussian noise — soft organic sandblasted surface',badge:'gen'},
-    {file:'gen-vermiculate-200.png',name:'Vermiculate (Soft)',size:'200×200',kb:'~4KB',note:'Blurred noise — simplified vermiculate, softer than Turing',badge:'gen'},
-    {file:'gen-eggshell-200.png',name:'Eggshell (Micro)',size:'200×200',kb:'~2KB',note:'Per-pixel uniform noise — ultra-fine eggshell/matte finish',badge:'gen'},
+  {title:'Matched to Bauhaus — fBm Blurred Noise (OURS)', textures:[
+    {file:'grain-v2.png',name:'V2 ⭐ Best Match',size:'200×200',kb:'~6KB',note:'Large blobs dominant (blur 6+3+1.5) — closest to Bauhaus scale & character',badge:'gen'},
+    {file:'grain-v1.png',name:'V1 Large-Blob',size:'200×200',kb:'~6KB',note:'3-octave fBm (blur 5+2.5+1.2) — slightly tighter than Bauhaus',badge:'gen'},
+    {file:'grain-v3.png',name:'V3 Balanced Mid',size:'200×200',kb:'~6KB',note:'Balanced octaves (blur 4+2+1) — more uniform, less blobby',badge:'gen'},
+    {file:'grain-v6.png',name:'V6 More Contrast',size:'200×200',kb:'~6KB',note:'Wider tonal range (218-255) — same blobs, slightly bolder',badge:'gen'},
+    {file:'grain-v4.png',name:'V4 Alt Seed',size:'200×200',kb:'~6KB',note:'Same as V1 with different random seed — different blob arrangement',badge:'gen'},
+    {file:'grain-v5.png',name:'V5 Alt Seed 2',size:'200×200',kb:'~6KB',note:'Same as V1 with another seed — shows variation range',badge:'gen'},
+    {file:'grain-match-a.png',name:'Single Octave',size:'200×200',kb:'~5KB',note:'Single blur (2.5) only — too uniform, missing multi-scale character',badge:'gen'},
+  ]},
+  {title:'Other Approaches (Generated)', textures:[
+    {file:'gen-turing-256.png',name:'Turing Vermiculate',size:'256×256',kb:'~8KB',note:'Reaction-diffusion — organic worms, different character than Bauhaus',badge:'gen'},
+    {file:'gen-stipple-200.png',name:'Stipple (Bead-Blasted)',size:'200×200',kb:'~3KB',note:'Sparse random dots — sandblasted metal feel',badge:'gen'},
+    {file:'gen-eggshell-200.png',name:'Eggshell (Micro)',size:'200×200',kb:'~2KB',note:'Per-pixel uniform noise — ultra-fine matte finish',badge:'gen'},
   ]},
   {title:'Transparent Textures (CC0 — Free)', textures:[
     {file:'noisy.png',name:'Noisy',size:'300×300',kb:'37KB',note:'Fine stipple pinholes — closest free match to sandblasted metal',badge:'free'},

@@ -927,37 +927,47 @@ function buildBrandText() {
   
   const c = DIALS[currentDial];
   
-  function makeLine(text, fontSize, yPos, isSubtitle) {
-    const shapes = _brandFont.generateShapes(text, fontSize);
+  // Canvas-based text rendering — supports Arabic glyphs with proper RTL/shaping
+  function makeCanvasLine(text, fontSpec, yPos, planeW, planeH, alpha) {
+    const dpr = 3;
+    const cW = 512, cH = 128;
+    const cvs = document.createElement('canvas');
+    cvs.width = cW * dpr; cvs.height = cH * dpr;
+    const ctx = cvs.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cW, cH);
     
-    // Compute bounds for centering
-    const tempGeo = new THREE.ShapeGeometry(shapes);
-    tempGeo.computeBoundingBox();
-    const bb = tempGeo.boundingBox;
-    const cx = (bb.max.x + bb.min.x) / 2;
-    const cy = (bb.max.y + bb.min.y) / 2;
-    tempGeo.dispose();
+    // Use lume color for text
+    const lumeCol = '#' + new THREE.Color(c.lume).getHexString();
+    ctx.fillStyle = lumeCol;
+    ctx.globalAlpha = alpha !== undefined ? alpha : 1;
+    ctx.font = fontSpec;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cW / 2, cH / 2);
     
-    // Single layer — clean lume material, no double-layer offset issues
-    const geo = new THREE.ExtrudeGeometry(shapes, {
-      depth: isSubtitle ? 1 : 2,
-      bevelEnabled: true,
-      bevelThickness: 0.1, bevelSize: 0.06, bevelOffset: 0, bevelSegments: 2
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.anisotropy = 4;
+    const geo = new THREE.PlaneGeometry(planeW, planeH);
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, depthWrite: false,
+      side: THREE.FrontSide
     });
-    geo.computeVertexNormals();
-    geo.translate(-cx, -cy, 0);
-    const lMat = lumeMat(c.lume);
-    const mesh = new THREE.Mesh(geo, lMat);
-    mesh.position.set(0, yPos, 3.5);
+    mat._isBrandTex = true; // flag for night mode color updates
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(0, yPos, 4);
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
-    brandLumeMats.push(lMat);
+    // Store canvas+ctx for night mode redraws
+    mesh.userData.brandCanvas = { cvs, ctx, text, fontSpec, alpha, cW, cH, dpr };
+    brandLumeMats.push(mat);
   }
   
-  // Main brand text — centered between 12 marker bottom and subdial top
-  makeLine('A GIFT OF TIME', R * 0.0715, R * 0.33, false);
+  const pw = R * 1.2; // plane width
+  // Main: Arabic brand name — هدية الوقت (A Gift of Time)
+  makeCanvasLine('هدية الوقت', "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif", R * 0.33, pw, pw * 0.25, 1);
   // Subtitle
-  makeLine('agiftoftime.app', R * 0.0416, R * 0.20, true);
+  makeCanvasLine('agiftoftime.app', "300 24px Inter, system-ui, sans-serif", R * 0.20, pw, pw * 0.18, 0.6);
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)
@@ -2004,10 +2014,24 @@ function animate(){
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     m.emissiveIntensity = lumeIntensity * 0.85;
   });
-  // Brand text glow
-  brandLumeMats.forEach(m=>{
-    m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.85;
+  // Brand text glow — canvas textures, redraw with glow color in night mode
+  brandMeshes.forEach(mesh=>{
+    const bd = mesh.userData.brandCanvas;
+    if(!bd) return;
+    const {cvs, ctx, text, fontSpec, alpha, cW, cH, dpr} = bd;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cW, cH);
+    // Blend from lume color to emissive glow
+    const dayCol = new THREE.Color(DIALS[currentDial].lume);
+    const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
+    const blended = dayCol.lerp(nightCol, modeBlend);
+    ctx.fillStyle = '#' + blended.getHexString();
+    ctx.globalAlpha = alpha !== undefined ? alpha : 1;
+    ctx.font = fontSpec;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cW / 2, cH / 2);
+    mesh.material.map.needsUpdate = true;
   });
   
   // Dial surface picks up faint lume ambient bounce

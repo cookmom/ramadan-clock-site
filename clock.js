@@ -971,61 +971,52 @@ function buildBrandText() {
   makeCanvasLine('هدية الوقت', "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif", R * 0.33, pw, pw * 0.25, 1);
   
   // Arched subtitle: "AGIFTOFTIME.APP" below 6 o'clock (like NOMOS "MADE IN GERMANY")
+  // Use individual letter sprites placed along a world-space arc — no canvas mapping issues
   {
-    const dpr = 3;
-    const cW = 512, cH = 512;
-    const cvs = document.createElement('canvas');
-    cvs.width = cW * dpr; cvs.height = cH * dpr;
-    const ctx = cvs.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, cW, cH);
-    
-    const lumeCol = '#' + new THREE.Color(c.lume).getHexString();
-    ctx.fillStyle = lumeCol;
-    ctx.globalAlpha = 0.5;
-    ctx.font = "400 14px Inter, system-ui, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
     const text = 'AGIFTOFTIME.APP';
-    const arcR = cW * 0.42; // arc radius
-    const centerX = cW / 2;
-    const centerY = cH * 0.95; // center below text — arc curves upward (smile shape)
-    // Spread letters along top arc (from center's perspective)
-    const totalAngle = 0.65; // radians of arc span
-    // Arc goes from right to left at the top (3π/2 center = 12 o'clock from center below)
-    const startAngle = -Math.PI / 2 - totalAngle / 2;
+    const lumeCol = new THREE.Color(c.lume);
+    // Arc center = subdial center (0, -R*0.5), arc radius slightly larger than subdial
+    const arcCX = 0, arcCY = -R * 0.5;
+    const arcRadius = R * 0.45; // just outside subdial edge (subdial R = 0.38)
+    const totalAngle = 0.75; // radians
+    // Arc centered at bottom (270° from arc center = 6 o'clock direction)
+    const midAngle = Math.PI / 2; // pointing down from arc center
+    const startAngle = midAngle - totalAngle / 2;
     
     for (let i = 0; i < text.length; i++) {
       const t = text.length === 1 ? 0.5 : i / (text.length - 1);
       const ang = startAngle + t * totalAngle;
-      const x = centerX + Math.cos(ang) * arcR;
-      const y = centerY + Math.sin(ang) * arcR;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(ang + Math.PI / 2); // orient letter tangent to arc, upright
-      // Add letter spacing
-      ctx.letterSpacing = '3px';
-      ctx.fillText(text[i], 0, 0);
-      ctx.restore();
+      // Position on arc (ang=0 is right, π/2 is down)
+      const wx = arcCX + Math.cos(ang) * arcRadius;
+      const wy = arcCY - Math.sin(ang) * arcRadius; // flip Y for 3D coords
+      
+      // Tiny canvas per letter
+      const dpr = 3;
+      const cS = 64;
+      const cvs = document.createElement('canvas');
+      cvs.width = cS * dpr; cvs.height = cS * dpr;
+      const ctx = cvs.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#' + lumeCol.getHexString();
+      ctx.globalAlpha = 0.45;
+      ctx.font = "400 28px Inter, system-ui, sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text[i], cS / 2, cS / 2);
+      
+      const tex = new THREE.CanvasTexture(cvs);
+      const sz = R * 0.06;
+      const geo = new THREE.PlaneGeometry(sz, sz);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(wx, wy, 4);
+      // Rotate letter to follow arc tangent
+      mesh.rotation.z = -(ang - Math.PI / 2);
+      clockGroup.add(mesh);
+      brandMeshes.push(mesh);
+      mesh.userData.brandLetter = { cvs, ctx, ch: text[i], cS, dpr };
+      brandLumeMats.push(mat);
     }
-    
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.anisotropy = 4;
-    const planeS = R * 1.8;
-    const geo = new THREE.PlaneGeometry(planeS, planeS);
-    const mat = new THREE.MeshBasicMaterial({
-      map: tex, transparent: true, depthWrite: false,
-      side: THREE.FrontSide
-    });
-    mat._isBrandTex = true;
-    const mesh = new THREE.Mesh(geo, mat);
-    // Position: below 6 o'clock minute markers, near dial edge
-    mesh.position.set(0, -R * 0.52, 4);
-    clockGroup.add(mesh);
-    brandMeshes.push(mesh);
-    mesh.userData.brandCanvas = { cvs, ctx, text, fontSpec: "400 14px Inter, system-ui, sans-serif", alpha: 0.5, cW, cH, dpr, arched: true };
-    brandLumeMats.push(mat);
   }
 }
 
@@ -2090,26 +2081,30 @@ function animate(){
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     if(bd.arched) {
-      // Redraw arched text
-      const arcR = cW * 0.42;
-      const centerX = cW / 2;
-      const centerY = cH * 0.95;
-      const totalAngle = 0.65;
-      const startAngle = -Math.PI / 2 - totalAngle / 2;
-      for (let i = 0; i < text.length; i++) {
-        const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-        const ang = startAngle + t * totalAngle;
-        const x = centerX + Math.cos(ang) * arcR;
-        const y = centerY + Math.sin(ang) * arcR;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(ang + Math.PI / 2);
-        ctx.fillText(text[i], 0, 0);
-        ctx.restore();
-      }
+      // Legacy arched — no longer used
+    } else if(false) {
+      // placeholder
     } else {
       ctx.fillText(text, cW / 2, cH / 2);
     }
+    mesh.material.map.needsUpdate = true;
+  });
+  // Brand letter sprites (arched AGIFTOFTIME.APP)
+  brandMeshes.forEach(mesh=>{
+    const bl = mesh.userData.brandLetter;
+    if(!bl) return;
+    const {cvs, ctx, ch, cS, dpr} = bl;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cS, cS);
+    const dayCol = new THREE.Color(DIALS[currentDial].lume);
+    const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
+    const blended = dayCol.lerp(nightCol, modeBlend);
+    ctx.fillStyle = '#' + blended.getHexString();
+    ctx.globalAlpha = 0.45;
+    ctx.font = "400 28px Inter, system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, cS / 2, cS / 2);
     mesh.material.map.needsUpdate = true;
   });
   

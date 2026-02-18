@@ -890,7 +890,7 @@ function buildNumerals() {
     // Layer 1: metal base — clone lume geo, scale mesh 110%
     const baseGeo = geo.clone();
     const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
-    baseMesh.position.set(nx, ny, 3.5);
+    baseMesh.position.set(nx, ny, 3.3); // slightly behind lume to prevent z-fighting
     baseMesh.scale.setScalar(1.1);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);

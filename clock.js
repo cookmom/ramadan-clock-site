@@ -1027,74 +1027,57 @@ function buildBrandText() {
     brandLumeMats.push(mat);
   }
 
-  // Extruded "AGIFTOFTIME.APP" — arched below 6 o'clock (like NOMOS "MADE IN GERMANY")
+  // "AGIFTOFTIME.APP" — canvas-rendered arc text below 6 o'clock (like NOMOS "MADE IN GERMANY")
   {
-    const text = 'AGIFTOFTIME.APP';
-    const arcRadius = R * 1.02;
-    const letterH = R * 0.04; // target letter height
-    const midAngle = -Math.PI / 2;
+    const text = 'A G I F T O F T I M E . A P P';
+    const dpr = 3;
+    const cW = 512, cH = 512;
+    const cvs = document.createElement('canvas');
+    cvs.width = cW * dpr; cvs.height = cH * dpr;
+    const ctx = cvs.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cW, cH);
     
-    // Measure each letter width for proportional spacing
-    const widths = text.split('').map(ch => {
-      const s = _brandFont.generateShapes(ch, letterH);
-      if(!s.length) return letterH * 0.3; // space/dot fallback
-      const g = new THREE.ShapeGeometry(s); g.computeBoundingBox();
-      const w = g.boundingBox.max.x - g.boundingBox.min.x;
-      g.dispose();
-      return w;
-    });
-    const gap = letterH * 0.15; // inter-letter gap
-    const totalArc = widths.reduce((a,w) => a + w, 0) + gap * (text.length - 1);
-    const totalAngle = totalArc / arcRadius; // arc length → angle
-    const startAngle = midAngle - totalAngle / 2;
+    const lumeCol = '#' + new THREE.Color(mk).getHexString();
+    ctx.fillStyle = lumeCol;
+    ctx.globalAlpha = 0.5;
+    ctx.font = "600 16px 'Inter', 'Helvetica Neue', system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.letterSpacing = '3px';
     
-    // Place each letter at cumulative position
-    let cumArc = 0;
-    for (let i = 0; i < text.length; i++) {
-      const letterCenter = cumArc + widths[i] / 2;
-      const ang = startAngle + letterCenter / arcRadius;
-      cumArc += widths[i] + gap;
-      const wx = Math.cos(ang) * arcRadius;
-      const wy = Math.sin(ang) * arcRadius;
-
-      // Extruded 3D letter
-      const shapes = _brandFont.generateShapes(text[i], letterH);
-      if (!shapes.length) continue;
-      const geo = new THREE.ExtrudeGeometry(shapes, {
-        depth: 1.2, bevelEnabled: true,
-        bevelThickness: 0.1, bevelSize: 0.05, bevelSegments: 2,
-      });
-      geo.computeBoundingBox();
-      const bb = geo.boundingBox;
-      geo.translate(-(bb.max.x+bb.min.x)/2, -(bb.max.y+bb.min.y)/2, 0);
-
-      // Two-layer: base (complementary) + lume fill
-      const baseMatl = new THREE.MeshPhysicalMaterial({
-        color: mkBase, roughness: 0.45, metalness: 0.0,
-        emissive: mk, emissiveIntensity: 0,
-      });
-      baseMatl.envMapIntensity = 0.3;
-      const baseMesh = new THREE.Mesh(geo, baseMatl);
-      baseMesh.position.set(wx, wy, 0.3); // base BEHIND
-      baseMesh.rotation.z = ang + Math.PI / 2;
-      baseMesh.scale.setScalar(1.2); // 20% border
-      clockGroup.add(baseMesh);
-      brandMeshes.push(baseMesh);
-      brandLumeMats.push(baseMatl);
-
-      const lumeMatl = new THREE.MeshPhysicalMaterial({
-        color: mk, roughness: 0.08, metalness: 0.0,
-        clearcoat: 1.0, clearcoatRoughness: 0.03,
-        emissive: mk, emissiveIntensity: 0,
-      });
-      lumeMatl.envMapIntensity = 0.8;
-      const lumeMesh = new THREE.Mesh(geo, lumeMatl);
-      lumeMesh.position.set(wx, wy, 0.3 + 1.2 + 0.3); // above base extrusion
-      lumeMesh.rotation.z = ang + Math.PI / 2;
-      clockGroup.add(lumeMesh);
-      brandMeshes.push(lumeMesh);
-      brandLumeMats.push(lumeMatl);
+    // Draw text along a circular arc
+    const arcR = 200; // canvas-space arc radius
+    const cx = cW / 2, cy = cH / 2;
+    const plainText = 'AGIFTOFTIME.APP';
+    const charAngle = 0.038; // radians per character
+    const startAng = -Math.PI / 2 - (plainText.length - 1) * charAngle / 2;
+    
+    for (let i = 0; i < plainText.length; i++) {
+      const ang = startAng + i * charAngle;
+      const x = cx + Math.cos(ang) * arcR;
+      const y = cy + Math.sin(ang) * arcR;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang + Math.PI / 2);
+      ctx.fillText(plainText[i], 0, 0);
+      ctx.restore();
     }
+    
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.anisotropy = 4;
+    const pw = R * 1.6;
+    const geo = new THREE.PlaneGeometry(pw, pw);
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
+    });
+    mat._isBrandTex = true;
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(0, -R * 0.48, 4); // below center, offset toward 6 o'clock
+    clockGroup.add(mesh);
+    brandMeshes.push(mesh);
+    mesh.userData.brandCanvas = { cvs, ctx, text: plainText, fontSpec: "600 16px Inter", alpha: 0.5, cW, cH, dpr, isArc: true };
+    brandLumeMats.push(mat);
   }
 }
 

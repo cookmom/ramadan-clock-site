@@ -815,12 +815,19 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Single layer — lume material only, no metal base (too small for two-layer to read clean)
+        // Layer 1: wider lume base plate
+        const baseGeo = new THREE.BoxGeometry(mW*1.6, mH*1.05, depth*0.5);
+        const baseMesh = new THREE.Mesh(baseGeo, lumeMat(c.lume));
+        baseMesh.position.set(px, py, depth*0.3);
+        baseMesh.rotation.z = ang + Math.PI/2;
+        baseMesh.castShadow = true;
+        clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
+        lumeMeshes.push(baseMesh);
+        // Layer 2: lume on top
         const lumeGeo = new THREE.BoxGeometry(mW, mH, depth*0.6);
         const lumeMesh = new THREE.Mesh(lumeGeo, lumeMat(c.lume));
-        lumeMesh.position.set(px, py, depth*0.5);
+        lumeMesh.position.set(px, py, depth*0.5 + 0.5);
         lumeMesh.rotation.z = ang + Math.PI/2;
-        lumeMesh.castShadow = true;
         clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
         lumeMeshes.push(lumeMesh);
       }
@@ -881,10 +888,20 @@ function buildNumerals() {
     const gcy = (gbb.max.y + gbb.min.y) / 2;
     geo.translate(-gcx, -gcy, 0);
     
-    // Single layer — lume only (metal base caused z-fighting at all angles)
+    // Layer 1: lume base — clone, scale 110% from center, sits behind
+    const baseGeo = geo.clone();
+    const baseFaceMat = lumeMat(c.lume);
+    const baseMesh = new THREE.Mesh(baseGeo, baseFaceMat);
+    baseMesh.position.set(nx, ny, 3.3);
+    baseMesh.scale.setScalar(1.1);
+    baseMesh.castShadow = true;
+    clockGroup.add(baseMesh);
+    numeralSprites.push(baseMesh);
+    numeralMats.push(baseFaceMat);
+    
+    // Layer 2: lume on top
     const mesh = new THREE.Mesh(geo, faceMat);
     mesh.position.set(nx, ny, 3.5);
-    mesh.castShadow = true;
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(faceMat);

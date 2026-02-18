@@ -150,10 +150,10 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// CSS grain overlay — sandblast texture tiled across FULL page (zero GPU cost)
-if(!CONTAINED) {
+// CSS grain overlay — texture tiled across full page + clock (zero GPU cost)
+{
   const _grainDiv = document.createElement('div');
-  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background-image:url(bauhaus-grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.12;mix-blend-mode:multiply;';
+  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.4;mix-blend-mode:multiply;';
   document.body.appendChild(_grainDiv);
 }
 

@@ -1638,6 +1638,8 @@ function openClockFullscreen() {
   // Stop tour/idle — pause all landing page animations in fullscreen
   stopDialCycle();
   if(window._stopTour) window._stopTour();
+  // Reset to default dial (slate) for consistent look
+  if(window.switchDial) window.switchDial(6);
 
   // Move canvas into fullscreen overlay
   overlay.appendChild(canvas);
@@ -1765,7 +1767,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=261';
+_cs.type='module';_cs.src='clock.js?v=262';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

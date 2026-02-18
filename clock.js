@@ -2317,7 +2317,17 @@ function animate(){
       const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;
       if(!CONTAINED) { document.documentElement.style.backgroundColor = document.body.style.backgroundColor = _bgHex; }
       if(isFullscreen) {
-        const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=_bgHex;
+        const ov=document.getElementById('clockFullscreen');
+        if(ov) {
+          ov.style.background=_bgHex;
+          // Adjust grain overlay for light vs dark backgrounds
+          // soft-light loses contrast on light bgs — boost opacity or switch blend
+          const c=new THREE.Color(_bgHex);
+          const lum=c.r*0.299+c.g*0.587+c.b*0.114;
+          if(lum>0.65) { ov.style.setProperty('--grain-blend','multiply'); ov.style.setProperty('--grain-opacity','0.15'); }
+          else if(lum<0.15) { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.6'); }
+          else { ov.style.setProperty('--grain-blend','soft-light'); ov.style.setProperty('--grain-opacity','0.4'); }
+        }
       }
     }
   }

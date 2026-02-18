@@ -3,29 +3,34 @@
 <title>Grain Texture Comparison</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#1a1a1a;color:#fff;font-family:system-ui;padding:20px}
-h1{text-align:center;margin-bottom:8px;font-weight:300;font-size:1.4em}
-p.sub{text-align:center;opacity:0.5;margin-bottom:24px;font-size:0.85em}
-.controls{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-.controls button{padding:8px 16px;border:1px solid #555;background:#222;color:#fff;border-radius:20px;cursor:pointer;font-size:0.8em}
+body{background:#1a1a1a;color:#fff;font-family:system-ui;padding:16px}
+h1{text-align:center;margin-bottom:4px;font-weight:300;font-size:1.3em}
+p.sub{text-align:center;opacity:0.5;margin-bottom:16px;font-size:0.8em}
+.controls{display:flex;justify-content:center;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.controls button{padding:6px 14px;border:1px solid #555;background:#222;color:#fff;border-radius:20px;cursor:pointer;font-size:0.75em}
 .controls button.active{background:#fff;color:#000;border-color:#fff}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.card{border-radius:12px;overflow:hidden;border:1px solid #333}
-.card .preview{position:relative;height:280px;display:flex;align-items:center;justify-content:center}
+h2.section{color:#888;font-size:0.85em;font-weight:400;text-transform:uppercase;letter-spacing:0.1em;margin:20px 0 10px;padding-left:8px;border-left:3px solid #444}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:12px}
+.card{border-radius:10px;overflow:hidden;border:1px solid #333}
+.card.ref{border-color:#c4a265}
+.card .preview{position:relative;height:240px;display:flex;align-items:center;justify-content:center}
 .card .preview .grain{position:absolute;inset:0;mix-blend-mode:plus-lighter;opacity:0.2;background-repeat:repeat}
-.card .preview .circle{width:200px;height:200px;border-radius:50%;position:relative;z-index:1;box-shadow:0 2px 20px rgba(0,0,0,0.3)}
+.card .preview .circle{width:170px;height:170px;border-radius:50%;position:relative;z-index:1;box-shadow:0 2px 16px rgba(0,0,0,0.3)}
 .card .preview .circle .cg{position:absolute;inset:0;border-radius:50%;overflow:hidden}
-.card .preview .circle .cg::after{content:'';position:absolute;inset:0;background-repeat:repeat;mix-blend-mode:plus-lighter;opacity:0.2}
-.card .info{padding:12px;background:#111;font-size:0.8em}
-.card .info .name{font-weight:600;margin-bottom:4px}
-.card .info .meta{opacity:0.5}
-.badge{display:inline-block;background:#333;padding:2px 8px;border-radius:10px;font-size:0.7em;margin-left:6px}
+.card .preview .circle .cg>div{position:absolute;inset:0;background-repeat:repeat;mix-blend-mode:plus-lighter;opacity:0.2}
+.card .info{padding:10px;background:#111;font-size:0.75em}
+.card .info .name{font-weight:600;margin-bottom:2px}
+.card .info .meta{opacity:0.5;line-height:1.4}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:0.65em;margin-left:4px;font-weight:400}
+.badge.ref{background:#c4a265;color:#000}
+.badge.gen{background:#4a7;color:#000}
+.badge.free{background:#47a;color:#fff}
 </style>
 </head><body>
-<h1>Grain Texture Comparison</h1>
-<p class="sub">All textures from Transparent Textures (free, CC0). Tiled with mix-blend-mode: plus-lighter, opacity: 0.2</p>
+<h1>Grain Texture Comparison — A Gift of Time</h1>
+<p class="sub">mix-blend-mode: plus-lighter · opacity: 0.2 · tiled at 75% native size</p>
 <div class="controls" id="colorBtns"></div>
-<div class="grid" id="grid"></div>
+<div id="content"></div>
 <script>
 const colors = [
   {name:'Day (Warm)',bg:'#e8e0d4',dial:'#ddd5c8'},
@@ -35,31 +40,39 @@ const colors = [
   {name:'White',bg:'#f0ede8',dial:'#e8e5e0'},
   {name:'Dark',bg:'#2a2a2e',dial:'#222226'},
 ];
-const textures = [
-  {file:'noisy.png',name:'Noisy',size:'300×300',kb:'37KB',note:'Stipple pinholes — sandblasted metal feel'},
-  {file:'smooth-wall-light.png',name:'Smooth Wall Light',size:'358×358',kb:'74KB',note:'Woven cross-hatch with mottling'},
-  {file:'cardboard-flat.png',name:'Cardboard Flat',size:'256×256',kb:'32KB',note:'Paper fiber — fine and uniform'},
-  {file:'white-texture.png',name:'White Texture',size:'102×102',kb:'4KB',note:'Ultra-fine speckle — eggshell/stucco'},
-  {file:'handmade-paper.png',name:'Handmade Paper',size:'100×100',kb:'6KB',note:'Nearly invisible fine plaster'},
-  {file:'subtle-grey.png',name:'Subtle Grey',size:'397×322',kb:'42KB',note:'Micro-grid mosaic'},
-  {file:'tactile-noise-light.png',name:'Tactile Noise Light',size:'48×48',kb:'1KB',note:'Tiny tile — sparse dots'},
-  {file:'low-contrast-linen.png',name:'Low Contrast Linen',size:'256×256',kb:'23KB',note:'Soft fabric weave'},
-  {file:'natural-paper.png',name:'Natural Paper',size:'523×384',kb:'99KB',note:'Larger paper texture'},
-  {file:'groovepaper.png',name:'Groovepaper',size:'300×300',kb:'35KB',note:'Textured paper — visible grain'},
-  {file:'noise-lines.png',name:'Noise Lines',size:'60×59',kb:'2KB',note:'Tiny crosshatch'},
-  {file:'white-paperboard.png',name:'White Paperboard',size:'256×252',kb:'29KB',note:'Very faint — near invisible'},
+
+const sections = [
+  {title:'Reference', textures:[
+    {file:'grain-fine.png',name:'Bauhaus (current)',size:'200×200',kb:'5.7KB',note:'Their vermiculate grain tile — our current production texture',badge:'ref'},
+  ]},
+  {title:'Custom Generated — Matte Watch Dial', textures:[
+    {file:'gen-turing-256.png',name:'Turing Vermiculate',size:'256×256',kb:'~8KB',note:'Reaction-diffusion — organic worm-like grain, closest to Bauhaus ref',badge:'gen'},
+    {file:'gen-stipple-200.png',name:'Stipple (Bead-Blasted)',size:'200×200',kb:'~3KB',note:'Sparse random dots — sandblasted/bead-blasted metal finish',badge:'gen'},
+    {file:'gen-sandblast-200.png',name:'Sandblasted (Soft)',size:'200×200',kb:'~5KB',note:'Gaussian noise — soft organic sandblasted surface',badge:'gen'},
+    {file:'gen-vermiculate-200.png',name:'Vermiculate (Soft)',size:'200×200',kb:'~4KB',note:'Blurred noise — simplified vermiculate, softer than Turing',badge:'gen'},
+    {file:'gen-eggshell-200.png',name:'Eggshell (Micro)',size:'200×200',kb:'~2KB',note:'Per-pixel uniform noise — ultra-fine eggshell/matte finish',badge:'gen'},
+  ]},
+  {title:'Transparent Textures (CC0 — Free)', textures:[
+    {file:'noisy.png',name:'Noisy',size:'300×300',kb:'37KB',note:'Fine stipple pinholes — closest free match to sandblasted metal',badge:'free'},
+    {file:'white-texture.png',name:'White Texture',size:'102×102',kb:'4KB',note:'Ultra-fine speckle — eggshell/stucco, tiny file',badge:'free'},
+    {file:'handmade-paper.png',name:'Handmade Paper',size:'100×100',kb:'6KB',note:'Fine plaster — nearly invisible, very delicate',badge:'free'},
+    {file:'cardboard-flat.png',name:'Cardboard Flat',size:'256×256',kb:'32KB',note:'Paper fiber — fine and uniform',badge:'free'},
+    {file:'smooth-wall-light.png',name:'Smooth Wall Light',size:'358×358',kb:'74KB',note:'Woven cross-hatch with subtle mottling',badge:'free'},
+    {file:'tactile-noise-light.png',name:'Tactile Noise Light',size:'48×48',kb:'1KB',note:'Tiny tile — sparse dots, minimal file size',badge:'free'},
+    {file:'subtle-grey.png',name:'Subtle Grey',size:'397×322',kb:'42KB',note:'Micro-grid mosaic pattern',badge:'free'},
+    {file:'low-contrast-linen.png',name:'Low Contrast Linen',size:'256×256',kb:'23KB',note:'Soft fabric weave texture',badge:'free'},
+    {file:'groovepaper.png',name:'Groovepaper',size:'300×300',kb:'35KB',note:'Textured paper — more visible grain',badge:'free'},
+    {file:'noise-lines.png',name:'Noise Lines',size:'60×59',kb:'2KB',note:'Tiny crosshatch tile',badge:'free'},
+  ]},
 ];
-// Current Bauhaus reference
-textures.unshift({file:'grain-fine.png',name:'Current (Bauhaus ref)',size:'198×198',kb:'5.7KB',note:'REFERENCE — current production texture'});
 
 let currentColor = colors[0];
 const btnBox = document.getElementById('colorBtns');
-const grid = document.getElementById('grid');
+const content = document.getElementById('content');
 
 colors.forEach((c,i) => {
   const b = document.createElement('button');
   b.textContent = c.name;
-  b.style.borderColor = c.bg;
   if(i===0) b.classList.add('active');
   b.onclick = () => {
     currentColor = c;
@@ -71,23 +84,32 @@ colors.forEach((c,i) => {
 });
 
 function render(){
-  grid.innerHTML = '';
-  textures.forEach(t => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const isRef = t.name.includes('Current');
-    card.innerHTML = `
-      <div class="preview" style="background:${currentColor.bg}">
-        <div class="grain" style="background-image:url('${t.file}');background-size:${t.size.split('×').map(v=>parseInt(v)*0.75+'px').join(' ')}"></div>
-        <div class="circle" style="background:${currentColor.dial}">
-          <div class="cg"><div style="position:absolute;inset:0;background-image:url('${t.file}');background-repeat:repeat;background-size:${t.size.split('×').map(v=>parseInt(v)*0.75+'px').join(' ')};mix-blend-mode:plus-lighter;opacity:0.2"></div></div>
+  content.innerHTML = '';
+  sections.forEach(sec => {
+    const h = document.createElement('h2');
+    h.className = 'section';
+    h.textContent = sec.title;
+    content.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    sec.textures.forEach(t => {
+      const sz = t.size.split('×').map(v => parseInt(v)*0.75+'px').join(' ');
+      const card = document.createElement('div');
+      card.className = 'card' + (t.badge==='ref' ? ' ref' : '');
+      card.innerHTML = `
+        <div class="preview" style="background:${currentColor.bg}">
+          <div class="grain" style="background-image:url('${t.file}');background-size:${sz}"></div>
+          <div class="circle" style="background:${currentColor.dial}">
+            <div class="cg"><div style="background-image:url('${t.file}');background-size:${sz}"></div></div>
+          </div>
         </div>
-      </div>
-      <div class="info">
-        <div class="name">${t.name}${isRef?'<span class="badge" style="background:#c4a265;color:#000">REF</span>':''}</div>
-        <div class="meta">${t.size} · ${t.kb} — ${t.note}</div>
-      </div>`;
-    grid.appendChild(card);
+        <div class="info">
+          <div class="name">${t.name}<span class="badge ${t.badge}">${t.badge==='ref'?'REF':t.badge==='gen'?'OURS':'FREE'}</span></div>
+          <div class="meta">${t.size} · ${t.kb} — ${t.note}</div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
   });
 }
 render();

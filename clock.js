@@ -2210,12 +2210,10 @@ function animate(){
   bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
   // Dim scene lights for night — let lume own the scene
-  ambLight.intensity = 0.06 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 2.5 * (1 - modeBlend * 0.85);
-  stripLight.intensity = 4.0 * (1 - modeBlend * 0.8);
-  specPoint.intensity = 6 * (1 - modeBlend * 0.7);
-  counterSpec.intensity = 1.5 * (1 - modeBlend * 0.7);
-  subSpot.intensity = 20 * (1 - modeBlend * 0.5);
+  ambLight.intensity = 0.25 * (1 - modeBlend * 0.85);
+  keyLight.intensity = 3.0 * (1 - modeBlend * 0.85);
+  fillLight.intensity = 1.0 * (1 - modeBlend * 0.8);
+  topLight.intensity = 1.5 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
   renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
@@ -2301,15 +2299,11 @@ function animate(){
     scene.environmentRotation.y = 2.8 + gx * 0.6;  // base offset + tilt sweep
     scene.environmentRotation.x = 0.1 + gy * 0.3;
   }
-  // Spec point follows tilt — the main visible highlight on hands
-  specPoint.position.x = 30 + gx * 120;  // wider travel
-  specPoint.position.y = 60 + gy * 90;
-  // Subdial spot follows tilt
-  subSpot.position.x = 10 + gx * 70;
-  subSpot.position.y = -R*0.5 + 30 + gy * 50;
-  // Counter spec — opposite dance for depth
-  counterSpec.position.x = -40 - gx * 90;
-  counterSpec.position.y = -30 - gy * 50;
+  // Lights follow tilt subtly for material response
+  keyLight.position.x = -60 + gx * 40;
+  keyLight.position.y = 120 + gy * 30;
+  fillLight.position.x = 80 - gx * 30;
+  fillLight.position.y = -40 - gy * 20;
   
   updateHands();
   updateFlap();

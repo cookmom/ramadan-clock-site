@@ -150,51 +150,26 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// Grain: per-section overlays in HTML, dial grain composited INTO dial albedo
-// This means grain renders UNDER hands/markers/crystal — not over them
+// ── Grain overlay — CSS div on top of the 3D canvas (same look as v158) ──
+// Pure CSS: sibling of the canvas, pointer-events:none
+// Covers the entire 3D render (dial + hands + markers) but NOT the HTML sections
+// Moves with the canvas between landing page (#dialHero) and fullscreen (#clockFullscreen)
+const _clockGrainOverlay = document.createElement('div');
+_clockGrainOverlay.id = 'clockGrain';
+_clockGrainOverlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.35;mix-blend-mode:multiply;';
+{
+  const parent = CONTAINED ? CONTAINER : document.body;
+  if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+  parent.appendChild(_clockGrainOverlay);
+}
+// Expose for index.html fullscreen canvas moves
+window._clockGrainOverlay = _clockGrainOverlay;
 
-const _bauhausGrainImg = new Image();
-_bauhausGrainImg.src = 'bauhaus-grain.png';
-let _bauhausGrainReady = false;
-_bauhausGrainImg.onload = () => {
-  _bauhausGrainReady = true;
-  // Rebuild dial to apply grain once image is ready
-  if (typeof buildAll === 'function') try { buildAll(); } catch(e) {}
-};
-
-// Also load as Three.js texture for roughnessMap
+// Bauhaus texture for dial roughnessMap (subtle specular variation)
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(4, 4);
 });
-
-// Composite dial color + grain into a single albedo map
-// Bakes Bauhaus vermicular texture into the dial surface
-function makeDialGrainMap(dialColor, size = 512) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
-  // Fill with dial base color
-  const col = new THREE.Color(dialColor);
-  ctx.fillStyle = '#' + col.getHexString();
-  ctx.fillRect(0, 0, size, size);
-  // Composite grain — subtle texture baked once per dial change, zero per-frame cost
-  if (_bauhausGrainReady) {
-    ctx.globalAlpha = 0.08; // very subtle — texture not color shift
-    ctx.globalCompositeOperation = 'soft-light';
-    const pat = ctx.createPattern(_bauhausGrainImg, 'repeat');
-    ctx.fillStyle = pat;
-    ctx.fillRect(0, 0, size, size);
-    ctx.globalAlpha = 1.0;
-    ctx.globalCompositeOperation = 'source-over';
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-// No per-frame bg grain — performance matters. Dial grain is baked once per dial change.
-// Fullscreen background uses solid scene.background color (no grain overhead).
 
 const scene = new THREE.Scene();
 

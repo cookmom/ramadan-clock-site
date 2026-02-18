@@ -1,5 +1,5 @@
 // A Gift of Time — Service Worker
-const CACHE_NAME = 'rc-v168';
+const CACHE_NAME = 'rc-v169';
 const ASSETS = [
   '/',
   '/index.html',

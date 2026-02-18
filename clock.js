@@ -416,10 +416,10 @@ function dialMat(color) {
     qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0.2, clearcoatRoughness:0.2 },
   };
   const s = special[cd] || { roughness:0.92, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8, clearcoat:0, clearcoatRoughness:0 };
-  // Dial = PBR with NOMOS sandblasted finish + Bauhaus grain baked into albedo
-  const grainMap = makeDialGrainMap(color, 512, 0.15);
+  // Dial = PBR with NOMOS sandblasted finish
+  // Grain via roughnessMap only — subtle specular variation, no albedo darkening
   const m = new THREE.MeshPhysicalMaterial({
-    map: grainMap,           // grain composited into dial color — renders UNDER hands/markers
+    color,
     roughness: s.roughness,
     metalness: s.metalness,
     clearcoat: s.clearcoat,

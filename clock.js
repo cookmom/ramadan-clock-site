@@ -165,7 +165,7 @@ const scene = new THREE.Scene();
 // ── Orthographic camera — true top-down (no perspective distortion on markers)
 const aspect = W/H;
 const camZ = 280;
-const frustumH = 105; // world units visible vertically (R=80, case ~90)
+const frustumH = 82; // world units visible vertically — dial fills the view
 const frustumW = frustumH * aspect;
 const cam = new THREE.OrthographicCamera(-frustumW, frustumW, frustumH, -frustumH, 1, 2000);
 cam.position.set(0, 0, camZ);
@@ -2066,7 +2066,7 @@ function onResize(){
   H=(CONTAINED && !isFullscreen)?CONTAINER.clientHeight:window.innerHeight;
   renderer.setSize(W,H);
   const a=W/H;
-  const fH = 105;
+  const fH = 82;
   const fW = fH * a;
   cam.left = -fW; cam.right = fW; cam.top = fH; cam.bottom = -fH;
   cam.position.z = 280;

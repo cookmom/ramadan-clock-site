@@ -862,13 +862,14 @@ function buildMarkers() {
         baseMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Lume fill — sits INSIDE the channel, recessed
+        // Lume fill — sits INSIDE the channel, recessed, glossy lacquer finish
         const lumeGeo = new THREE.BoxGeometry(cW, cH, depth*0.5);
         const lumeMatl = new THREE.MeshPhysicalMaterial({
-          color: mk, roughness: 0.35, metalness: 0.0,
+          color: mk, roughness: 0.08, metalness: 0.0,
+          clearcoat: 1.0, clearcoatRoughness: 0.03,
           emissive: mk, emissiveIntensity: 0,
         });
-        lumeMatl.envMapIntensity = 0.3;
+        lumeMatl.envMapIntensity = 0.8;
         const lumeMesh = new THREE.Mesh(lumeGeo, lumeMatl);
         lumeMesh.position.set(px, py, 0.5); // inside channel, below base top surface
         lumeMesh.rotation.z = ang + Math.PI/2;

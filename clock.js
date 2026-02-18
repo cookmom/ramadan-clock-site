@@ -169,8 +169,8 @@ const scene = new THREE.Scene();
 // Matches NOMOS reference: near top-down with slight tilt toward 12 o'clock
 // Medium telephoto FOV minimizes barrel distortion (like 100mm lens)
 const aspect = W/H;
-const camFOV = 18; // narrow FOV = telephoto = minimal distortion
-const camDist = 320;
+const camFOV = 22; // narrow FOV = telephoto = minimal distortion
+const camDist = 380;
 const camTiltDeg = 7; // degrees off perpendicular — subtle, just enough for reflections
 const camTiltRad = camTiltDeg * Math.PI / 180;
 const cam = new THREE.PerspectiveCamera(camFOV, aspect, 1, 2000);

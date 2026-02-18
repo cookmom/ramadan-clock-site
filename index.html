@@ -1275,6 +1275,11 @@ function fsSwitchDial(name) {
   if(idx >= 0) { dialIdx = idx; updateDial(); }
   document.querySelectorAll('#fsDialBar .dial-dot').forEach(d => d.classList.toggle('active', d.dataset.dial === name));
   document.getElementById('fsDialSurah').textContent = FS_DIAL_NAMES_MAP[name] || '';
+  // Update listen button — if playing a different surah, show "Listen to this Surah" so user knows tap will switch
+  const btn=document.getElementById('fsListenBtn');
+  if(btn && fsSurahAudio && !fsSurahAudio.paused && fsSurahNum !== FS_SURAH_MAP[name]) {
+    btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah';
+  }
 }
 function fsPrevDial() {
   const names = FS_DIALS_DATA.map(d=>d.name);
@@ -1505,25 +1510,35 @@ document.getElementById('fsModeToggle').addEventListener('click', () => {
 // Listen button in fullscreen
 const FS_PLAY_SVG='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><polygon points="5,3 19,12 5,21"/></svg>';
 const FS_PAUSE_SVG='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+let fsSurahNum = null; // track which surah number is currently playing
 function fsPlaySurah() {
   const cur = DIALS[dialIdx];
   const num = FS_SURAH_MAP[cur];
   if(!num) return;
   const btn=document.getElementById('fsListenBtn');
-  if(fsSurahAudio && !fsSurahAudio.paused) { fsSurahAudio.pause(); fsSurahAudio = null; btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah'; return; }
+  const fsClock=document.getElementById('clockFullscreen');
+  // If same surah is playing, toggle pause
+  if(fsSurahAudio && !fsSurahAudio.paused && fsSurahNum === num) {
+    fsSurahAudio.pause(); fsSurahAudio = null; fsSurahNum = null;
+    btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah';
+    if(fsClock) fsClock.classList.remove('fs-chrome-hidden');
+    return;
+  }
+  // Different surah or nothing playing — stop old, start new
+  if(fsSurahAudio) { fsSurahAudio.pause(); fsSurahAudio = null; }
+  fsSurahNum = num;
   fsSurahAudio = new Audio(`https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${num}.mp3`);
   fsSurahAudio.play().catch(()=>{});
   btn.innerHTML=FS_PAUSE_SVG+'Playing — al-Afasy';
   // Hide chrome for immersive listening — show again when ended or tapped
-  const fsClock=document.getElementById('clockFullscreen');
   if(fsClock) fsClock.classList.add('fs-chrome-hidden');
-  fsSurahAudio.onended=()=>{fsSurahAudio=null;btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah'; if(fsClock) fsClock.classList.remove('fs-chrome-hidden');};
+  fsSurahAudio.onended=()=>{fsSurahAudio=null;fsSurahNum=null;btn.innerHTML=FS_PLAY_SVG+'Listen to this Surah'; if(fsClock) fsClock.classList.remove('fs-chrome-hidden');};
 }
 
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=121';
+_cs.type='module';_cs.src='clock.js?v=122';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

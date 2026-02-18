@@ -990,10 +990,11 @@ function buildBrandText() {
     const text = 'AGIFTOFTIME.APP';
     const arcR = cW * 0.42; // arc radius
     const centerX = cW / 2;
-    const centerY = cW * 0.08; // center above canvas — arc curves downward
-    // Spread letters along bottom arc
+    const centerY = cH * 0.95; // center below text — arc curves upward (smile shape)
+    // Spread letters along top arc (from center's perspective)
     const totalAngle = 0.65; // radians of arc span
-    const startAngle = Math.PI / 2 - totalAngle / 2; // centered at bottom (π/2)
+    // Arc goes from right to left at the top (3π/2 center = 12 o'clock from center below)
+    const startAngle = -Math.PI / 2 - totalAngle / 2;
     
     for (let i = 0; i < text.length; i++) {
       const t = text.length === 1 ? 0.5 : i / (text.length - 1);
@@ -1002,7 +1003,7 @@ function buildBrandText() {
       const y = centerY + Math.sin(ang) * arcR;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(ang - Math.PI / 2); // orient letter tangent to arc
+      ctx.rotate(ang + Math.PI / 2); // orient letter tangent to arc, upright
       // Add letter spacing
       ctx.letterSpacing = '3px';
       ctx.fillText(text[i], 0, 0);
@@ -1019,8 +1020,8 @@ function buildBrandText() {
     });
     mat._isBrandTex = true;
     const mesh = new THREE.Mesh(geo, mat);
-    // Position: below 6 o'clock, just inside minute marker ring
-    mesh.position.set(0, -R * 0.62, 4);
+    // Position: below 6 o'clock minute markers, near dial edge
+    mesh.position.set(0, -R * 0.52, 4);
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
     mesh.userData.brandCanvas = { cvs, ctx, text, fontSpec: "400 14px Inter, system-ui, sans-serif", alpha: 0.5, cW, cH, dpr, arched: true };
@@ -2092,9 +2093,9 @@ function animate(){
       // Redraw arched text
       const arcR = cW * 0.42;
       const centerX = cW / 2;
-      const centerY = cW * 0.08;
+      const centerY = cH * 0.95;
       const totalAngle = 0.65;
-      const startAngle = Math.PI / 2 - totalAngle / 2;
+      const startAngle = -Math.PI / 2 - totalAngle / 2;
       for (let i = 0; i < text.length; i++) {
         const t = text.length === 1 ? 0.5 : i / (text.length - 1);
         const ang = startAngle + t * totalAngle;
@@ -2102,7 +2103,7 @@ function animate(){
         const y = centerY + Math.sin(ang) * arcR;
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(ang - Math.PI / 2);
+        ctx.rotate(ang + Math.PI / 2);
         ctx.fillText(text[i], 0, 0);
         ctx.restore();
       }

@@ -925,7 +925,7 @@ const _brandFontP = import('three/addons/loaders/FontLoader.js').then(({FontLoad
 function buildBrandText() {
   brandMeshes.forEach(m => clockGroup.remove(m));
   brandMeshes = []; brandLumeMats = [];
-  if(currentDial === 'kawthar' || currentDial === 'rainbow') return;
+  if(currentDial === 'rainbow') return;
   if(!_brandFont) return;
   
   const c = DIALS[currentDial];

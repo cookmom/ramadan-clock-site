@@ -153,7 +153,7 @@ if(CONTAINED) {
 // CSS grain overlay — sandblast texture tiled across FULL page (zero GPU cost)
 if(!CONTAINED) {
   const _grainDiv = document.createElement('div');
-  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background-image:url(grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.12;mix-blend-mode:multiply;';
+  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background-image:url(bauhaus-grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.12;mix-blend-mode:multiply;';
   document.body.appendChild(_grainDiv);
 }
 

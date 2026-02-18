@@ -126,6 +126,7 @@ const EMBED = _P.has('embed') || CONTAINED;
 let currentDial = (_P.get('dial') && DIALS[_P.get('dial')]) ? _P.get('dial') : 'slate';
 const NIGHT_START = _P.has('night');
 let modeBlend = NIGHT_START ? 1 : 0, modeTarget = NIGHT_START ? 1 : 0;
+let _lastBgHex = '';
 let PD = null;
 function pM(s){if(!s)return 0;const[h,m]=s.split(':').map(Number);return h*60+m;}
 
@@ -136,7 +137,7 @@ let W = CONTAINED ? CONTAINER.clientWidth : window.innerWidth;
 let H = CONTAINED ? CONTAINER.clientHeight : window.innerHeight;
 const R = 80; // world-space radius
 
-const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance', alpha: EMBED && !NIGHT_START && !CONTAINED });
 renderer.samples = 4;
 renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 : 1), 2));
 renderer.setSize(W, H);
@@ -144,17 +145,17 @@ renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.825;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-const _host = CONTAINED ? CONTAINER : document.body;
-_host.appendChild(renderer.domElement);
+(CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// CSS grain overlay — sandblast texture tiled over canvas (zero GPU cost)
-const _grainDiv = document.createElement('div');
-_grainDiv.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background-image:url(grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.18;mix-blend-mode:multiply;';
-_host.style.position = _host.style.position || 'relative';
-_host.appendChild(_grainDiv);
+// CSS grain overlay — sandblast texture tiled across FULL page (zero GPU cost)
+if(!CONTAINED) {
+  const _grainDiv = document.createElement('div');
+  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background-image:url(grain.png);background-size:198px 198px;background-repeat:repeat;opacity:0.12;mix-blend-mode:multiply;';
+  document.body.appendChild(_grainDiv);
+}
 
 const scene = new THREE.Scene();
 
@@ -170,8 +171,7 @@ cam.lookAt(0, 0, 0);
 // BLOOM POST-PROCESSING
 // ══════════════════════════════════════════
 // Bloom — full resolution, with adaptive fallback if GPU process OOMs
-const _composerRT = new THREE.WebGLRenderTarget(W, H, { samples: 4 });
-const composer = new EffectComposer(renderer, _composerRT);
+const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, cam));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(W, H),
@@ -687,7 +687,7 @@ function buildScrollIndicator() {
   const lumeCol = c.lume || c.hand;
   const mat = new THREE.MeshStandardMaterial({
     color: lumeCol, roughness: 0.3, metalness: 0.4,
-    emissive: lumeCol, emissiveIntensity: nightBlend > 0.3 ? 1.5 : 0.3,
+    emissive: lumeCol, emissiveIntensity: modeBlend > 0.3 ? 1.5 : 0.3,
     transparent: true, opacity: 1
   });
   mat.envMapIntensity = 0.2;
@@ -722,7 +722,7 @@ function updateScrollIndicator() {
   scrollIndicator.position.x = scrollIndicatorCurrent.x;
   scrollIndicator.position.y = scrollIndicatorCurrent.y;
   scrollIndicator.material.opacity = scrollIndicatorCurrent.opacity;
-  const lumeGlow = nightBlend > 0.3 ? 1.5 : 0.3;
+  const lumeGlow = modeBlend > 0.3 ? 1.5 : 0.3;
   scrollIndicator.material.emissiveIntensity = lumeGlow + Math.sin(Date.now()*0.003)*0.15;
 }
 
@@ -980,58 +980,57 @@ function buildBrandText() {
   // Main: Arabic brand name — هدية الوقت (A Gift of Time)
   makeCanvasLine('هدية الوقت', "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif", R * 0.33, pw, pw * 0.25, 1);
   
-  // Arched subtitle: "AGIFTOFTIME.APP" — single arc canvas mesh
+  // Arched subtitle: "AGIFTOFTIME.APP" below 6 o'clock (like NOMOS "MADE IN GERMANY")
+  // Use individual letter sprites placed along a world-space arc — no canvas mapping issues
   {
     const text = 'AGIFTOFTIME.APP';
     const lumeCol = new THREE.Color(c.lume);
-    const dpr = 3;
-    const cW = 512, cH = 256;
-    const cvs = document.createElement('canvas');
-    cvs.width = cW * dpr; cvs.height = cH * dpr;
-    const ctx = cvs.getContext('2d');
-    ctx.scale(dpr, dpr);
-    
-    // Bottom-arc (smile): center above canvas, letters at bottom of arc
-    // In canvas coords: y-down, so center is at negative y, letters at positive y
-    const arcRadius = cW * 0.45;
-    const totalAngle = 0.55;
-    const arcCX = cW / 2, arcCY = cH * 0.5 - arcRadius; // center above the text line
-    // midAngle = π/2 = bottom of circle in standard math (but canvas y is flipped)
-    // In canvas coords, bottom of arc = largest y = angle π/2
-    const midAngle = Math.PI / 2;
-    const startAngle = midAngle - totalAngle / 2;
-    
-    ctx.fillStyle = '#' + lumeCol.getHexString();
-    ctx.globalAlpha = 0.45;
-    ctx.font = "700 28px Inter, system-ui, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // Arc center = dial center (0,0), radius outside minute markers
+    const arcCX = 0, arcCY = 0;
+    const arcRadius = R * 1.02; // outside minute markers, near dial rim
+    const totalAngle = 0.55; // radians — tighter arc
+    // Letters arc along bottom of dial, reading left-to-right
+    // At 6 o'clock (bottom): first letter on the LEFT side, last on the RIGHT
+    // Angles: 0=right, π/2=top, π=left, -π/2=bottom (standard math)
+    // Left of 6 o'clock = angles between -π/2 and -π (3rd quadrant)
+    // Right of 6 o'clock = angles between -π/2 and 0 (4th quadrant)
+    // Sweep from left (-π/2 - half) to right (-π/2 + half) = clockwise visually
+    const midAngle = -Math.PI / 2; // 6 o'clock
+    const startAngle = midAngle - totalAngle / 2; // left of 6
     
     for (let i = 0; i < text.length; i++) {
       const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-      const ang = startAngle + t * totalAngle;
-      const lx = arcCX + Math.cos(ang) * arcRadius;
-      const ly = arcCY + Math.sin(ang) * arcRadius;
-      ctx.save();
-      ctx.translate(lx, ly);
-      ctx.rotate(ang - Math.PI / 2); // tops point outward
-      ctx.fillText(text[i], 0, 0);
-      ctx.restore();
+      const ang = startAngle + t * totalAngle; // sweep left-to-right (increasing angle)
+      const wx = arcCX + Math.cos(ang) * arcRadius;
+      const wy = arcCY + Math.sin(ang) * arcRadius;
+      
+      // Tiny canvas per letter
+      const dpr = 3;
+      const cS = 64;
+      const cvs = document.createElement('canvas');
+      cvs.width = cS * dpr; cvs.height = cS * dpr;
+      const ctx = cvs.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#' + lumeCol.getHexString();
+      ctx.globalAlpha = 0.45;
+      ctx.font = "700 28px Inter, system-ui, sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text[i], cS / 2, cS / 2);
+      
+      const tex = new THREE.CanvasTexture(cvs);
+      const sz = R * 0.06;
+      const geo = new THREE.PlaneGeometry(sz, sz);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(wx, wy, 4);
+      // Rotate letter to follow arc tangent
+      mesh.rotation.z = ang + Math.PI / 2; // tops point outward — standard bottom-arc watch text
+      clockGroup.add(mesh);
+      brandMeshes.push(mesh);
+      mesh.userData.brandLetter = { cvs, ctx, ch: text[i], cS, dpr };
+      brandLumeMats.push(mat);
     }
-    
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.anisotropy = 4;
-    const planeW = R * 1.2, planeH = R * 0.6;
-    const geo = new THREE.PlaneGeometry(planeW, planeH);
-    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, -R * 0.96, 4);
-    mesh.userData.brandArc = true;
-    mesh.userData._lastDrawnColor = '#' + lumeCol.getHexString();
-    mesh.userData._arcCanvas = { cvs, ctx, text, cW, cH, dpr, arcRadius, totalAngle, arcCX, arcCY, midAngle, startAngle };
-    clockGroup.add(mesh);
-    brandMeshes.push(mesh);
-    brandLumeMats.push(mat);
   }
 }
 
@@ -1112,7 +1111,6 @@ function buildHands() {
 // QIBLA ORBITAL COMPASS — Ressence-inspired
 // ══════════════════════════════════════════
 let qiblaGroup, qiblaRotor, qiblaInnerRotor;
-let _qiblaEmissiveMats = [];
 let hasCompassData = false;
 let compassHeading = 0, targetCompassHeading = 0;
 let qiblaBearing = 0; // degrees from north
@@ -1363,14 +1361,6 @@ function buildQibla() {
   
   clockGroup.add(qiblaGroup);
   
-  // Cache all qibla emissive materials for fast animate() iteration
-  _qiblaEmissiveMats = [];
-  qiblaGroup.traverse(child => {
-    if(child.material && child.material.emissive) {
-      _qiblaEmissiveMats.push({ mat: child.material, isQibla: child.material === window._qiblaTriMat });
-    }
-  });
-  
   // ── Glass sapphire crystal dome over subdial ──
   // Research: real sapphire crystal = IOR 1.77, very low roughness,
   // slight dispersion for chromatic aberration at edges,
@@ -1454,7 +1444,25 @@ function updateQibla() {
   qiblaInnerRotor.rotation.z += (targetInnerRot - qiblaInnerRotor.rotation.z) * snapSpeed;
 }
 
-// Split-flap removed (no longer used)
+// Split-flap at 12 o'clock
+let flapSprite, flapCanvas, flapTexture;
+let flapPrevChars=[], flapCharAnims=[];
+const FLAP_DUR=350, FLAP_STAGGER=60;
+
+function buildFlap() {
+  if(flapSprite) clockGroup.remove(flapSprite);
+  const cw=1024, ch=384;
+  flapCanvas=document.createElement('canvas');
+  flapCanvas.width=cw; flapCanvas.height=ch;
+  flapTexture=new THREE.CanvasTexture(flapCanvas);
+  flapTexture.minFilter=THREE.LinearFilter;
+  const geo=new THREE.PlaneGeometry(R*0.55, R*0.2);
+  flapSprite=new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:flapTexture,transparent:true,depthTest:false}));
+  flapSprite.position.y=R*0.32;
+  flapSprite.position.z=5;
+  flapSprite.visible = false;
+  clockGroup.add(flapSprite);
+}
 
 // Stars (Surah Yusuf 12:4) — 11 stars in a sujud (prostration) arc above the clock
 // "I saw eleven stars and the sun and the moon — I saw them prostrating to me."
@@ -1750,7 +1758,7 @@ function buildAll(){
   if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
   if(!CONTAINED) document.documentElement.style.background = document.body.style.background = '#' + dialBg.getHexString();
-  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
+  const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
   if(!CONTAINED) {
     // Update dial info panel
@@ -1835,7 +1843,64 @@ function updateHands(){
   if(secGroup) secGroup.rotation.z=secAngle;
 }
 
-// updateFlap removed (no longer used)
+function updateFlap(){
+  if(!flapCanvas)return;
+  const ctx=flapCanvas.getContext('2d');
+  const cw=flapCanvas.width, ch=flapCanvas.height;
+  ctx.clearRect(0,0,cw,ch);
+  
+  const now=new Date(), nowMin=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  let label='',mins=0;
+  if(PD){
+    const fajr=pM(PD.Fajr),mag=pM(PD.Maghrib),isha=pM(PD.Isha);
+    if(nowMin>=fajr&&nowMin<mag){mins=mag-nowMin;label='UNTIL IFTAR';}
+    else if(nowMin>=mag&&nowMin<isha){mins=isha-nowMin;label='UNTIL ISHA';}
+    else if(nowMin>=isha){mins=(24*60-nowMin)+fajr;label='UNTIL FAJR';}
+    else{mins=fajr-nowMin;label='UNTIL FAJR';}
+  }
+  
+  const hh=Math.floor(mins/60),mm=Math.floor(mins%60);
+  const chars=[String(Math.floor(hh/10)),String(hh%10),':',String(Math.floor(mm/10)),String(mm%10)];
+  const nowMs=performance.now();
+  while(flapPrevChars.length<chars.length)flapPrevChars.push('');
+  while(flapCharAnims.length<chars.length)flapCharAnims.push({start:0,prev:''});
+  for(let i=0;i<chars.length;i++){if(chars[i]!==flapPrevChars[i])flapCharAnims[i]={start:nowMs+i*FLAP_STAGGER,prev:flapPrevChars[i]||chars[i]};}
+  flapPrevChars=chars.slice();
+  
+  const c=DIALS[currentDial];
+  const digitW=cw*0.17,colonW=cw*0.06,cellH=ch*0.65;
+  const charWidths=chars.map(c=>c===':'?colonW:digitW);
+  const totalW=charWidths.reduce((a,w)=>a+w,0)+(chars.length-1)*4;
+  let curX=(cw-totalW)/2;
+  const cellY=ch*0.15,fontSize=cellH*0.7;
+  const lumeCol=c.text;
+  
+  for(let i=0;i<chars.length;i++){
+    const ch2=chars[i],charW=charWidths[i],cellCx=curX+charW/2;
+    if(ch2===':'){
+      ctx.fillStyle=lumeCol;ctx.globalAlpha=0.4;
+      ctx.beginPath();ctx.arc(cellCx,cellY+cellH*0.3,4,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(cellCx,cellY+cellH*0.7,4,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;curX+=charW+4;continue;
+    }
+    ctx.fillStyle='rgba(0,0,0,0.3)';rr(ctx,curX,cellY,charW,cellH,6);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(curX,cellY+cellH/2-0.5,charW,1);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`500 ${fontSize}px Inter,system-ui`;
+    ctx.fillStyle=lumeCol;ctx.globalAlpha=0.9;
+    ctx.fillText(ch2,cellCx,cellY+cellH/2);
+    ctx.globalAlpha=1;curX+=charW+4;
+  }
+  if(label){
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`500 ${ch*0.1}px Inter,system-ui`;
+    ctx.fillStyle=lumeCol;ctx.globalAlpha=0.55;
+    ctx.fillText(label,cw/2,cellY+cellH+ch*0.14);
+    ctx.globalAlpha=1;
+  }
+  flapTexture.needsUpdate=true;
+}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
 
 // ══════════════════════════════════════════
 // PRAYER TIMES
@@ -1987,13 +2052,6 @@ if(CONTAINED){new ResizeObserver(onResize).observe(CONTAINER);}
 // ══════════════════════════════════════════
 const vignetteEl = CONTAINED ? null : document.getElementById('vignette');
 let _animCount=0;
-// Pre-allocated reusable Color objects (Fix 5)
-const _tmpCol1 = new THREE.Color();
-const _tmpCol2 = new THREE.Color();
-const _tmpCol3 = new THREE.Color();
-const _tmpCol4 = new THREE.Color();
-const _tmpCol5 = new THREE.Color();
-let _lastBgHex = '';
 function animate(){
   requestAnimationFrame(animate);
   if(CONTAINED && _animCount<3) console.log('[clock] animate frame', _animCount);
@@ -2004,93 +2062,83 @@ function animate(){
   if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.024;
   else modeBlend=modeTarget;
   
-  // Night mode — skip all work when fully daytime (Fix 4)
+  // Night mode: lume glow with per-dial color
   const nightLume = NIGHT_LUME[currentDial] || NIGHT_LUME.slate;
-  _tmpCol1.set(nightLume.emissive); // lumeEmCol
-  const nightActive = modeBlend > 0.001;
-  
-  if(nightActive) {
+  const lumeEmCol = new THREE.Color(nightLume.emissive);
   // Subtle lume breathing — very slow, barely perceptible (±5%)
   const lumeBreathe = 1.0 + Math.sin(Date.now() * 0.0005) * 0.05;
   const lumeIntensity = modeBlend * 2.0 * lumeBreathe;
   lumeMeshes.forEach(m=>{
-    _tmpCol2.set(0x000000).lerp(_tmpCol1, modeBlend);
-    m.material.emissive.copy(_tmpCol2);
+    m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
+    // Kawthar candy buttons: cap glow to prevent blowout
     m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.7 : lumeIntensity;
   });
-  if(hLumeMat_) { hLumeMat_.emissive.lerp(_tmpCol1, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity; }
-  if(mLumeMat_) { mLumeMat_.emissive.lerp(_tmpCol1, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity; }
+  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity; }
+  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity; }
   
   // Numerals glow
-  _tmpCol2.set(0x000000).lerp(_tmpCol1, modeBlend);
   numeralMats.forEach(m=>{
-    m.emissive.copy(_tmpCol2);
+    m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     m.emissiveIntensity = lumeIntensity * 0.85;
   });
-  
   // Brand text glow — canvas textures, redraw with glow color in night mode
-  _tmpCol3.set(DIALS[currentDial].lume);
-  _tmpCol4.copy(_tmpCol1).multiplyScalar(1 + modeBlend * 1.5);
-  _tmpCol5.copy(_tmpCol3).lerp(_tmpCol4, modeBlend);
-  const blendedHex = '#' + _tmpCol5.getHexString();
-  
   brandMeshes.forEach(mesh=>{
-    // Arc canvas (single mesh for AGIFTOFTIME.APP)
-    const ba = mesh.userData._arcCanvas;
-    if(ba && mesh.userData.brandArc) {
-      if(mesh.userData._lastDrawnColor !== blendedHex) {
-        mesh.userData._lastDrawnColor = blendedHex;
-        const {cvs, ctx, text, cW, cH, dpr, arcRadius, totalAngle, arcCX, arcCY, startAngle} = ba;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, cW, cH);
-        ctx.fillStyle = blendedHex;
-        ctx.globalAlpha = 0.45;
-        ctx.font = "700 28px Inter, system-ui, sans-serif";
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        for (let i = 0; i < text.length; i++) {
-          const t = text.length === 1 ? 0.5 : i / (text.length - 1);
-          const ang = startAngle + t * totalAngle;
-          const lx = arcCX + Math.cos(ang) * arcRadius;
-          const ly = arcCY + Math.sin(ang) * arcRadius;
-          ctx.save();
-          ctx.translate(lx, ly);
-          ctx.rotate(ang - Math.PI / 2);
-          ctx.fillText(text[i], 0, 0);
-          ctx.restore();
-        }
-        mesh.material.map.needsUpdate = true;
-      }
-      return;
-    }
-    // Regular brand canvas (Arabic text etc.)
     const bd = mesh.userData.brandCanvas;
     if(!bd) return;
     const {cvs, ctx, text, fontSpec, alpha, cW, cH, dpr} = bd;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cW, cH);
-    ctx.fillStyle = blendedHex;
+    // Blend from lume color to emissive glow
+    const dayCol = new THREE.Color(DIALS[currentDial].lume);
+    const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
+    const blended = dayCol.lerp(nightCol, modeBlend);
+    ctx.fillStyle = '#' + blended.getHexString();
     ctx.globalAlpha = alpha !== undefined ? alpha : 1;
     ctx.font = fontSpec;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, cW / 2, cH / 2);
+    if(bd.arched) {
+      // Legacy arched — no longer used
+    } else if(false) {
+      // placeholder
+    } else {
+      ctx.fillText(text, cW / 2, cH / 2);
+    }
+    mesh.material.map.needsUpdate = true;
+  });
+  // Brand letter sprites (arched AGIFTOFTIME.APP)
+  brandMeshes.forEach(mesh=>{
+    const bl = mesh.userData.brandLetter;
+    if(!bl) return;
+    const {cvs, ctx, ch, cS, dpr} = bl;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cS, cS);
+    const dayCol = new THREE.Color(DIALS[currentDial].lume);
+    const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
+    const blended = dayCol.lerp(nightCol, modeBlend);
+    ctx.fillStyle = '#' + blended.getHexString();
+    ctx.globalAlpha = 0.45;
+    ctx.font = "700 28px Inter, system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, cS / 2, cS / 2);
     mesh.material.map.needsUpdate = true;
   });
   
   // Dial surface picks up faint lume ambient bounce
   if(dialMesh && dialMesh.material) {
-    _tmpCol2.set(DIALS[currentDial].bg);
-    _tmpCol3.copy(_tmpCol2).lerp(_tmpCol4.set(0x080810), modeBlend * 0.92);
-    dialMesh.material.color.copy(_tmpCol3);
-    if(dialMesh.material.emissive) {
-      dialMesh.material.emissive.copy(_tmpCol1).multiplyScalar(0.08);
+    const dayColor = new THREE.Color(DIALS[currentDial].bg);
+    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
+    dialMesh.material.color.copy(nightDialColor);
+    if(dialMesh.material.emissive) { // PBR materials only (kawthar, qamar)
+      dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
       dialMesh.material.emissiveIntensity = modeBlend;
     }
   }
+  // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
-    _tmpCol2.set(DIALS[currentDial].bg).multiplyScalar(0.75);
-    dialLowerMesh.material.color.copy(_tmpCol2.lerp(_tmpCol3.set(0x060608), modeBlend * 0.9));
+    const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
+    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x060608), modeBlend * 0.9));
   }
   
   // Rainbow bezel gems glow at night
@@ -2100,88 +2148,102 @@ function animate(){
     }
   });
   
-  // Qibla compass elements glow — cached materials (Fix 6)
-  for(let i = 0; i < _qiblaEmissiveMats.length; i++) {
-    const entry = _qiblaEmissiveMats[i];
-    if(entry.isQibla) {
-      entry.mat.emissiveIntensity = 0.15 + modeBlend * 1.0;
-    } else {
-      entry.mat.emissiveIntensity = modeBlend * 0.5;
-    }
+  // Qibla compass elements glow at night
+  if(qiblaGroup) {
+    qiblaGroup.traverse(child => {
+      if(child.material && child.material.emissive) {
+        if(child.material === window._qiblaTriMat) {
+          // Qibla green triangle — strong glow
+          child.material.emissiveIntensity = 0.15 + modeBlend * 1.0;
+        } else if(child.material.emissiveIntensity !== undefined) {
+          // Compass ticks — subtle lume glow
+          child.material.emissiveIntensity = modeBlend * 0.5;
+        }
+      }
+    });
   }
   
-  // Bloom ramps up in night mode
+  // (subdial rings removed)
+  
+  // Bloom ramps up in night mode — soft, dreamy glow
   bloomPass.strength = modeBlend * 0.8;
   bloomPass.radius = 0.4 + modeBlend * 0.3;
-  bloomPass.threshold = 0.85 - modeBlend * 0.25;
+  bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
-  // Dim scene lights for night
+  // Dim scene lights for night — let lume own the scene
   ambLight.intensity = 0.06 * (1 - modeBlend * 0.85);
   keyLight.intensity = 2.5 * (1 - modeBlend * 0.85);
   stripLight.intensity = 4.0 * (1 - modeBlend * 0.8);
   specPoint.intensity = 6 * (1 - modeBlend * 0.7);
   counterSpec.intensity = 1.5 * (1 - modeBlend * 0.7);
   subSpot.intensity = 20 * (1 - modeBlend * 0.5);
+  // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
   renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
   
-  // Second hand subtle glow
+  // Second hand subtle glow at night
   if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;
   
-  // Hands catch faint lume-tinted spec
-  if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(_tmpCol1).multiplyScalar(0.04); hourMat_.emissiveIntensity = modeBlend; }
-  if(minMat_) { minMat_.emissive = minMat_.emissive || new THREE.Color(0); minMat_.emissive.copy(_tmpCol1).multiplyScalar(0.04); minMat_.emissiveIntensity = modeBlend; }
+  // Hands catch faint lume-tinted spec at night (simulates lume bounce on polished steel)
+  if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(lumeEmCol).multiplyScalar(0.04); hourMat_.emissiveIntensity = modeBlend; }
+  if(minMat_) { minMat_.emissive = minMat_.emissive || new THREE.Color(0); minMat_.emissive.copy(lumeEmCol).multiplyScalar(0.04); minMat_.emissiveIntensity = modeBlend; }
   
-  // Stars — staggered fade-in
+  // Stars — staggered fade-in, tinted to lume palette
   starMeshes.forEach((m,i)=>{
     const s=m.userData;if(!s)return;
-    const starThreshold = 0.2 + (i / starMeshes.length) * 0.25;
+    // Stagger: each star appears at a different modeBlend threshold
+    const starThreshold = 0.2 + (i / starMeshes.length) * 0.25; // 0.2 → 0.45 — all visible by modeBlend 0.6
     const starBlend = Math.max(0, Math.min(1, (modeBlend - starThreshold) / 0.15));
     const twinkle = (Math.sin(Date.now()*s.speed+s.offset)*0.3+0.7);
     m.material.opacity = starBlend * s.bright * twinkle;
+    // Stars gently scale in
     const sc = 0.6 + starBlend * 0.4;
     m.scale.setScalar(sc);
-    _tmpCol2.set(2.2, 2.2, 1.9);
-    _tmpCol3.copy(_tmpCol1).multiplyScalar(1.5);
-    _tmpCol2.lerp(_tmpCol3, modeBlend * 0.3);
-    m.material.color.copy(_tmpCol2);
+    const starCol = new THREE.Color(2.2, 2.2, 1.9); // HDR for bloom pickup
+    starCol.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.5), modeBlend * 0.3);
+    m.material.color.copy(starCol);
   });
   
-  // Moon — rises from below
+  // Moon — rises from below, reaches position at full night
   if(moonGroup) {
-    const moonThreshold = 0.3;
+    const moonThreshold = 0.3; // moon starts rising after stars begin
     const moonBlend = Math.max(0, Math.min(1, (modeBlend - moonThreshold) / 0.5));
     moonGroup.visible = modeBlend > 0.1;
-    const startY = R * 0.85, endY = 78;
-    const startZ = -20, endZ = -15;
+    
+    // Rise from behind dial top — first appears above the 12 o'clock edge
+    const startY = R * 0.85, endY = 78;  // starts at dial top edge, rises to crown
+    const startZ = -20, endZ = -15;       // starts behind dial, comes forward
+    // Ease-out cubic for natural rise
     const eased = 1 - Math.pow(1 - moonBlend, 3);
     moonGroup.position.y = startY + (endY - startY) * eased;
     moonGroup.position.x = 0;
     moonGroup.position.z = startZ + (endZ - startZ) * eased;
+    
+    // Moon glow and emissive
     if(moonMesh) {
       moonMesh.material.opacity = moonBlend;
-      _tmpCol2.set(1.15, 1.12, 1.05);
-      _tmpCol3.copy(_tmpCol1).multiplyScalar(0.8);
-      _tmpCol2.lerp(_tmpCol3, 0.1);
-      moonMesh.material.color.copy(_tmpCol2);
+      // HDR moon tinted slightly toward lume
+      const mc = new THREE.Color(1.15, 1.12, 1.05);
+      mc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(0.8), 0.1);
+      moonMesh.material.color.copy(mc);
     }
     if(moonGlowMesh) {
       moonGlowMesh.material.opacity = moonBlend * 0.15;
-      _tmpCol2.set(1.2, 1.15, 1.0);
-      _tmpCol3.copy(_tmpCol1).multiplyScalar(1.2);
-      _tmpCol2.lerp(_tmpCol3, 0.2);
-      moonGlowMesh.material.color.copy(_tmpCol2);
+      const gc = new THREE.Color(1.2, 1.15, 1.0);
+      gc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.2), 0.2);
+      moonGlowMesh.material.color.copy(gc);
     }
+    
+    // Moon phase: TODO — canvas texture approach for proper crescent
   }
-  } // end nightActive
   
-  // BG color blend (always runs — needed for theme-color)
-  _tmpCol2.set(DIALS[currentDial].bg).lerp(_tmpCol3.set(0x0a0e18), modeBlend);
-  if(!EMBED || CONTAINED || isFullscreen) scene.background = _tmpCol2.clone();
-  bgPlaneMat.color.copy(_tmpCol2);
+  // BG color blend
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend); // deep midnight — not void black
+  if(!EMBED || CONTAINED || isFullscreen) scene.background = nightBg;
+  bgPlaneMat.color.copy(nightBg);
   
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
@@ -2207,6 +2269,7 @@ function animate(){
   counterSpec.position.y = -30 - gy * 50;
   
   updateHands();
+  updateFlap();
   updateQiblaDemo();
   updateQibla();
   updateScrollIndicator();
@@ -2250,15 +2313,15 @@ function animate(){
     renderer.render(scene, cam);
   }
   
-  // Compute bg color from scene.background directly (no GPU readPixels)
+  // Compute bg color from scene.background directly (no GPU readPixels stall)
   if(!CONTAINED || isFullscreen) {
-    const bgHex = '#' + _tmpCol2.getHexString();
-    if(bgHex !== _lastBgHex) {
-      _lastBgHex = bgHex;
-      const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=bgHex;
-      if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = bgHex; }
+    const _bgHex = '#' + scene.background.getHexString();
+    if(_bgHex !== _lastBgHex) {
+      _lastBgHex = _bgHex;
+      const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;
+      if(!CONTAINED) { document.documentElement.style.background = document.body.style.background = _bgHex; }
       if(isFullscreen) {
-        const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=bgHex;
+        const ov=document.getElementById('clockFullscreen'); if(ov) ov.style.background=_bgHex;
       }
     }
   }

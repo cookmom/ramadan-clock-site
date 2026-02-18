@@ -643,16 +643,22 @@ window._clockSetFullscreen = function(on, snapNight) {
   isFullscreen = on;
   if(on) {
     CLOCK_SCALE = 0.50;
-    // No bgPlane cutout in fullscreen — PBR fsBgPlane fills seamlessly
+    // No bgPlane cutout in fullscreen — PBR fsBgPlane IS the dial surface
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
-    fsBgPlane.visible = true; // continuous textured surface behind dial
+    fsBgPlane.visible = true; // continuous textured surface — the dial IS the background
+    // Hide dial geometry — elements sit directly on the PBR background
+    if(dialMesh) dialMesh.visible = false;
+    if(dialLowerMesh) dialLowerMesh.visible = false;
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
     // Snap day/night blend instantly on exit — no lerp
     if(snapNight !== undefined) { modeTarget = snapNight ? 1 : 0; modeBlend = modeTarget; }
     if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
-    fsBgPlane.visible = false; // hide PBR background in embedded mode
+    fsBgPlane.visible = false;
+    // Restore dial geometry for embedded/landing mode
+    if(dialMesh) dialMesh.visible = true;
+    if(dialLowerMesh) dialLowerMesh.visible = true;
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }
   // Update bgPlane cutout
@@ -708,6 +714,11 @@ function buildDial() {
   if(fsBgPlane) {
     fsBgPlane.material.dispose();
     fsBgPlane.material = dialMat(DIALS[currentDial].bg);
+  }
+  // In fullscreen, dial geometry hidden — background IS the dial
+  if(isFullscreen) {
+    if(dialMesh) dialMesh.visible = false;
+    if(dialLowerMesh) dialLowerMesh.visible = false;
   }
   
   // Main crystal removed — caused visible edge ring on mobile

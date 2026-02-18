@@ -829,14 +829,15 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: metal base — wider, darker, matte nickel
+        // Layer 1: rhodium metal base — same finish as hands, wider footprint
         const baseGeo = new THREE.BoxGeometry(mW*1.5, mH*1.02, depth*0.4);
         const baseMatl = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color(c.lume).multiplyScalar(0.6), // darker base
-          roughness: 0.45, metalness: 0.8,
+          color: new THREE.Color(c.hand).lerp(new THREE.Color(0xE8E8EC), 0.3),
+          roughness: 0.2, metalness: 1.0,
+          clearcoat: 0.3, clearcoatRoughness: 0.08,
           emissive: c.lume, emissiveIntensity: 0,
         });
-        baseMatl.envMapIntensity = 1.5;
+        baseMatl.envMapIntensity = 2.0;
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
         baseMesh.position.set(px, py, depth*0.2);
         baseMesh.rotation.z = ang + Math.PI/2;
@@ -911,14 +912,15 @@ function buildNumerals() {
     const gcy = (gbb.max.y + gbb.min.y) / 2;
     geo.translate(-gcx, -gcy, 0);
     
-    // Layer 1: metal base — darker, slightly larger, matte nickel
+    // Layer 1: rhodium metal base — same finish as hands, slightly larger
     const baseGeo = geo.clone();
     const baseMatl = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(c.lume).multiplyScalar(0.6),
-      roughness: 0.45, metalness: 0.8,
+      color: new THREE.Color(c.hand).lerp(new THREE.Color(0xE8E8EC), 0.3),
+      roughness: 0.2, metalness: 1.0,
+      clearcoat: 0.3, clearcoatRoughness: 0.08,
       emissive: c.lume, emissiveIntensity: 0,
     });
-    baseMatl.envMapIntensity = 1.5;
+    baseMatl.envMapIntensity = 2.0;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
     baseMesh.position.set(nx, ny, 2.5);
     baseMesh.scale.setScalar(1.08);
@@ -1187,12 +1189,12 @@ function buildQibla() {
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — brushed metallic, subtle contrast from dial
+  // Base disc — matches main dial surface (same color/material + grain texture)
+  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.92); // slightly darker from recess
   const baseMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.82),
-    roughness: 0.35, metalness: 0.5,
-    clearcoat: 0.4, envMapIntensity: 3.5,
-    roughnessMap: metalGrainTex,
+    color: subDialColor,
+    roughness: 0.4, metalness: 0.0,
+    roughnessMap: dialGrainTex, // same grain texture as dial surface
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
   qiblaGroup.add(baseDisc);

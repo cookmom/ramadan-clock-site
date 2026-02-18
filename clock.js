@@ -150,11 +150,20 @@ if(CONTAINED) {
   renderer.domElement.style.cssText='width:100%;height:100%;display:block';
   console.log('[clock] canvas appended, size:', W, 'x', H, 'pixelRatio:', renderer.getPixelRatio());
 }
-// CSS grain — over everything uniformly (dial + page match)
-{
+// Grain: page background only (not over WebGL canvas)
+// Wrap all body children in a z-index:2 container, grain at z-index:1
+if(!CONTAINED) {
   const _grainDiv = document.createElement('div');
-  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.35;mix-blend-mode:multiply;';
-  document.body.appendChild(_grainDiv);
+  _grainDiv.id = 'grainOverlay';
+  _grainDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;background-image:url(bauhaus-grain.png);background-size:200px 200px;background-repeat:repeat;opacity:0.35;mix-blend-mode:multiply;';
+  // Insert grain as first child of body so it's behind everything
+  document.body.insertBefore(_grainDiv, document.body.firstChild);
+  // Ensure all other body children stack above
+  Array.from(document.body.children).forEach(el => {
+    if(el === _grainDiv) return;
+    if(!el.style.position || el.style.position === 'static') el.style.position = 'relative';
+    if(!el.style.zIndex) el.style.zIndex = '2';
+  });
 }
 // Dial grain: load same Bauhaus texture into Three.js for the dial material
 const _bauhausGrainTex = new THREE.TextureLoader().load('bauhaus-grain.png', (t) => {

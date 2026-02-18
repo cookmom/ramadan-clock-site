@@ -222,9 +222,8 @@ a{color:inherit;text-decoration:none}
 /* Ensure section content paints above any positioned ancestors */
 .scroll-section>*{position:relative;z-index:2;}
 .section-header{
-  position:sticky;top:calc(var(--clock-size) + 4.5rem);
-  z-index:40;padding:.75rem 0 .5rem;
-  background:var(--bg);transition:background 1s ease;
+  padding:.75rem 0 .5rem;
+  transition:background 1s ease;
 }
 .section-label{
   font-weight:500;font-size:.7rem;letter-spacing:.15em;
@@ -285,7 +284,7 @@ a{color:inherit;text-decoration:none}
 .step p{font-weight:300;font-size:.875rem;color:var(--text-muted);line-height:1.5;transition:color 1s ease}
 
 /* ── Scroll Snap ── */
-html{scroll-snap-type:y mandatory;scroll-padding-top:calc(var(--clock-size) + 4.5rem)}
+html{scroll-snap-type:y mandatory;scroll-padding-top:calc(var(--clock-size) + 5rem)}
 .scroll-section{scroll-snap-align:start}
 
 /* ── Footer ── */

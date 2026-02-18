@@ -532,12 +532,42 @@ let adhanAudio=null, adhanPlaying=false;
 let dialCycleTimer=null;
 
 // ══════════════════════════════════════════
+// SPATIAL AUDIO HELPER — Quran toward Qibla
+// ══════════════════════════════════════════
+let _spatialCtx=null;
+function _getSpatialCtx(){
+  if(!_spatialCtx) _spatialCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(_spatialCtx.state==='suspended') _spatialCtx.resume();
+  return _spatialCtx;
+}
+function _spatializeAudio(audio){
+  try{
+    const ctx=_getSpatialCtx();
+    const src=ctx.createMediaElementSource(audio);
+    const pan=ctx.createStereoPanner();
+    src.connect(pan).connect(ctx.destination);
+    let currentPan=0;
+    const iv=setInterval(()=>{
+      const q=window._spatialQibla&&window._spatialQibla();
+      if(!q||!q.hasCompass||!q.qiblaAngle)return;
+      const ra=q.qiblaAngle-q.deviceHeading;
+      const target=Math.max(-1,Math.min(1,Math.sin(ra)));
+      currentPan+=(target-currentPan)*0.15;
+      pan.pan.value=currentPan;
+    },50);
+    audio._spatialCleanup=()=>clearInterval(iv);
+  }catch(e){console.warn('[spatial] fallback:',e)}
+}
+
+// ══════════════════════════════════════════
 // VERSE AUDIO HELPER
 // ══════════════════════════════════════════
 function playVerse(btn,url){
   if(!btn._a){
     btn._a=new Audio(url);
-    btn._a.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'};
+    btn._a.crossOrigin='anonymous';
+    _spatializeAudio(btn._a);
+    btn._a.onended=()=>{btn.innerHTML='<i class="ph-thin ph-play"></i> Listen';if(btn._a._spatialCleanup)btn._a._spatialCleanup()};
   }
   if(btn._a.paused){btn._a.play();btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing'}
   else{btn._a.pause();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen'}
@@ -594,11 +624,14 @@ function playDialSurah(){
   const btn=document.getElementById('dialListen');
   if(dialPlaying&&dialAudio&&!dialAudio.paused){
     dialAudio.pause();dialPlaying=false;
+    if(dialAudio._spatialCleanup)dialAudio._spatialCleanup();
     btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah';return;
   }
   dialPlaying=true;
   dialAudio=new Audio('https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/'+num+'.mp3');
-  dialAudio.onended=()=>{dialPlaying=false;btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah'};
+  dialAudio.crossOrigin='anonymous';
+  _spatializeAudio(dialAudio);
+  dialAudio.onended=()=>{dialPlaying=false;if(dialAudio._spatialCleanup)dialAudio._spatialCleanup();btn.innerHTML='<i class="ph-thin ph-play"></i> Listen to this Surah'};
   dialAudio.play().catch(()=>{});
   btn.innerHTML='<i class="ph-thin ph-pause"></i> Playing — al-Afasy';
 }
@@ -1577,7 +1610,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=161';
+_cs.type='module';_cs.src='clock.js?v=162';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

@@ -13,33 +13,36 @@ if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.client
 // CONFIG
 // ══════════════════════════════════════════
 const DIALS = {
-  tennis: {bg:0x68b890, lume:0xf0f0e8, hand:0xf0f0e8, sec:0xffffff, text:'#f0f0e8', surah:'Ar-Raḥmān'},       // pistachio sorbet
-  white:  {bg:0xe8e4dc, lume:0xd4708c, hand:0xd4708c, sec:0xd4708c, text:'#d4708c', surah:'An-Nūr'},           // Nurjaan's dial — white + rose pink everything
-  salmon: {bg:0xd8988c, lume:0xf8f0ec, hand:0xf8f0ec, sec:0xffffff, text:'#f8f0ec', surah:'Ash-Shams'},        // peach sorbet
-  slate:  {bg:0x585860, lume:0xe8e0c8, hand:0xd0d0d4, sec:0xff6633, text:'#e8e0c8', surah:'Al-Layl'},          // grey + cream + orange sec — the anchor
-  sky:    {bg:0x82b8d8, lume:0xf0f4f8, hand:0xf0f4f8, sec:0xffffff, text:'#f0f4f8', surah:'Al-Burūj'},         // blueberry sorbet
+  // ── NOMOS Club Campus palette ── (extracted from nomos-glashuette.com product photography)
+  // All Campus dials: warm white rhodium hands/lume + neon orange seconds hand
+  deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah'},   // NOMOS deep pink — bold magenta
+  red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams'},     // NOMOS nonstop red — vivid coral
+  coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā'},      // NOMOS cream coral — warm peach
+  starlight:  {bg:0xddd84c, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — bright lemon
+  green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān'},     // NOMOS electric green — mint emerald
+  teal:       {bg:0x3ca8a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj'},      // NOMOS endless blue — turquoise
+  slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl'},       // NOMOS blue purple — muted slate-blue
+  navy:       {bg:0x132653, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm'},       // NOMOS night sky — deep navy
+  white:      {bg:0xf0ece4, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar'},      // NOMOS white — classic cream
+  // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar'},        // strawberry + rose gold
-  dhuha:  {bg:0xf08040, lume:0xffffff, hand:0xffffff, sec:0xffffff, text:'#ffffff', surah:'Aḍ-Ḍuḥā'},           // bright orange sorbet
-  najm:   {bg:0x384870, lume:0xe0e8f4, hand:0xe0e8f4, sec:0xffffff, text:'#e0e8f4', surah:'An-Najm'},          // blueberry sorbet — softer midnight
-  qamar:  {bg:0xc0c4cc, lume:0x2a2a30, hand:0x1a1a20, sec:0x2a4070, text:'#2a2a30', surah:'Al-Qamar'},         // silver — the neutral
-  ward:   {bg:0xd89098, lume:0xf8f0f0, hand:0xf8f0f0, sec:0xffffff, text:'#f8f0f0', surah:'Al-Wāqiʿah'},       // raspberry sorbet
-  lilas:  {bg:0x8878a8, lume:0xf0ecf4, hand:0xf0ecf4, sec:0xffffff, text:'#f0ecf4', surah:'Al-Mulk'},           // lavender sorbet
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true}, // Rolex Rainbow — black dial + rose gold
 };
 // Night lume palettes — modeled after real SuperLuminova variants
 // Each matches the daytime lume character but amplified for glow
 const NIGHT_LUME = {
-  tennis: { emissive: 0x88ff30 },  // C1 — vivid green, gardens glowing at night
-  white:  { emissive: 0xffa0c0 },  // Nurjaan — soft rose pink lume
-  salmon: { emissive: 0xffc070 },  // Old radium — warm amber, sunset afterglow
-  slate:  { emissive: 0xc8e8a0 },  // C3 — classic green-cream, the iconic lume
-  sky:    { emissive: 0x80d0ff },  // BGW9 — ice blue constellations
+  // NOMOS Campus — all use blue Superluminova (blue luminescence)
+  deep_pink:  { emissive: 0x80c0ff },  // Blue superluminova on pink
+  red:        { emissive: 0x80c0ff },  // Blue superluminova on red
+  coral:      { emissive: 0x80c0ff },  // Blue superluminova on coral
+  starlight:  { emissive: 0x80c0ff },  // Blue superluminova on yellow
+  green:      { emissive: 0x80c0ff },  // Blue superluminova on green
+  teal:       { emissive: 0x80c0ff },  // Blue superluminova on teal
+  slate:      { emissive: 0x80c0ff },  // Blue superluminova on slate
+  navy:       { emissive: 0x80c0ff },  // Blue superluminova on navy
+  white:      { emissive: 0x80c0ff },  // Blue superluminova on white
+  // Special dials
   kawthar:{ emissive: 0xffa0c0 },  // Soft pink glow
-  dhuha:  { emissive: 0xffc040 },  // Warm golden sunrise
-  najm:   { emissive: 0x90b8ff },  // Cool stellar blue
-  qamar:  { emissive: 0xe8f0ff },  // Bright ice-silver moonbeam
-  ward:   { emissive: 0xff80a8 },  // Warm rose glow
-  lilas:  { emissive: 0xc090ff },  // Purple lume
   rainbow:{ emissive: 0xf0d8a0 },  // Warm champagne
 };
 const DIAL_NAMES = Object.keys(DIALS);
@@ -330,7 +333,6 @@ function dialMat(color) {
   const cd = currentDial;
   const special = {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3 },
-    qamar:   { roughness:0.35, metalness:0.4, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 },
   };
   const s = special[cd] || { roughness:0.4, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 };
   const m = new THREE.MeshPhysicalMaterial({
@@ -342,7 +344,7 @@ function dialMat(color) {
   return m;
 }
 function metalMat(color) {
-  const precious = ['kawthar','dhuha','qamar','rainbow'].includes(currentDial);
+  const precious = ['kawthar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
     roughness: precious ? 0.02 : 0.04,

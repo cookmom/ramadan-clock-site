@@ -625,21 +625,34 @@ const bgPlaneGeo = new THREE.ShapeGeometry(bgShape, 64);
 const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
 bgPlane.position.z = -3 * CLOCK_SCALE; // flush with dial front face in world space
 if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
+
+// Full-screen PBR background — same material as dial for seamless continuous surface
+// Used in fullscreen mode so dial + background read as one infinite textured plane
+const fsBgShape = new THREE.Shape();
+fsBgShape.moveTo(-5000, -5000); fsBgShape.lineTo(5000, -5000); fsBgShape.lineTo(5000, 5000); fsBgShape.lineTo(-5000, 5000); fsBgShape.closePath();
+const fsBgGeo = new THREE.ShapeGeometry(fsBgShape, 4);
+let fsBgMat = dialMat(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860);
+const fsBgPlane = new THREE.Mesh(fsBgGeo, fsBgMat);
+fsBgPlane.position.z = -0.01; // just behind dial face but in front of nothing
+fsBgPlane.visible = false; // only visible in fullscreen
 if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
+scene.add(fsBgPlane); // always in scene, visibility toggled by fullscreen
 
 // Fullscreen API for landing page
 window._clockSetFullscreen = function(on, snapNight) {
   isFullscreen = on;
   if(on) {
     CLOCK_SCALE = 0.50;
-    // No bgPlane in fullscreen — scene.background fills the screen seamlessly
+    // No bgPlane cutout in fullscreen — PBR fsBgPlane fills seamlessly
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
+    fsBgPlane.visible = true; // continuous textured surface behind dial
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   } else {
     CLOCK_SCALE = 0.95;
     // Snap day/night blend instantly on exit — no lerp
     if(snapNight !== undefined) { modeTarget = snapNight ? 1 : 0; modeBlend = modeTarget; }
     if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
+    fsBgPlane.visible = false; // hide PBR background in embedded mode
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }
   // Update bgPlane cutout
@@ -690,6 +703,12 @@ function buildDial() {
   dialMesh = new THREE.Mesh(geo, dialMat(DIALS[currentDial].bg));
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
+  
+  // Update fullscreen PBR background to match new dial material
+  if(fsBgPlane) {
+    fsBgPlane.material.dispose();
+    fsBgPlane.material = dialMat(DIALS[currentDial].bg);
+  }
   
   // Main crystal removed — caused visible edge ring on mobile
 }
@@ -2158,6 +2177,12 @@ function animate(){
   if(dialLowerMesh && dialLowerMesh.material) {
     const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
     dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x060608), modeBlend * 0.9));
+  }
+  // Sync fullscreen PBR background with dial color — one continuous surface
+  if(fsBgPlane && fsBgPlane.material && fsBgPlane.visible) {
+    const dayBg = new THREE.Color(DIALS[currentDial].bg);
+    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
+    fsBgPlane.material.color.copy(nightBgColor);
   }
   
   // Rainbow bezel gems glow at night

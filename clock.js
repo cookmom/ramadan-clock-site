@@ -1782,9 +1782,8 @@ function buildAll(){
   // Initial bg — animation loop readPixels will correct on first frame
   if(!CONTAINED) document.documentElement.style.backgroundColor = document.body.style.backgroundColor = '#' + dialBg.getHexString();
   if(CONTAINED && CONTAINER) {
-    const hex = '#' + dialBg.getHexString();
-    CONTAINER.style.backgroundColor = hex;
-    CONTAINER.parentElement.style.background = hex; // .clock-sticky
+    CONTAINER.style.backgroundColor = '#' + dialBg.getHexString();
+    // .clock-sticky stays as landing page bg — don't override
   }
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
@@ -2338,7 +2337,7 @@ function animate(){
       _lastBgHex = _bgHex;
       const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;
       if(!CONTAINED) { document.documentElement.style.backgroundColor = document.body.style.backgroundColor = _bgHex; }
-      if(CONTAINED && CONTAINER) { CONTAINER.style.backgroundColor = _bgHex; CONTAINER.parentElement.style.background = _bgHex; }
+      if(CONTAINED && CONTAINER) { CONTAINER.style.backgroundColor = _bgHex; }
       if(isFullscreen) {
         const ov=document.getElementById('clockFullscreen');
         if(ov) {

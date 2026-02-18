@@ -338,6 +338,7 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 <!-- Fullscreen Clock Overlay -->
 <div id="clockFullscreen" class="clock-fs-overlay">
   <button id="clockFsClose" class="clock-fs-close" aria-label="Close">&times;</button>
+  <div id="fsVersionTag" style="position:fixed;bottom:calc(env(safe-area-inset-bottom,8px) + 8px);left:16px;z-index:210;font-family:var(--font);font-size:.6rem;font-weight:300;color:rgba(255,255,255,.3);letter-spacing:.05em;pointer-events:none"></div>
   <div id="fsHeader" class="fs-header">
     <div class="fs-datetime" id="fsDateTime"></div>
     <div class="fs-location" id="fsLocation"></div>
@@ -1407,6 +1408,10 @@ function openClockFullscreen() {
   const canvas = document.querySelector('#dialHero canvas');
   if(!canvas) return;
 
+  // Show version tag
+  const vTag=document.getElementById('fsVersionTag');
+  if(vTag){const vs=document.querySelector('script[src*="clock.js"]');const vm=vs&&vs.src.match(/v=(\d+)/);vTag.textContent='v'+(vm?vm[1]:'?');}
+
   // Stop tour/idle — pause all landing page animations in fullscreen
   stopDialCycle();
   if(window._stopTour) window._stopTour();
@@ -1537,7 +1542,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=127';
+_cs.type='module';_cs.src='clock.js?v=128';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

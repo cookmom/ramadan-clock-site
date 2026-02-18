@@ -509,13 +509,13 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 // ══════════════════════════════════════════
 // DIAL DATA
 // ══════════════════════════════════════════
-const DIALS=['tennis','white','salmon','slate','sky','kawthar','dhuha','najm','qamar','ward','lilas'];
-const DIAL_NAMES={'tennis':'Ar-Raḥmān','white':'An-Nūr','salmon':'Ash-Shams','slate':'Al-Layl','sky':'Al-Burūj','kawthar':'Al-Kawthar','dhuha':'Aḍ-Ḍuḥā','najm':'An-Najm','qamar':'Al-Qamar','ward':'Al-Wāqiʿah','lilas':'Al-Mulk'};
-const DIAL_COLORS={'tennis':'#68b890','white':'#e8e4dc','salmon':'#d8988c','slate':'#585860','sky':'#82b8d8','kawthar':'#f2dce0','dhuha':'#f08040','najm':'#384870','qamar':'#c0c4cc','ward':'#d89098','lilas':'#8878a8'};
-const DIAL_LUMES={'tennis':'#88ff30','white':'#ffa0c0','salmon':'#ffc070','slate':'#c8e8a0','sky':'#80d0ff','kawthar':'#ffa0c0','dhuha':'#ffc040','najm':'#90b8ff','qamar':'#e8f0ff','ward':'#ff80a8','lilas':'#c090ff'};
-const DIAL_SURAHS={'tennis':55,'white':24,'salmon':91,'slate':92,'sky':85,'kawthar':108,'dhuha':93,'najm':53,'qamar':54,'ward':56,'lilas':67};
+const DIALS=['deep_pink','red','coral','starlight','green','teal','slate','navy','white','kawthar','rainbow'];
+const DIAL_NAMES={'deep_pink':'Al-Wāqiʿah','red':'Ash-Shams','coral':'Aḍ-Ḍuḥā','starlight':'An-Nūr','green':'Ar-Raḥmān','teal':'Al-Burūj','slate':'Al-Layl','navy':'An-Najm','white':'Al-Qamar','kawthar':'Al-Kawthar','rainbow':'Al-Insān'};
+const DIAL_COLORS={'deep_pink':'#bc4b79','red':'#df473a','coral':'#e8967a','starlight':'#e9e872','green':'#30b080','teal':'#63afb9','slate':'#5d6278','navy':'#132653','white':'#e0e0e0','kawthar':'#f2dce0','rainbow':'#1a1a1a'};
+const DIAL_LUMES={'deep_pink':'#80c0ff','red':'#80c0ff','coral':'#80c0ff','starlight':'#80c0ff','green':'#80c0ff','teal':'#80c0ff','slate':'#80c0ff','navy':'#80c0ff','white':'#80c0ff','kawthar':'#ffa0c0','rainbow':'#f0d8a0'};
+const DIAL_SURAHS={'deep_pink':56,'red':91,'coral':93,'starlight':24,'green':55,'teal':85,'slate':92,'navy':53,'white':54,'kawthar':108,'rainbow':76};
 
-let dialIdx=3; // slate default
+let dialIdx=6; // slate default
 let pageNight=false;
 let dialAudio=null, dialPlaying=false;
 let adhanAudio=null, adhanPlaying=false;
@@ -1164,7 +1164,7 @@ document.addEventListener('visibilitychange',()=>{
 function setupScrollObservers(){
   // Track intersection ratios — only the most-visible section wins
   const sectionStates={
-    'sec-hook':    ()=>{ if(window._clockSwitchDial&&DIALS[dialIdx]!=='slate'){dialIdx=3;updateDial();} setNightMode(false); },
+    'sec-hook':    ()=>{ if(window._clockSwitchDial&&DIALS[dialIdx]!=='slate'){dialIdx=6;updateDial();} setNightMode(false); },
     'sec-qibla':   ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(true); },
     'sec-prayer':  ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(false); },
     'sec-dials':   ()=>{ setNightMode(false); startDialCycle(); },
@@ -1484,13 +1484,13 @@ setTimeout(()=>{window.scrollTo({top:0,behavior:'instant'});},500);
 // FULLSCREEN CLOCK
 // ══════════════════════════════════════════
 const FS_DIALS_DATA = [
-  {name:'tennis',color:'#68b890'},{name:'white',color:'#e8e4dc'},{name:'salmon',color:'#d8988c'},
-  {name:'slate',color:'#6a6a74'},{name:'sky',color:'#82b8d8'},{name:'kawthar',color:'#f2dce0'},
-  {name:'dhuha',color:'#f08040'},{name:'najm',color:'#384870'},{name:'qamar',color:'#c0c4cc'},
-  {name:'ward',color:'#d89098'},{name:'lilas',color:'#8878a8'}
+  {name:'deep_pink',color:'#bc4b79'},{name:'red',color:'#df473a'},{name:'coral',color:'#e8967a'},
+  {name:'starlight',color:'#e9e872'},{name:'green',color:'#30b080'},{name:'teal',color:'#63afb9'},
+  {name:'slate',color:'#5d6278'},{name:'navy',color:'#132653'},{name:'white',color:'#e0e0e0'},
+  {name:'kawthar',color:'#f2dce0'},{name:'rainbow',color:'#1a1a1a'}
 ];
-const FS_SURAH_MAP = {tennis:55,white:24,salmon:91,slate:92,sky:85,kawthar:108,dhuha:93,najm:53,qamar:54,ward:56,lilas:67};
-const FS_DIAL_NAMES_MAP = {tennis:'Ar-Raḥmān',white:'An-Nūr',salmon:'Ash-Shams',slate:'Al-Layl',sky:'Al-Burūj',kawthar:'Al-Kawthar',dhuha:'Aḍ-Ḍuḥā',najm:'An-Najm',qamar:'Al-Qamar',ward:'Al-Wāqiʿah',lilas:'Al-Mulk'};
+const FS_SURAH_MAP = {deep_pink:56,red:91,coral:93,starlight:24,green:55,teal:85,slate:92,navy:53,white:54,kawthar:108,rainbow:76};
+const FS_DIAL_NAMES_MAP = {deep_pink:'Al-Wāqiʿah',red:'Ash-Shams',coral:'Aḍ-Ḍuḥā',starlight:'An-Nūr',green:'Ar-Raḥmān',teal:'Al-Burūj',slate:'Al-Layl',navy:'An-Najm',white:'Al-Qamar',kawthar:'Al-Kawthar',rainbow:'Al-Insān'};
 let fsNight = false;
 let fsSurahAudio = null;
 
@@ -1777,7 +1777,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=212';
+_cs.type='module';_cs.src='clock.js?v=213';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

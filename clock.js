@@ -18,12 +18,12 @@ const DIALS = {
   deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah'},   // NOMOS deep pink — bold magenta
   red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams'},     // NOMOS nonstop red — vivid coral
   coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā'},      // NOMOS cream coral — warm peach
-  starlight:  {bg:0xddd84c, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — bright lemon
+  starlight:  {bg:0xe9e872, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr'},        // NOMOS starlight — bright lemon
   green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān'},     // NOMOS electric green — mint emerald
-  teal:       {bg:0x3ca8a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj'},      // NOMOS endless blue — turquoise
+  teal:       {bg:0x63afb9, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj'},      // NOMOS endless blue — turquoise
   slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl'},       // NOMOS blue purple — muted slate-blue
   navy:       {bg:0x132653, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm'},       // NOMOS night sky — deep navy
-  white:      {bg:0xf0ece4, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar'},      // NOMOS white — classic cream
+  white:      {bg:0xe0e0e0, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar'},      // NOMOS white — silver-white
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar'},        // strawberry + rose gold
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true}, // Rolex Rainbow — black dial + rose gold

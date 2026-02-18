@@ -551,11 +551,10 @@ function updateDial(){
   if(document.getElementById('clockFullscreen').classList.contains('active')){
     document.querySelectorAll('#fsDialBar .dial-dot').forEach(dot => dot.classList.toggle('active', dot.dataset.dial === d));
     document.getElementById('fsDialSurah').textContent = (typeof FS_DIAL_NAMES_MAP!=='undefined' && FS_DIAL_NAMES_MAP[d]) || DIAL_NAMES[d] || '';
-    // Stop fullscreen surah if playing
+    // Update listen button text — surah keeps playing until user taps listen on new dial
     if(typeof fsSurahAudio!=='undefined' && fsSurahAudio && !fsSurahAudio.paused){
-      fsSurahAudio.pause(); fsSurahAudio=null;
       const fb=document.getElementById('fsListenBtn');
-      if(fb) fb.innerHTML=FS_PLAY_SVG+'Listen to this Surah';
+      if(fb && fsSurahNum !== FS_SURAH_MAP[d]) fb.innerHTML=FS_PLAY_SVG+'Listen to this Surah';
     }
   }
 }
@@ -1538,7 +1537,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=122';
+_cs.type='module';_cs.src='clock.js?v=123';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

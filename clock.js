@@ -903,60 +903,112 @@ function buildNumerals() {
   }
 }
 
-// Brand text — "A GIFT OF TIME" positioned like NOMOS/GLASHÜTTE at ~3 o'clock
+// Brand text — "A GIFT OF TIME" extruded 3D, two-layer metal+lume like numerals
 let brandMeshes = [];
+let brandLumeMats = [];
+let _brandFont = null;
+const _brandFontP = import('three/addons/loaders/FontLoader.js').then(({FontLoader})=>{
+  return new Promise(resolve=>{
+    new FontLoader().load('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/fonts/helvetiker_regular.typeface.json', f=>{
+      _brandFont=f; resolve(f);
+      // Rebuild brand text now that font is available
+      try { buildBrandText(); } catch(e) { console.warn('brand rebuild:', e); }
+    }, undefined, ()=>resolve(null));
+  });
+});
+
 function buildBrandText() {
   brandMeshes.forEach(m => clockGroup.remove(m));
-  brandMeshes = [];
+  brandMeshes = []; brandLumeMats = [];
   if(currentDial === 'kawthar' || currentDial === 'rainbow') return;
+  if(!_brandFont) return; // font not loaded yet
   
   const c = DIALS[currentDial];
-  const cvs = document.createElement('canvas');
-  const dpr = 2;
-  const cW = 512, cH = 160;
-  cvs.width = cW * dpr; cvs.height = cH * dpr;
-  const ctx = cvs.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, cW, cH);
+  const { TextGeometry } = THREE; // check if available
   
-  // Match dial text color — use hand color with reduced opacity for subtlety
-  const handCol = '#' + new THREE.Color(c.hand).getHexString();
+  // Helper: create extruded text line, centered, two-layer
+  function makeLine(text, fontSize, yPos, tracking) {
+    // Use TextGeometry from addons — loaded dynamically
+    const shapes = _brandFont.generateShapes(text, fontSize);
+    
+    // Apply letter spacing by shifting each shape
+    if(tracking && shapes.length > 1) {
+      // Compute bounding to find per-char offsets — simple approach: uniform shift
+      let accum = 0;
+      const charWidths = [];
+      // Group shapes by approximate x position clusters
+      shapes.forEach((s, i) => {
+        if(i > 0) {
+          // Shift all points in this shape by accumulated tracking
+          const shift = tracking * i;
+          s.curves.forEach(curve => {
+            if(curve.v1) { curve.v1.x += shift; curve.v2.x += shift; }
+            if(curve.aX !== undefined) { curve.aX += shift; }
+            if(curve.points) curve.points.forEach(p => p.x += shift);
+          });
+          if(s.holes) s.holes.forEach(hole => {
+            hole.curves.forEach(curve => {
+              if(curve.v1) { curve.v1.x += shift; curve.v2.x += shift; }
+              if(curve.aX !== undefined) { curve.aX += shift; }
+              if(curve.points) curve.points.forEach(p => p.x += shift);
+            });
+          });
+        }
+      });
+    }
+    
+    // Compute bounds for centering
+    const tempGeo = new THREE.ShapeGeometry(shapes);
+    tempGeo.computeBoundingBox();
+    const bb = tempGeo.boundingBox;
+    const offsetX = -(bb.max.x + bb.min.x) / 2;
+    const offsetY = -(bb.max.y + bb.min.y) / 2;
+    tempGeo.dispose();
+    
+    // Layer 1: metal base (slightly larger)
+    const baseScale = 1.08;
+    const baseShapes = _brandFont.generateShapes(text, fontSize * baseScale);
+    const baseTempGeo = new THREE.ShapeGeometry(baseShapes);
+    baseTempGeo.computeBoundingBox();
+    const bbb = baseTempGeo.boundingBox;
+    const baseOffsetX = -(bbb.max.x + bbb.min.x) / 2;
+    const baseOffsetY = -(bbb.max.y + bbb.min.y) / 2;
+    baseTempGeo.dispose();
+    
+    const baseGeo = new THREE.ExtrudeGeometry(baseShapes, {
+      depth: EXTRUDE_DEPTH * 0.5, bevelEnabled: true,
+      bevelThickness: 0.1, bevelSize: 0.08, bevelOffset: 0, bevelSegments: 2
+    });
+    baseGeo.computeVertexNormals();
+    const baseMesh = new THREE.Mesh(baseGeo, metalMat(c.hand));
+    baseMesh.position.set(baseOffsetX, yPos + baseOffsetY, 2.5);
+    baseMesh.castShadow = true;
+    clockGroup.add(baseMesh);
+    brandMeshes.push(baseMesh);
+    
+    // Layer 2: lume top
+    const lumeGeo = new THREE.ExtrudeGeometry(shapes, {
+      depth: EXTRUDE_DEPTH, bevelEnabled: true,
+      bevelThickness: 0.15, bevelSize: 0.1, bevelOffset: 0, bevelSegments: 3
+    });
+    lumeGeo.computeVertexNormals();
+    const lMat = lumeMat(c.lume);
+    const lumeMesh = new THREE.Mesh(lumeGeo, lMat);
+    lumeMesh.position.set(offsetX, yPos + offsetY, 3.5);
+    clockGroup.add(lumeMesh);
+    brandMeshes.push(lumeMesh);
+    brandLumeMats.push(lMat);
+  }
   
-  // Line 1: "A GIFT OF TIME" — main brand, NOMOS-weight tracking
-  ctx.fillStyle = handCol;
-  ctx.font = '500 28px Inter, system-ui, sans-serif';
-  ctx.letterSpacing = '4px';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('A GIFT OF TIME', cW/2, cH * 0.38);
+  // Position: centered on 12 o'clock line, between bottom of 12 marker and top of subdial
+  const brandY = R * 0.27;
+  const subY = R * 0.18; // subtitle slightly below
   
-  // Line 2: "agiftoftime.app" — subtitle, like GLASHÜTTE
-  ctx.font = '300 16px Inter, system-ui, sans-serif';
-  ctx.letterSpacing = '2px';
-  ctx.globalAlpha = 0.6;
-  ctx.fillText('agiftoftime.app', cW/2, cH * 0.68);
-  ctx.globalAlpha = 1;
+  // Main: "A GIFT OF TIME" — size to match dial proportion
+  makeLine('A GIFT OF TIME', R * 0.055, brandY, 0);
   
-  const tex = new THREE.CanvasTexture(cvs);
-  tex.anisotropy = 4;
-  
-  // Plane size in world units — 4x original for proper dial presence
-  const planeW = R * 1.6;
-  const planeH = planeW * (cH / cW);
-  const geo = new THREE.PlaneGeometry(planeW, planeH);
-  const mat = new THREE.MeshBasicMaterial({
-    map: tex, transparent: true, depthWrite: false,
-    side: THREE.FrontSide
-  });
-  
-  const mesh = new THREE.Mesh(geo, mat);
-  // Position: centered at 12 o'clock line, halfway between bottom of 12 marker and top of subdial
-  // 12 marker bottom ≈ R*0.72 (numeralRing R*0.82 minus half height R*0.16/2 = ~R*0.74)
-  // Subdial top ≈ -R*0.5 + cutoutR (R*0.38) = -R*0.12
-  // Midpoint ≈ (R*0.66 + (-R*0.12)) / 2 ≈ R*0.27
-  mesh.position.set(0, R * 0.27, 4);
-  clockGroup.add(mesh);
-  brandMeshes.push(mesh);
+  // Subtitle: "agiftoftime.app" — smaller, like GLASHÜTTE
+  makeLine('agiftoftime.app', R * 0.032, subY, 0);
 }
 
 // Hands (NOMOS Club Campus sword style — real 3D with lume channel)
@@ -2000,6 +2052,11 @@ function animate(){
   
   // Numerals glow
   numeralMats.forEach(m=>{
+    m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
+    m.emissiveIntensity = lumeIntensity * 0.85;
+  });
+  // Brand text glow
+  brandLumeMats.forEach(m=>{
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     m.emissiveIntensity = lumeIntensity * 0.85;
   });

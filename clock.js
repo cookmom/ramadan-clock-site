@@ -831,31 +831,31 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: complementary base — wider, tinted with dial color
+        // Layer 1: complementary base — visibly wider + taller border
         const mk = c.marker || c.lume;
         const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
-        const baseGeo = new THREE.BoxGeometry(mW*1.35, mH*1.02, depth*0.35);
+        const baseGeo = new THREE.BoxGeometry(mW*1.8, mH*1.08, depth*0.4);
         const baseMatl = new THREE.MeshPhysicalMaterial({
           color: mkBase,
-          roughness: 0.5, metalness: 0.0,
+          roughness: 0.45, metalness: 0.0,
           emissive: mk, emissiveIntensity: 0,
         });
         baseMatl.envMapIntensity = 0.3;
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-        baseMesh.position.set(px, py, depth*0.2);
+        baseMesh.position.set(px, py, 0.5);
         baseMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Layer 2: marker top — bright painted, subtle clear coat
-        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.45);
+        // Layer 2: marker top — narrower, sits on base
+        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.5);
         const topMatl = new THREE.MeshPhysicalMaterial({
-          color: mk, roughness: 0.35, metalness: 0.0,
+          color: mk, roughness: 0.3, metalness: 0.0,
           clearcoat: 0.5, clearcoatRoughness: 0.08,
           emissive: mk, emissiveIntensity: 0,
         });
         topMatl.envMapIntensity = 0.3;
         const topMesh = new THREE.Mesh(topGeo, topMatl);
-        topMesh.position.set(px, py, depth*0.35 + 0.6);
+        topMesh.position.set(px, py, depth*0.4 + 1.0);
         topMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(topMesh); markerMeshes.push(topMesh);
         lumeMeshes.push(topMesh);
@@ -916,17 +916,17 @@ function buildNumerals() {
     
     const mk = c.marker || c.lume;
     const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
-    // Layer 1: complementary base — slightly larger, tinted with dial color
+    // Layer 1: complementary base — visibly larger border
     const baseGeo = geo.clone();
     const baseMatl = new THREE.MeshPhysicalMaterial({
       color: mkBase,
-      roughness: 0.5, metalness: 0.0,
+      roughness: 0.45, metalness: 0.0,
       emissive: mk, emissiveIntensity: 0,
     });
     baseMatl.envMapIntensity = 0.3;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-    baseMesh.position.set(nx, ny, 2.5);
-    baseMesh.scale.setScalar(1.06);
+    baseMesh.position.set(nx, ny, 0.5);
+    baseMesh.scale.setScalar(1.15);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
     numeralSprites.push(baseMesh);

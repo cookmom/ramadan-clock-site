@@ -2192,7 +2192,7 @@ function animate(){
   topLight.intensity = 1.5 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
+  renderer.toneMappingExposure = (CONTAINED ? 0.70 : 0.825) - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;

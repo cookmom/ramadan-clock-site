@@ -151,7 +151,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = CONTAINED ? 0.70 : 0.825;
+renderer.toneMappingExposure = 0.825;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -1783,7 +1783,15 @@ function buildAll(){
   if(!CONTAINED) document.documentElement.style.backgroundColor = document.body.style.backgroundColor = '#' + dialBg.getHexString();
   if(CONTAINED && CONTAINER) {
     CONTAINER.style.backgroundColor = '#' + dialBg.getHexString();
-    // .clock-sticky stays as landing page bg — don't override
+    // Sync grain CSS vars on #dialHero to match fullscreen grain
+    const dialData = DIALS[currentDial];
+    if(dialData && dialData.grainBlend) {
+      CONTAINER.style.setProperty('--grain-blend', dialData.grainBlend);
+      CONTAINER.style.setProperty('--grain-opacity', String(dialData.grainOpacity));
+    } else {
+      CONTAINER.style.setProperty('--grain-blend', 'soft-light');
+      CONTAINER.style.setProperty('--grain-opacity', '0.4');
+    }
   }
   const steps = [['dial',buildDial],['bezel',buildBezel],['markers',buildMarkers],['numerals',buildNumerals],['brand',buildBrandText],['hands',buildHands],['qibla',buildQibla],['flap',buildFlap],['stars',buildStars],['scrollIndicator',buildScrollIndicator],['surah',updateSurah]];
   for(const [name,fn] of steps) { try { fn(); } catch(e) { console.error(`buildAll: ${name} failed:`, e); } }
@@ -2192,7 +2200,7 @@ function animate(){
   topLight.intensity = 1.5 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
   if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = (CONTAINED ? 0.70 : 0.825) - modeBlend * 0.25;
+  renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;

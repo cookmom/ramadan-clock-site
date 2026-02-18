@@ -161,6 +161,7 @@ body::after{display:none;
   transition:background 1s ease;
 }
 #dialHero{
+  position:relative;
   width:var(--clock-size);height:var(--clock-size);
   border-radius:50%;overflow:hidden;
   background:#585860;
@@ -218,7 +219,8 @@ a{color:inherit;text-decoration:none}
   position:relative;overflow:hidden;
   transition:background 1s ease,color 1s ease;
 }
-.grain-overlay{
+/* grain overlays removed — dial only */
+.grain-overlay-UNUSED{
   position:absolute;top:0;left:0;right:0;bottom:0;
   z-index:1;pointer-events:none;
   background:url(bauhaus-grain.png) repeat;background-size:200px 200px;
@@ -383,7 +385,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 1. THE HOOK -->
 <section class="scroll-section" id="sec-hook">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Introducing</p>
     <h1 class="section-title" style="font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.03em">A Gift of Time.</h1></div>
@@ -394,7 +395,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 2. QIBLA -->
 <section class="scroll-section" id="sec-qibla">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Direction</p>
     <h2 class="section-title">Always facing Qibla.</h2></div>
@@ -410,7 +410,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 3. PRAYER TIMES -->
 <section class="scroll-section" id="sec-prayer">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Prayer Times</p>
     <h2 class="section-title" style="margin-bottom:0">Come to prayer.</h2>
@@ -428,7 +427,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 4. ELEVEN DIALS -->
 <section class="scroll-section" id="sec-dials">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Dial Themes</p>
     <h2 class="section-title">Eleven stars, eleven dials.</h2></div>
@@ -453,7 +451,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 5. NIGHT MODE -->
 <section class="scroll-section" id="sec-night">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Night Mode</p>
     <h2 class="section-title">The lume reveals itself.</h2></div>
@@ -469,7 +466,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 6. ADHAN -->
 <section class="scroll-section" id="sec-adhan">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Adhan</p>
     <h2 class="section-title">Hear the call to prayer.</h2></div>
@@ -481,7 +477,6 @@ html.clock-direct nav,.clock-direct .scroll-section,.clock-direct .clock-sticky,
 
 <!-- 7. INSTALL -->
 <section class="scroll-section" id="sec-install">
-<div class="grain-overlay"></div>
   <div class="reveal">
     <div class="section-header"><p class="section-label">Install</p>
     <h2 class="section-title">Add to your home screen.</h2></div>
@@ -1650,8 +1645,10 @@ function openClockFullscreen() {
   stopDialCycle();
   if(window._stopTour) window._stopTour();
 
-  // Move canvas into fullscreen overlay
+  // Move canvas + grain overlay into fullscreen overlay
   overlay.appendChild(canvas);
+  const grain = document.getElementById('clockGrainOverlay');
+  if(grain) overlay.appendChild(grain);
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   document.querySelector('nav').style.display = 'none';
@@ -1699,8 +1696,11 @@ function closeClockFullscreen() {
   const canvas = overlay.querySelector('canvas');
   if(!canvas) return;
 
-  // Move canvas back
-  document.getElementById('dialHero').appendChild(canvas);
+  // Move canvas + grain overlay back
+  const hero = document.getElementById('dialHero');
+  hero.appendChild(canvas);
+  const grain = document.getElementById('clockGrainOverlay');
+  if(grain) hero.appendChild(grain);
   overlay.classList.remove('active');
   document.body.style.overflow = '';
   document.querySelector('nav').style.display = '';
@@ -1776,7 +1776,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=172';
+_cs.type='module';_cs.src='clock.js?v=173';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

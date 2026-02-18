@@ -1,11 +1,15 @@
 // A Gift of Time — Service Worker
-const CACHE_NAME = 'rc-v1';
+const CACHE_NAME = 'rc-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/clock.js',
+  '/studio.hdr',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/og-image.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install: cache core assets

@@ -2,7 +2,7 @@
   "name": "A Gift of Time",
   "short_name": "A Gift of Time",
   "description": "Prayer-aware clock with fasting countdown, Qibla compass, and tawaf animation.",
-  "start_url": "/ramadan-clock/",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a1a1a",

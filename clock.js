@@ -826,15 +826,31 @@ function buildMarkers() {
         lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
-      // NOMOS two-layer applied index: metal base (darker) + lume top (bright, clearcoated)
+      // NOMOS two-layer applied index: base with recessed lume channel
       if(isHour && !isNumeralPos){
-        const mH=R*0.16, mW=R*0.03, depth=3;
+        const mH=R*0.16, mW=R*0.03, depth=2.5;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: complementary base — visibly wider + taller border
         const mk = c.marker || c.lume;
         const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
-        const baseGeo = new THREE.BoxGeometry(mW*1.8, mH*1.08, depth*0.4);
+        // Base with channel cutout (extruded shape with hole)
+        const bW = mW*1.8, bH = mH*1.08;
+        const baseShape = new THREE.Shape();
+        baseShape.moveTo(-bW/2, -bH/2);
+        baseShape.lineTo(bW/2, -bH/2);
+        baseShape.lineTo(bW/2, bH/2);
+        baseShape.lineTo(-bW/2, bH/2);
+        baseShape.closePath();
+        // Cut channel hole — same proportions as lume fill
+        const cW = mW*0.85, cH = mH*0.88;
+        const channel = new THREE.Path();
+        channel.moveTo(-cW/2, -cH/2);
+        channel.lineTo(cW/2, -cH/2);
+        channel.lineTo(cW/2, cH/2);
+        channel.lineTo(-cW/2, cH/2);
+        channel.closePath();
+        baseShape.holes.push(channel);
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, {depth, bevelEnabled:false});
         const baseMatl = new THREE.MeshPhysicalMaterial({
           color: mkBase,
           roughness: 0.45, metalness: 0.0,
@@ -842,23 +858,22 @@ function buildMarkers() {
         });
         baseMatl.envMapIntensity = 0.3;
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-        baseMesh.position.set(px, py, 0.5);
+        baseMesh.position.set(px, py, 0.3);
         baseMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Layer 2: marker top — narrower, sits on base
-        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.5);
-        const topMatl = new THREE.MeshPhysicalMaterial({
-          color: mk, roughness: 0.3, metalness: 0.0,
-          clearcoat: 0.5, clearcoatRoughness: 0.08,
+        // Lume fill — sits INSIDE the channel, recessed
+        const lumeGeo = new THREE.BoxGeometry(cW, cH, depth*0.5);
+        const lumeMatl = new THREE.MeshPhysicalMaterial({
+          color: mk, roughness: 0.35, metalness: 0.0,
           emissive: mk, emissiveIntensity: 0,
         });
-        topMatl.envMapIntensity = 0.3;
-        const topMesh = new THREE.Mesh(topGeo, topMatl);
-        topMesh.position.set(px, py, depth*0.4 + 1.0);
-        topMesh.rotation.z = ang + Math.PI/2;
-        clockGroup.add(topMesh); markerMeshes.push(topMesh);
-        lumeMeshes.push(topMesh);
+        lumeMatl.envMapIntensity = 0.3;
+        const lumeMesh = new THREE.Mesh(lumeGeo, lumeMatl);
+        lumeMesh.position.set(px, py, 0.5); // inside channel, below base top surface
+        lumeMesh.rotation.z = ang + Math.PI/2;
+        clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
+        lumeMeshes.push(lumeMesh);
       }
     }
   }
@@ -932,15 +947,15 @@ function buildNumerals() {
     numeralSprites.push(baseMesh);
     numeralMats.push(baseMatl);
     
-    // Layer 2: marker top — bright painted, subtle clear coat
+    // Layer 2: lume fill — recessed inside base (lower z, smaller scale)
     const topMatl = new THREE.MeshPhysicalMaterial({
       color: mk, roughness: 0.35, metalness: 0.0,
-      clearcoat: 0.5, clearcoatRoughness: 0.08,
       emissive: mk, emissiveIntensity: 0,
     });
     topMatl.envMapIntensity = 0.3;
     const mesh = new THREE.Mesh(geo, topMatl);
-    mesh.position.set(nx, ny, 3.5);
+    mesh.position.set(nx, ny, 0.8); // inside base, not on top
+    mesh.scale.setScalar(1.0); // smaller than base (1.15) = visible border
     clockGroup.add(mesh);
     numeralSprites.push(mesh);
     numeralMats.push(topMatl);

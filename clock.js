@@ -170,6 +170,15 @@ new THREE.TextureLoader().load('grain-fine-roughness.png', (t) => {
   _grainRoughnessTex = t;
 });
 
+// Grain color texture — used as emissiveMap on fullscreen background for visible grain
+let _grainColorTex = null;
+new THREE.TextureLoader().load('grain-fine.png', (t) => {
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(12, 12); // 198px tiled 12x — matches ~148px CSS tile density
+  _grainColorTex = t;
+  console.log('[clock] grain color texture loaded');
+});
+
 const scene = new THREE.Scene();
 
 // ── Perspective camera (slight top-down angle for depth)
@@ -631,7 +640,17 @@ if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
 const fsBgShape = new THREE.Shape();
 fsBgShape.moveTo(-5000, -5000); fsBgShape.lineTo(5000, -5000); fsBgShape.lineTo(5000, 5000); fsBgShape.lineTo(-5000, 5000); fsBgShape.closePath();
 const fsBgGeo = new THREE.ShapeGeometry(fsBgShape, 4);
-let fsBgMat = dialMat(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860);
+function fsBgMaterial(color) {
+  const m = dialMat(color);
+  // Add grain as emissive map — adds light like CSS plus-lighter blend
+  if (_grainColorTex) {
+    m.emissiveMap = _grainColorTex;
+    m.emissive = new THREE.Color(color);
+    m.emissiveIntensity = 0.12; // subtle grain glow — matches Bauhaus opacity 0.2
+  }
+  return m;
+}
+let fsBgMat = fsBgMaterial(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860);
 const fsBgPlane = new THREE.Mesh(fsBgGeo, fsBgMat);
 fsBgPlane.position.z = -0.01; // just behind dial face but in front of nothing
 fsBgPlane.visible = false; // only visible in fullscreen
@@ -713,7 +732,7 @@ function buildDial() {
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {
     fsBgPlane.material.dispose();
-    fsBgPlane.material = dialMat(DIALS[currentDial].bg);
+    fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
   // In fullscreen, dial geometry hidden — background IS the dial
   if(isFullscreen) {
@@ -2194,6 +2213,10 @@ function animate(){
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
     const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
     fsBgPlane.material.color.copy(nightBgColor);
+    if(fsBgPlane.material.emissive) {
+      fsBgPlane.material.emissive.copy(nightBgColor);
+      fsBgPlane.material.emissiveIntensity = 0.12 * (1 - modeBlend * 0.7); // dim grain at night
+    }
   }
   
   // Rainbow bezel gems glow at night

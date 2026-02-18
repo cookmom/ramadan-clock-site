@@ -940,8 +940,8 @@ function buildBrandText() {
   const tex = new THREE.CanvasTexture(cvs);
   tex.anisotropy = 4;
   
-  // Plane size in world units — proportional to dial
-  const planeW = R * 0.44;
+  // Plane size in world units — 4x original for proper dial presence
+  const planeW = R * 1.6;
   const planeH = planeW * (cH / cW);
   const geo = new THREE.PlaneGeometry(planeW, planeH);
   const mat = new THREE.MeshBasicMaterial({
@@ -950,8 +950,11 @@ function buildBrandText() {
   });
   
   const mesh = new THREE.Mesh(geo, mat);
-  // Position: 3 o'clock area, between center and 2 marker — same as NOMOS
-  mesh.position.set(R * 0.32, R * 0.12, 4);
+  // Position: centered at 12 o'clock line, halfway between bottom of 12 marker and top of subdial
+  // 12 marker bottom ≈ R*0.72 (numeralRing R*0.82 minus half height R*0.16/2 = ~R*0.74)
+  // Subdial top ≈ -R*0.5 + cutoutR (R*0.38) = -R*0.12
+  // Midpoint ≈ (R*0.66 + (-R*0.12)) / 2 ≈ R*0.27
+  mesh.position.set(0, R * 0.27, 4);
   clockGroup.add(mesh);
   brandMeshes.push(mesh);
 }

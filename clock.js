@@ -13,18 +13,19 @@ if(CONTAINED) console.log('[clock] CONTAINED mode, container:', CONTAINER.client
 // CONFIG
 // ══════════════════════════════════════════
 const DIALS = {
-  // ── NOMOS Club Campus palette ── (extracted from nomos-glashuette.com product photography)
-  // All Campus dials: warm white rhodium hands/lume + neon orange seconds hand
+  // ── NOMOS Club Campus palette ── (extracted from product photography)
+  // marker = printed marker/numeral color (NOT metal — painted applied indices)
+  // lume = night glow base color (SuperLuminova)
   // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
-  deep_pink:  {bg:0xbc4b79, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
-  red:        {bg:0xdf473a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
-  coral:      {bg:0xe8967a, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
-  starlight:  {bg:0xd8d580, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},
-  green:      {bg:0x30b080, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
-  teal:       {bg:0x63afb9, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
-  slate:      {bg:0x5d6278, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
-  navy:       {bg:0x132653, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
-  white:      {bg:0xe0e0e0, lume:0x2a2a30, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
+  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
+  red:        {bg:0xdf473a, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
+  coral:      {bg:0xe8967a, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
+  starlight:  {bg:0xd8d580, marker:0xe08850, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf54020, text:'#e9e6e1', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},       // orange markers
+  green:      {bg:0x30b080, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
+  teal:       {bg:0x63afb9, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
+  slate:      {bg:0x5d6278, marker:0xe9e6e1, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
+  navy:       {bg:0x132653, marker:0xf0ecf0, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
+  white:      {bg:0xe0e0e0, marker:0xd8907a, lume:0xd8907a, hand:0x888890, sec:0xf56623, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},     // salmon pink markers
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},
@@ -812,7 +813,7 @@ function buildMarkers() {
       {
         const tH=R*0.036, tW=0.675, depth=1.5;
         const geo = new THREE.BoxGeometry(tW, tH, depth);
-        const mat = lumeMat(c.lume); // minute ticks = lume paint (SuperLuminova)
+        const mat = lumeMat(c.marker || c.lume); // minute ticks match marker color
         const mesh = new THREE.Mesh(geo, mat);
         const midR = (R - R*0.04 - tH/2) * 1.03;
         mesh.position.x = Math.cos(ang)*midR;
@@ -829,31 +830,30 @@ function buildMarkers() {
         const mH=R*0.16, mW=R*0.03, depth=3;
         const midR = (R - R*0.04 - mH/2) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
-        // Layer 1: rhodium metal base — same finish as hands, wider footprint
-        const baseGeo = new THREE.BoxGeometry(mW*1.5, mH*1.02, depth*0.4);
+        // Layer 1: painted base — slightly wider, slightly darker tone
+        const mk = c.marker || c.lume;
+        const baseGeo = new THREE.BoxGeometry(mW*1.35, mH*1.02, depth*0.35);
         const baseMatl = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color(c.hand).lerp(new THREE.Color(0xE8E8EC), 0.3),
-          roughness: 0.2, metalness: 1.0,
-          clearcoat: 0.3, clearcoatRoughness: 0.08,
-          emissive: c.lume, emissiveIntensity: 0,
+          color: new THREE.Color(mk).multiplyScalar(0.75), // darker base
+          roughness: 0.5, metalness: 0.0,
+          emissive: mk, emissiveIntensity: 0,
         });
-        baseMatl.envMapIntensity = 2.0;
+        baseMatl.envMapIntensity = 0.3;
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
         baseMesh.position.set(px, py, depth*0.2);
         baseMesh.rotation.z = ang + Math.PI/2;
-        baseMesh.castShadow = true;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Layer 2: lume top — bright, clearcoated (SuperLuminova under lacquer)
-        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.5);
+        // Layer 2: marker top — bright painted, subtle clear coat
+        const topGeo = new THREE.BoxGeometry(mW, mH, depth*0.45);
         const topMatl = new THREE.MeshPhysicalMaterial({
-          color: c.lume, roughness: 0.3, metalness: 0.0,
-          clearcoat: 0.8, clearcoatRoughness: 0.06,
-          emissive: c.lume, emissiveIntensity: 0,
+          color: mk, roughness: 0.35, metalness: 0.0,
+          clearcoat: 0.5, clearcoatRoughness: 0.08,
+          emissive: mk, emissiveIntensity: 0,
         });
-        topMatl.envMapIntensity = 0.5;
+        topMatl.envMapIntensity = 0.3;
         const topMesh = new THREE.Mesh(topGeo, topMatl);
-        topMesh.position.set(px, py, depth*0.4 + 0.8);
+        topMesh.position.set(px, py, depth*0.35 + 0.6);
         topMesh.rotation.z = ang + Math.PI/2;
         clockGroup.add(topMesh); markerMeshes.push(topMesh);
         lumeMeshes.push(topMesh);
@@ -912,30 +912,30 @@ function buildNumerals() {
     const gcy = (gbb.max.y + gbb.min.y) / 2;
     geo.translate(-gcx, -gcy, 0);
     
-    // Layer 1: rhodium metal base — same finish as hands, slightly larger
+    const mk = c.marker || c.lume;
+    // Layer 1: painted base — slightly larger, darker tone
     const baseGeo = geo.clone();
     const baseMatl = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(c.hand).lerp(new THREE.Color(0xE8E8EC), 0.3),
-      roughness: 0.2, metalness: 1.0,
-      clearcoat: 0.3, clearcoatRoughness: 0.08,
-      emissive: c.lume, emissiveIntensity: 0,
+      color: new THREE.Color(mk).multiplyScalar(0.75),
+      roughness: 0.5, metalness: 0.0,
+      emissive: mk, emissiveIntensity: 0,
     });
-    baseMatl.envMapIntensity = 2.0;
+    baseMatl.envMapIntensity = 0.3;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
     baseMesh.position.set(nx, ny, 2.5);
-    baseMesh.scale.setScalar(1.08);
+    baseMesh.scale.setScalar(1.06);
     baseMesh.castShadow = true;
     clockGroup.add(baseMesh);
     numeralSprites.push(baseMesh);
     numeralMats.push(baseMatl);
     
-    // Layer 2: lume top — bright, clearcoated (SuperLuminova under lacquer)
+    // Layer 2: marker top — bright painted, subtle clear coat
     const topMatl = new THREE.MeshPhysicalMaterial({
-      color: c.lume, roughness: 0.3, metalness: 0.0,
-      clearcoat: 0.8, clearcoatRoughness: 0.06,
-      emissive: c.lume, emissiveIntensity: 0,
+      color: mk, roughness: 0.35, metalness: 0.0,
+      clearcoat: 0.5, clearcoatRoughness: 0.08,
+      emissive: mk, emissiveIntensity: 0,
     });
-    topMatl.envMapIntensity = 0.5;
+    topMatl.envMapIntensity = 0.3;
     const mesh = new THREE.Mesh(geo, topMatl);
     mesh.position.set(nx, ny, 3.5);
     clockGroup.add(mesh);
@@ -976,8 +976,8 @@ function buildBrandText() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, cW, cH);
     
-    // Use lume color for text
-    const lumeCol = '#' + new THREE.Color(c.lume).getHexString();
+    // Use marker color for text (matches printed indices)
+    const lumeCol = '#' + new THREE.Color(c.marker || c.lume).getHexString();
     ctx.fillStyle = lumeCol;
     ctx.globalAlpha = alpha !== undefined ? alpha : 1;
     ctx.font = fontSpec;
@@ -1010,7 +1010,7 @@ function buildBrandText() {
   // Use individual letter sprites placed along a world-space arc — no canvas mapping issues
   {
     const text = 'AGIFTOFTIME.APP';
-    const lumeCol = new THREE.Color(c.lume);
+    const lumeCol = new THREE.Color(c.marker || c.lume);
     // Arc center = dial center (0,0), radius outside minute markers
     const arcCX = 0, arcCY = 0;
     const arcRadius = R * 1.02; // outside minute markers, near dial rim

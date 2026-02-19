@@ -673,47 +673,41 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — real 3D stepped geometry (not flat rings)
+  // Subdial recess — 3D bezel ring visible even when dialMesh is hidden
+  // Since dialMesh is hidden in fullscreen/contained, we use a TorusGeometry
+  // ring at the aperture edge — a physical raised border that reads as the
+  // lip of a recessed complication, like a real watch subdial bezel.
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
-  const recessDepth = 2; // matches qiblaGroup.position.z = -2
 
-  // Chamfered recess wall — LatheGeometry with cross-section profile
-  // Profile: top lip (dial surface) → chamfer → vertical wall → floor
-  const chamferSize = 0.4;
-  const wallPts = [
-    new THREE.Vector2(cutoutR + 0.3, 0),           // top lip outer edge (on dial surface)
-    new THREE.Vector2(cutoutR, 0),                  // top lip inner edge
-    new THREE.Vector2(cutoutR - chamferSize, -chamferSize), // chamfer
-    new THREE.Vector2(cutoutR - chamferSize, -recessDepth), // wall bottom
-    new THREE.Vector2(cutoutR + 0.3, -recessDepth), // floor edge (close the shape)
-  ];
-  const recessGeo = new THREE.LatheGeometry(wallPts, 128);
-  const recessWallMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.55),
-    roughness: 0.6,
-    metalness: 0.15,
-    envMapIntensity: 0.3,
+  // Bezel ring — TorusGeometry for a real 3D rounded lip
+  const bezelTubeR = 0.4;
+  const bezelRingR = cutoutR;
+  const bezelGeo = new THREE.TorusGeometry(bezelRingR, bezelTubeR, 24, 128);
+  const bezelMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.45),
+    roughness: 0.18,
+    metalness: 0.7,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.03,
+    envMapIntensity: 2.5,
   });
-  const recessWall = new THREE.Mesh(recessGeo, recessWallMat);
-  recessWall.position.set(0, subY, 0);
-  recessWall.rotation.x = Math.PI / 2; // LatheGeometry is Y-up, we need Z-up
-  clockGroup.add(recessWall);
-  markerMeshes.push(recessWall);
+  const bezelRing = new THREE.Mesh(bezelGeo, bezelMat);
+  bezelRing.position.set(0, subY, 0.2);
+  bezelRing.rotation.x = Math.PI / 2;
+  clockGroup.add(bezelRing);
+  markerMeshes.push(bezelRing);
 
-  // Thin polished lip ring at top edge — catches HDRI highlight like real watch
-  const lipGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.3, 128);
-  const lipMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.7),
-    roughness: 0.15,
-    metalness: 0.6,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.05,
-    envMapIntensity: 2.0,
+  // Inner shadow disc — darkens the recess floor behind the bezel
+  const shadowGeo = new THREE.CircleGeometry(cutoutR - 0.1, 128);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    color: dialCol.clone().multiplyScalar(0.3),
+    transparent: true,
+    opacity: 0.45,
   });
-  const lipRing = new THREE.Mesh(lipGeo, lipMat);
-  lipRing.position.set(0, subY, 0.1);
-  clockGroup.add(lipRing);
-  markerMeshes.push(lipRing);
+  const shadowDisc = new THREE.Mesh(shadowGeo, shadowMat);
+  shadowDisc.position.set(0, subY, -0.5);
+  clockGroup.add(shadowDisc);
+  markerMeshes.push(shadowDisc);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

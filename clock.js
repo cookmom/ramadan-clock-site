@@ -673,28 +673,32 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — bold dark rim (like v274 look)
-  // Thick outer ring: reads as watch complication aperture
-  const recessRimGeo = new THREE.RingGeometry(cutoutR - 1.2, cutoutR + 0.5, 128);
-  const recessRimMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.4),
-  });
-  const recessRim = new THREE.Mesh(recessRimGeo, recessRimMat);
-  recessRim.position.set(0, subY, 0.1); // slightly in front to ensure visibility
-  clockGroup.add(recessRim);
-  markerMeshes.push(recessRim);
+  // Subdial recess — cylindrical wall from dial surface (z=0) to subdial floor (z=-2)
+  // Creates a visible "step down" so the rotating qibla ring reads as physically recessed
+  const recessDepth = 2; // matches qiblaGroup.position.z = -2
+  const wallThickness = 0.8;
 
-  // Inner shadow — softer transition from rim to subdial floor
-  const shadowGeo = new THREE.RingGeometry(cutoutR - 2.5, cutoutR - 1.2, 128);
-  const shadowMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.6),
-    transparent: true,
-    opacity: 0.45,
+  // Cylindrical wall — dark inner surface creates shadow/depth illusion
+  const wallGeo = new THREE.CylinderGeometry(cutoutR, cutoutR, recessDepth, 64, 1, true);
+  const wallMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.35),
+    side: THREE.BackSide, // render inner surface only
   });
-  const shadowRing = new THREE.Mesh(shadowGeo, shadowMat);
-  shadowRing.position.set(0, subY, 0.05);
-  clockGroup.add(shadowRing);
-  markerMeshes.push(shadowRing);
+  const recessWall = new THREE.Mesh(wallGeo, wallMat);
+  recessWall.rotation.x = Math.PI / 2; // orient cylinder along Z axis
+  recessWall.position.set(0, subY, -recessDepth / 2); // spans z=0 to z=-2
+  clockGroup.add(recessWall);
+  markerMeshes.push(recessWall);
+
+  // Top edge bevel — thin dark ring at dial surface to define the aperture edge
+  const bevelGeo = new THREE.RingGeometry(cutoutR - 0.3, cutoutR + 0.3, 128);
+  const bevelMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.45),
+  });
+  const bevelRing = new THREE.Mesh(bevelGeo, bevelMat);
+  bevelRing.position.set(0, subY, 0.05);
+  clockGroup.add(bevelRing);
+  markerMeshes.push(bevelRing);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

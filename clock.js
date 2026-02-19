@@ -673,15 +673,28 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess wall — Nomos style: very fine hairline dark circle
-  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
-  const recessWallMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.82),
+  // Subdial recess — bold dark rim (like v274 look)
+  // Thick outer ring: reads as watch complication aperture
+  const recessRimGeo = new THREE.RingGeometry(cutoutR - 1.2, cutoutR + 0.5, 128);
+  const recessRimMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.4),
   });
-  const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
-  recessWall.position.set(0, subY, -0.5);
-  clockGroup.add(recessWall);
-  markerMeshes.push(recessWall);
+  const recessRim = new THREE.Mesh(recessRimGeo, recessRimMat);
+  recessRim.position.set(0, subY, 0.1); // slightly in front to ensure visibility
+  clockGroup.add(recessRim);
+  markerMeshes.push(recessRim);
+
+  // Inner shadow — softer transition from rim to subdial floor
+  const shadowGeo = new THREE.RingGeometry(cutoutR - 2.5, cutoutR - 1.2, 128);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.6),
+    transparent: true,
+    opacity: 0.45,
+  });
+  const shadowRing = new THREE.Mesh(shadowGeo, shadowMat);
+  shadowRing.position.set(0, subY, 0.05);
+  clockGroup.add(shadowRing);
+  markerMeshes.push(shadowRing);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

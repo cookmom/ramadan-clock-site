@@ -673,53 +673,51 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — stepped ring geometry visible even when dialMesh is hidden.
-  // Creates the visual boundary between the dial surface and the recessed subdial well.
+  // Subdial recess — visible stepped complication aperture.
+  // The camera is nearly straight-on (2° tilt), so a cylinder wall is invisible.
+  // Instead: surround ring (dial color PBR) + dark inner bevel ring + recessed floor disc.
+  // The contrast between surround → bevel → floor creates the depth illusion.
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
 
-  // Step ring — wide flat annular ring at dial surface, darker than dial.
-  // This reads as a chamfered step-down into the subdial recess.
-  // Width = 2.5 units (visible at screen resolution), color = 0.55x dial (shadow tone).
-  const stepInner = cutoutR - 2.5;
-  const stepOuter = cutoutR + 1.0;
-  const stepGeo = new THREE.RingGeometry(stepInner, stepOuter, 128, 1);
-  const stepMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.5),
-    roughness: 0.35,
-    metalness: 0.3,
-    envMapIntensity: 1.0,
-  });
-  const stepRing = new THREE.Mesh(stepGeo, stepMat);
-  stepRing.position.set(0, subY, 0.15);
-  clockGroup.add(stepRing);
-  markerMeshes.push(stepRing);
+  // 1. Surround ring — PBR dial surface that stays visible when dialMesh is hidden
+  const surroundWidth = 5;
+  const surroundShape = new THREE.Shape();
+  surroundShape.absarc(0, 0, cutoutR + surroundWidth, 0, Math.PI*2, false);
+  const surroundHole = new THREE.Path();
+  surroundHole.absarc(0, 0, cutoutR, 0, Math.PI*2, true);
+  surroundShape.holes.push(surroundHole);
+  const surroundGeo = new THREE.ShapeGeometry(surroundShape, 128);
+  const surroundMat = dialMat(DIALS[currentDial].bg);
+  const surroundRing = new THREE.Mesh(surroundGeo, surroundMat);
+  surroundRing.position.set(0, subY, 0.3); // raised above floor — creates actual step
+  clockGroup.add(surroundRing);
+  markerMeshes.push(surroundRing);
 
-  // Polished lip — thin bright ring at outer edge of step for a crisp highlight
-  const lipGeo = new THREE.RingGeometry(stepOuter - 0.3, stepOuter, 128, 1);
-  const lipMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.7),
-    roughness: 0.08,
-    metalness: 0.8,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.02,
-    envMapIntensity: 3.0,
+  // 2. Dark inner bevel ring — crisp dark border at the step edge.
+  // Width 2px, very dark — the primary visual cue that says "this area is recessed."
+  const bevelWidth = 2.0;
+  const bevelGeo = new THREE.RingGeometry(cutoutR - bevelWidth, cutoutR + 0.5, 128, 1);
+  const bevelMat = new THREE.MeshBasicMaterial({
+    color: dialCol.clone().multiplyScalar(0.2), // near-black — strong shadow line
   });
-  const lipRing = new THREE.Mesh(lipGeo, lipMat);
-  lipRing.position.set(0, subY, 0.18);
-  clockGroup.add(lipRing);
-  markerMeshes.push(lipRing);
+  const bevelRing = new THREE.Mesh(bevelGeo, bevelMat);
+  bevelRing.position.set(0, subY, 0.28);
+  clockGroup.add(bevelRing);
+  markerMeshes.push(bevelRing);
 
-  // Inner shadow disc — darkens the recess floor for depth
-  const shadowGeo = new THREE.CircleGeometry(stepInner, 128);
-  const shadowMat = new THREE.MeshBasicMaterial({
-    color: dialCol.clone().multiplyScalar(0.4),
-    transparent: true,
-    opacity: 0.35,
+  // 3. Floor disc — noticeably darker than the surround, creating visible depth contrast.
+  // The contrast between surround (full dial color) and floor (darker) IS the recess.
+  const floorGeo = new THREE.CircleGeometry(cutoutR - bevelWidth, 128);
+  const floorMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.75), // 25% darker than dial — visible contrast
+    roughness: 0.5,
+    metalness: 0.05,
+    envMapIntensity: 0.3,
   });
-  const shadowDisc = new THREE.Mesh(shadowGeo, shadowMat);
-  shadowDisc.position.set(0, subY, -0.3);
-  clockGroup.add(shadowDisc);
-  markerMeshes.push(shadowDisc);
+  const floorDisc = new THREE.Mesh(floorGeo, floorMat);
+  floorDisc.position.set(0, subY, 0.02);
+  clockGroup.add(floorDisc);
+  markerMeshes.push(floorDisc);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

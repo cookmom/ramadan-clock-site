@@ -151,7 +151,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = CONTAINED ? 0.74 : 0.825; // contained: compensate for simultaneous contrast on light bg
+renderer.toneMappingExposure = 0.825; // unified exposure — landing page matches fullscreen
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -213,7 +213,7 @@ let studioEnvMap;
   const envRT = pmrem.fromEquirectangular(hdrTex);
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
-  scene.environmentIntensity = 0.5; // controlled — HDRI for reflections not illumination
+  scene.environmentIntensity = 0.65; // subtle bump — hands and markers need env to read as metal
   scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
@@ -223,24 +223,25 @@ let studioEnvMap;
 // Clean, even illumination. Soft upper-left key creates subtle dial gradient.
 // Minimal shadows — watch photography is about material quality, not drama.
 
-// Ambient — gentle shadow fill
-const ambLight = new THREE.AmbientLight(0xffffff, 0.25);
+// Ambient — gentle shadow fill, warm tint
+const ambLight = new THREE.AmbientLight(0xfff8f2, 0.3);
 scene.add(ambLight);
 
 // Key light — large soft rect from upper-left (NOMOS product photo style)
-const keyLight = new THREE.RectAreaLight(0xfff8f0, 3.0, 400, 400);
+// Warm white mimics studio softbox — creates the primary highlight sweep on hands
+const keyLight = new THREE.RectAreaLight(0xfff4e8, 3.5, 400, 400);
 keyLight.position.set(-60, 120, 280);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Fill light — opposite side, cooler, lower intensity for depth
-const fillLight = new THREE.RectAreaLight(0xf0f4ff, 1.0, 300, 300);
+// Fill light — opposite side, cooler tone creates depth and dimension
+const fillLight = new THREE.RectAreaLight(0xe8f0ff, 1.2, 300, 300);
 fillLight.position.set(80, -40, 220);
 fillLight.lookAt(0, 0, 0);
 scene.add(fillLight);
 
-// Top light — even overhead wash (prevents dark spots)
-const topLight = new THREE.RectAreaLight(0xffffff, 1.5, 350, 350);
+// Top light — even overhead wash (prevents dark spots, neutral white)
+const topLight = new THREE.RectAreaLight(0xffffff, 1.8, 350, 350);
 topLight.position.set(0, 0, 300);
 topLight.lookAt(0, 0, 0);
 scene.add(topLight);
@@ -325,18 +326,22 @@ function makeNumeralBumpMap(numerals, font, size = 512) {
 }
 const numeralBumpTex = makeNumeralBumpMap();
 
-// ── Dial material — clean flat surface, grain handled by CSS overlay ──
+// ── Dial material — galvanized/sandblasted finish, responds subtly to tilt ──
 function dialMat(color) {
   const cd = currentDial;
   const special = {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3 },
   };
-  const s = special[cd] || { roughness:0.4, metalness:0.0, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 };
+  const s = special[cd] || { roughness:0.5, metalness:0.05, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 };
   const m = new THREE.MeshPhysicalMaterial({
     color,
     roughness: s.roughness,
     metalness: s.metalness,
+    roughnessMap: dialGrainTex,       // procedural grain — micro-texture responds to HDRI sweep
+    clearcoat: 0.15,                  // faint protective coat — visible on macro
+    clearcoatRoughness: 0.3,          // diffuse clearcoat — not glossy, sandblasted character
   });
+  m.envMapIntensity = 0.6; // subtle environment reflection — dial should be calm, not flashy
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
   return m;
 }
@@ -344,33 +349,34 @@ function metalMat(color) {
   const precious = ['kawthar','rainbow'].includes(currentDial);
   const m = new THREE.MeshPhysicalMaterial({
     color,
-    roughness: precious ? 0.02 : 0.04,
+    roughness: precious ? 0.02 : 0.03,
     metalness: 1.0,
-    clearcoat: 0.4,
-    clearcoatRoughness: 0.02,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.015,
     reflectivity: 1.0,
     ior: 2.33,
   });
-  m.envMapIntensity = precious ? 4.0 : 3.5;
+  m.envMapIntensity = precious ? 5.0 : 4.0;
   return m;
 }
 // Rhodium-plated hands — NOMOS Club Campus reference
-// Bright polished silver with fine satin finish, not mirror-chrome
+// Polished rhodium: warm silver with crisp HDRI reflections, not flat white
 function brushedHandMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(color).lerp(new THREE.Color(0xE8E8EC), 0.4), // rhodium tint — bright silver
-    roughness: 0.18,        // polished but not mirror (satin rhodium)
+    color: new THREE.Color(color).lerp(new THREE.Color(0xD8D8E0), 0.25), // less white wash — keep dial color influence
+    roughness: 0.12,        // more polished — crisp reflections like NOMOS macro shots
     metalness: 1.0,
-    anisotropy: 0.4,        // subtle brushing (NOMOS hands are more polished than brushed)
+    anisotropy: 0.3,        // subtle lengthwise grain
     anisotropyRotation: 0,
-    clearcoat: 0.6,         // visible clear protective coat (see macro shots)
-    clearcoatRoughness: 0.04,
+    clearcoat: 0.8,         // strong clearcoat — visible wet-look protective coat
+    clearcoatRoughness: 0.02,
     reflectivity: 0.95,
+    ior: 2.4,               // rhodium IOR
     polygonOffset: true,
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1,
   });
-  m.envMapIntensity = 2.5;
+  m.envMapIntensity = 3.5; // stronger env reflections — hands should catch studio light
   return m;
 }
 function lumeMat(color) {
@@ -378,7 +384,12 @@ function lumeMat(color) {
   m.envMapIntensity = 0; return m; // lume = paint, no reflections — recessed in channel so no z-fighting
 }
 function secMat(color) {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.4, emissive: color, emissiveIntensity: 0 }); m.envMapIntensity = 3.0; return m; // second hand — glossy lacquer finish
+  const m = new THREE.MeshPhysicalMaterial({
+    color, roughness: 0.08, metalness: 0.3,
+    clearcoat: 1.0, clearcoatRoughness: 0.02,  // lacquered finish — glossy and vibrant
+    emissive: color, emissiveIntensity: 0,
+  });
+  m.envMapIntensity = 3.5; return m; // second hand — wet lacquer finish with clearcoat
 }
 
 // ══════════════════════════════════════════
@@ -557,7 +568,7 @@ let isFullscreen = false;
 let CLOCK_SCALE = CONTAINED ? 0.95 : (EMBED ? 0.65 : 0.57);
 const bgCutoutR = R * 1.12 * CLOCK_SCALE; // flush with dial edge, no gap
 // Background plane — MeshBasicMaterial (unlit) so it always matches scene.background exactly
-const bgPlaneMat = new THREE.MeshBasicMaterial({ color: 0x18181e });
+const bgPlaneMat = new THREE.MeshBasicMaterial({ color: DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860 });
 const bgShape = new THREE.Shape();
 bgShape.moveTo(-5000, -5000); bgShape.lineTo(5000, -5000); bgShape.lineTo(5000, 5000); bgShape.lineTo(-5000, 5000); bgShape.closePath();
 const bgHole = new THREE.Path();
@@ -566,7 +577,7 @@ bgShape.holes.push(bgHole);
 const bgPlaneGeo = new THREE.ShapeGeometry(bgShape, 64);
 const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
 bgPlane.position.z = -3 * CLOCK_SCALE; // flush with dial front face in world space
-if(!EMBED || NIGHT_START || CONTAINED) scene.add(bgPlane);
+if((!EMBED || NIGHT_START) && !CONTAINED) scene.add(bgPlane);
 
 // Full-screen PBR background — same material as dial for seamless continuous surface
 // Used in fullscreen mode so dial + background read as one infinite textured plane
@@ -580,7 +591,7 @@ let fsBgMat = fsBgMaterial(DIALS[currentDial] ? DIALS[currentDial].bg : 0x585860
 const fsBgPlane = new THREE.Mesh(fsBgGeo, fsBgMat);
 fsBgPlane.position.z = -0.01; // just behind dial face but in front of nothing
 fsBgPlane.visible = false; // only visible in fullscreen
-if(EMBED && !NIGHT_START && !CONTAINED) { renderer.setClearColor(0x000000, 0); }
+if((EMBED && !NIGHT_START) || CONTAINED) { renderer.setClearColor(0x000000, 0); }
 scene.add(fsBgPlane); // always in scene, visibility toggled by fullscreen
 
 // Fullscreen API for landing page
@@ -599,11 +610,13 @@ window._clockSetFullscreen = function(on, snapNight) {
     CLOCK_SCALE = 0.95;
     // Snap day/night blend instantly on exit — no lerp
     if(snapNight !== undefined) { modeTarget = snapNight ? 1 : 0; modeBlend = modeTarget; }
-    if(!scene.children.includes(bgPlane)) scene.add(bgPlane);
+    if(!CONTAINED && !scene.children.includes(bgPlane)) scene.add(bgPlane);
     fsBgPlane.visible = false;
-    // Restore dial geometry for embedded/landing mode
-    if(dialMesh) dialMesh.visible = true;
-    if(dialLowerMesh) dialLowerMesh.visible = true;
+    // Restore dial geometry only for non-contained modes
+    if(!CONTAINED) {
+      if(dialMesh) dialMesh.visible = true;
+      if(dialLowerMesh) dialLowerMesh.visible = true;
+    }
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
   }
   // Update bgPlane cutout
@@ -671,8 +684,8 @@ function buildDial() {
     fsBgPlane.material.dispose();
     fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
-  // In fullscreen, dial geometry hidden — background IS the dial
-  if(isFullscreen) {
+  // In fullscreen/contained, dial geometry hidden — CSS background IS the dial
+  if(isFullscreen || CONTAINED) {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
   }
@@ -1771,14 +1784,14 @@ function buildAll(){
   while(clockGroup.children.length) clockGroup.remove(clockGroup.children[0]);
   const dialBg = new THREE.Color(DIALS[currentDial].bg);
   bgPlaneMat.color.copy(dialBg);
-  if(isFullscreen) {
-    scene.background = null; // transparent canvas — grain CSS layer shows through behind 3D elements
+  if(isFullscreen || CONTAINED) {
+    scene.background = null; // transparent canvas — CSS bg + grain overlay shows through
     renderer.setClearColor(0x000000, 0);
-  } else if(!EMBED || CONTAINED) {
+  } else if(!EMBED) {
     scene.background = dialBg.clone();
   }
-  // Ensure bgPlane is hidden in fullscreen
-  if(isFullscreen && scene.children.includes(bgPlane)) scene.remove(bgPlane);
+  // Remove bgPlane in fullscreen/contained — CSS background handles it
+  if((isFullscreen || CONTAINED) && scene.children.includes(bgPlane)) scene.remove(bgPlane);
   // Initial bg — animation loop readPixels will correct on first frame
   if(!CONTAINED) document.documentElement.style.backgroundColor = document.body.style.backgroundColor = '#' + dialBg.getHexString();
   if(CONTAINED && CONTAINER) {
@@ -1858,9 +1871,9 @@ document.fonts.ready.then(()=>{
   window._clockReady = true;
   window.currentDial = currentDial;
   if(CONTAINED) {
-    const initBg = new THREE.Color(DIALS[currentDial].bg);
-    scene.background = initBg;
-    bgPlaneMat.color.copy(initBg);
+    // Transparent canvas — CSS background + grain overlay on container handles dial color
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
   }
 });
 
@@ -2194,13 +2207,13 @@ function animate(){
   bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
   // Dim scene lights for night — let lume own the scene
-  ambLight.intensity = 0.25 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 3.0 * (1 - modeBlend * 0.85);
-  fillLight.intensity = 1.0 * (1 - modeBlend * 0.8);
-  topLight.intensity = 1.5 * (1 - modeBlend * 0.8);
+  ambLight.intensity = 0.3 * (1 - modeBlend * 0.85);
+  keyLight.intensity = 3.5 * (1 - modeBlend * 0.85);
+  fillLight.intensity = 1.2 * (1 - modeBlend * 0.8);
+  topLight.intensity = 1.8 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.5 * (1 - modeBlend * 0.7);
-  renderer.toneMappingExposure = (CONTAINED && !isFullscreen ? 0.74 : 0.825) - modeBlend * 0.25;
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.65 * (1 - modeBlend * 0.7);
+  renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
@@ -2264,9 +2277,9 @@ function animate(){
   // BG color blend
   const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
   bgPlaneMat.color.copy(nightBg);
-  if(isFullscreen) {
-    scene.background = null; // keep canvas transparent in fullscreen
-  } else if(!EMBED || CONTAINED) {
+  if(isFullscreen || CONTAINED) {
+    scene.background = null; // keep canvas transparent — CSS bg + grain shows through
+  } else if(!EMBED) {
     scene.background = nightBg;
   }
   
@@ -2337,15 +2350,23 @@ function animate(){
     renderer.render(scene, cam);
   }
   
-  // Compute bg color from scene.background directly (no GPU readPixels stall)
-  if(!CONTAINED || isFullscreen) {
+  // Compute bg color — from scene.background when available, else from nightBg blend
+  {
     const _bgObj = scene.background;
-    const _bgHex = _bgObj && _bgObj.isColor ? '#' + _bgObj.getHexString() : '#' + bgPlaneMat.color.getHexString();
+    const _bgHex = _bgObj && _bgObj.isColor ? '#' + _bgObj.getHexString() : '#' + nightBg.getHexString();
     if(_bgHex !== _lastBgHex) {
       _lastBgHex = _bgHex;
       const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=_bgHex;
       if(!CONTAINED) { document.documentElement.style.backgroundColor = document.body.style.backgroundColor = _bgHex; }
-      if(CONTAINED && CONTAINER) { CONTAINER.style.backgroundColor = _bgHex; }
+      if(CONTAINED && CONTAINER) {
+        CONTAINER.style.backgroundColor = _bgHex;
+        // Sync grain CSS vars on container to match current dial
+        const dialDataC = DIALS[currentDial];
+        if(dialDataC && dialDataC.grainBlend) {
+          CONTAINER.style.setProperty('--grain-blend', dialDataC.grainBlend);
+          CONTAINER.style.setProperty('--grain-opacity', String(dialDataC.grainOpacity));
+        }
+      }
       if(isFullscreen) {
         const ov=document.getElementById('clockFullscreen');
         if(ov) {

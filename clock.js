@@ -19,8 +19,8 @@ const DIALS = {
   // marker = printed marker/numeral color (NOT metal — painted applied indices)
   // lume = night glow base color (SuperLuminova)
   // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
-  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0x78ab92, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},   // sage green complement
-  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0x70b0b8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},   // teal complement
+  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0x78ab92, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},   // sage green complement, yellow-orange sec (Nomos: avoids warm-on-warm clash)
+  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0x70b0b8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},   // teal complement, yellow-orange sec (Nomos: avoids red-on-red clash)
   coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0x88b4c0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},      // steel blue complement
   starlight:  {bg:0xd8d580, marker:0xc07030, markerBase:0x8078a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xd03010, text:'#5a4a30', surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},        // deeper amber marker + richer lavender base
   green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0xa86878, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},    // dusty rose complement
@@ -676,7 +676,7 @@ function buildDial() {
   // Subdial recess wall — Nomos style: very fine hairline dark circle
   const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
   const recessWallMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.65),
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.82),
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
   recessWall.position.set(0, subY, -0.5);
@@ -1196,7 +1196,7 @@ function buildQibla() {
   const tickRingR = gaugeR - 0.8;
   const sdTickGroup = new THREE.Group();
   // Nomos uses dark tick marks that contrast subtly against the dial color
-  const sdTickColor = new THREE.Color(d.bg).multiplyScalar(0.55);
+  const sdTickColor = new THREE.Color(d.bg).multiplyScalar(0.62);
   for(let i = 0; i < 60; i++) {
     const ang = (i / 60) * Math.PI * 2;
     const isMajor = (i % 10 === 0); // 0,10,20,30,40,50
@@ -2241,7 +2241,7 @@ function animate(){
   fillLight.intensity = 1.2 * (1 - modeBlend * 0.8);
   topLight.intensity = 1.8 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.65 * (1 - modeBlend * 0.7);
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.8 * (1 - modeBlend * 0.7);
   renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night

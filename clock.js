@@ -677,53 +677,35 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — smooth torus bevel at the lip + shallow cylinder wall
+  // Subdial recess — use the dial mesh itself (it has the cutout hole)
+  // In fullscreen/contained: show dial mesh with MeshBasicMaterial so it matches CSS bg
+  // The cutout hole reveals the recessed qiblaGroup behind it = real 3D recess
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
-  const recessDepth = 0.8; // shallow — Nomos subdials barely step down
-
-  // Smooth torus bevel at the lip edge — rounded transition, not a hard edge
-  const bevelTubeR = 0.35;
-  const bevelTorus = new THREE.Mesh(
-    new THREE.TorusGeometry(cutoutR - bevelTubeR * 0.3, bevelTubeR, 16, 128),
-    new THREE.MeshPhysicalMaterial({
-      color: dialCol.clone().multiplyScalar(0.55),
-      roughness: 0.4,
-      metalness: 0.2,
-      envMapIntensity: 0.3,
-    })
-  );
-  bevelTorus.rotation.x = Math.PI / 2;
-  bevelTorus.position.set(0, subY, -bevelTubeR * 0.5);
-  clockGroup.add(bevelTorus);
-  _recessMeshes.push(bevelTorus);
-
-  // Shallow cylinder wall behind the bevel
-  const wallGeo = new THREE.CylinderGeometry(cutoutR - bevelTubeR * 0.6, cutoutR - bevelTubeR * 0.6, recessDepth, 128, 1, true);
-  const wallMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.45),
-    roughness: 0.6,
-    metalness: 0.05,
-    envMapIntensity: 0.1,
-    side: THREE.BackSide,
-  });
-  const recessWall = new THREE.Mesh(wallGeo, wallMat);
-  recessWall.rotation.x = Math.PI / 2;
-  recessWall.position.set(0, subY, -recessDepth / 2);
-  clockGroup.add(recessWall);
-  _recessMeshes.push(recessWall);
-
-  // No surround ring — caused tonal mismatch with CSS bg
 
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {
     fsBgPlane.material.dispose();
     fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
-  // Hide dial mesh in fullscreen/contained — CSS bg + grain is the dial surface
-  // Torus bevel at subdial lip provides the recessed look without needing the full dial
+  // In fullscreen/contained: hide dial mesh, CSS bg + grain IS the dial surface
   if(isFullscreen || CONTAINED) {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
+    // Smooth 3D torus recess ring at subdial cutout boundary
+    const torusMainR = cutoutR;
+    const torusTubeR = 0.7;             // thinner tube for subtle bevel
+    const recessTorus = new THREE.Mesh(
+      new THREE.TorusGeometry(torusMainR, torusTubeR, 24, 128),
+      new THREE.MeshPhysicalMaterial({
+        color: dialCol.clone().multiplyScalar(0.65),
+        roughness: 0.4,
+        metalness: 0.3,
+        envMapIntensity: 0.5,
+      })
+    );
+    recessTorus.position.set(0, subY, -0.15);
+    clockGroup.add(recessTorus);
+    _recessMeshes.push(recessTorus);
   }
   
   // Main crystal removed — caused visible edge ring on mobile
@@ -1207,7 +1189,7 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = -0.8; // shallow recess — Nomos subdials are barely stepped down
+  qiblaGroup.position.z = -1.0; // recess depth matches the annular ring extrusion
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
@@ -1344,13 +1326,12 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — MeshBasicMaterial with grain texture to match CSS bg tone
-  // PBR catches HDRI and renders brighter than the flat CSS background
+  // Rotor disc — visible, textured to match dial surface
   const rotorR = gaugeR - 2;
-  // Rotor disc — subtle tint so CSS bg + grain shows through, with slight darkening for depth
+  const rotorDiscColor = new THREE.Color(d.bg).multiplyScalar(0.93);
   const rotorDisc = new THREE.Mesh(
     new THREE.RingGeometry(moonR + 0.5, rotorR, 64),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.06 })
+    new THREE.MeshBasicMaterial({ color: rotorDiscColor })
   );
   qiblaRotor.add(rotorDisc);
   

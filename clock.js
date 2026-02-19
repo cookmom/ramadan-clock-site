@@ -1294,7 +1294,7 @@ function buildQibla() {
     new THREE.MeshBasicMaterial({map: moonTex, transparent: true})
   );
   moonOverlay.position.z = 0.15;
-  if (isFullscreen || CONTAINED) { moonDisc.visible = false; moonOverlay.visible = false; }
+  // Keep moonphase visible in all modes — it's a key visual element
   qiblaGroup.add(moonOverlay);
   
   // ── Fasting arc (Fajr → Maghrib daily progress) ──

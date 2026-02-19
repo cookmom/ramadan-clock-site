@@ -673,39 +673,51 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — 3D bezel ring visible even when dialMesh is hidden
-  // Since dialMesh is hidden in fullscreen/contained, we use a TorusGeometry
-  // ring at the aperture edge — a physical raised border that reads as the
-  // lip of a recessed complication, like a real watch subdial bezel.
+  // Subdial recess — stepped ring geometry visible even when dialMesh is hidden.
+  // Creates the visual boundary between the dial surface and the recessed subdial well.
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
 
-  // Bezel ring — TorusGeometry for a real 3D rounded lip
-  const bezelTubeR = 0.4;
-  const bezelRingR = cutoutR;
-  const bezelGeo = new THREE.TorusGeometry(bezelRingR, bezelTubeR, 24, 128);
-  const bezelMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.45),
-    roughness: 0.18,
-    metalness: 0.7,
-    clearcoat: 0.9,
-    clearcoatRoughness: 0.03,
-    envMapIntensity: 2.5,
+  // Step ring — wide flat annular ring at dial surface, darker than dial.
+  // This reads as a chamfered step-down into the subdial recess.
+  // Width = 2.5 units (visible at screen resolution), color = 0.55x dial (shadow tone).
+  const stepInner = cutoutR - 2.5;
+  const stepOuter = cutoutR + 1.0;
+  const stepGeo = new THREE.RingGeometry(stepInner, stepOuter, 128, 1);
+  const stepMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.5),
+    roughness: 0.35,
+    metalness: 0.3,
+    envMapIntensity: 1.0,
   });
-  const bezelRing = new THREE.Mesh(bezelGeo, bezelMat);
-  bezelRing.position.set(0, subY, 0.2);
-  bezelRing.rotation.x = Math.PI / 2;
-  clockGroup.add(bezelRing);
-  markerMeshes.push(bezelRing);
+  const stepRing = new THREE.Mesh(stepGeo, stepMat);
+  stepRing.position.set(0, subY, 0.15);
+  clockGroup.add(stepRing);
+  markerMeshes.push(stepRing);
 
-  // Inner shadow disc — darkens the recess floor behind the bezel
-  const shadowGeo = new THREE.CircleGeometry(cutoutR - 0.1, 128);
+  // Polished lip — thin bright ring at outer edge of step for a crisp highlight
+  const lipGeo = new THREE.RingGeometry(stepOuter - 0.3, stepOuter, 128, 1);
+  const lipMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.7),
+    roughness: 0.08,
+    metalness: 0.8,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.02,
+    envMapIntensity: 3.0,
+  });
+  const lipRing = new THREE.Mesh(lipGeo, lipMat);
+  lipRing.position.set(0, subY, 0.18);
+  clockGroup.add(lipRing);
+  markerMeshes.push(lipRing);
+
+  // Inner shadow disc — darkens the recess floor for depth
+  const shadowGeo = new THREE.CircleGeometry(stepInner, 128);
   const shadowMat = new THREE.MeshBasicMaterial({
-    color: dialCol.clone().multiplyScalar(0.3),
+    color: dialCol.clone().multiplyScalar(0.4),
     transparent: true,
-    opacity: 0.45,
+    opacity: 0.35,
   });
   const shadowDisc = new THREE.Mesh(shadowGeo, shadowMat);
-  shadowDisc.position.set(0, subY, -0.5);
+  shadowDisc.position.set(0, subY, -0.3);
   clockGroup.add(shadowDisc);
   markerMeshes.push(shadowDisc);
   

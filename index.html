@@ -222,6 +222,7 @@ a{color:inherit;text-decoration:none}
 /* Ensure section content paints above any positioned ancestors */
 .scroll-section>*{position:relative;z-index:2;}
 /* grain on landing page applied to #dialHero only — matches fullscreen grain */
+#dialHero canvas{position:relative;z-index:2}
 #dialHero::after{content:'';position:absolute;inset:0;z-index:1;border-radius:50%;background-image:url(grain-fine.png);background-repeat:repeat;background-size:148.5px auto;mix-blend-mode:var(--grain-blend,soft-light);opacity:var(--grain-opacity,0.4);pointer-events:none}
 .section-header{
   padding:.75rem 0 .5rem;
@@ -1771,7 +1772,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=271';
+_cs.type='module';_cs.src='clock.js?v=272';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

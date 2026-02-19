@@ -1180,13 +1180,14 @@ function buildQibla() {
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — unlit MeshBasicMaterial to match the flat CSS dial background
-  // Main dial is CSS bg (no 3D geometry) — subdial must also be unlit or it glows brighter
-  const subDialColor = new THREE.Color(d.bg); // exact dial color — Nomos subdial is same as dial
+  // Base disc — hidden in fullscreen/contained mode so CSS background + grain shows through
+  // uniformly (no brightness mismatch). Visible only in standalone mode where 3D dial is shown.
+  const subDialColor = new THREE.Color(d.bg);
   const baseMat = new THREE.MeshBasicMaterial({
     color: subDialColor,
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
+  if (isFullscreen || CONTAINED) baseDisc.visible = false;
   qiblaGroup.add(baseDisc);
 
   // ── Nomos-style subdial tick ring ──

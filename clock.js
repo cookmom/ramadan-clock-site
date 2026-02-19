@@ -673,30 +673,47 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — bold dark ring at aperture + inner shadow gradient
+  // Subdial recess — real 3D stepped geometry (not flat rings)
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
+  const recessDepth = 2; // matches qiblaGroup.position.z = -2
 
-  // Bold aperture ring — thick dark border clearly defining subdial boundary
-  const edgeGeo = new THREE.RingGeometry(cutoutR - 0.8, cutoutR + 0.8, 128);
-  const edgeMat = new THREE.MeshBasicMaterial({
-    color: dialCol.clone().multiplyScalar(0.2),
+  // Chamfered recess wall — LatheGeometry with cross-section profile
+  // Profile: top lip (dial surface) → chamfer → vertical wall → floor
+  const chamferSize = 0.4;
+  const wallPts = [
+    new THREE.Vector2(cutoutR + 0.3, 0),           // top lip outer edge (on dial surface)
+    new THREE.Vector2(cutoutR, 0),                  // top lip inner edge
+    new THREE.Vector2(cutoutR - chamferSize, -chamferSize), // chamfer
+    new THREE.Vector2(cutoutR - chamferSize, -recessDepth), // wall bottom
+    new THREE.Vector2(cutoutR + 0.3, -recessDepth), // floor edge (close the shape)
+  ];
+  const recessGeo = new THREE.LatheGeometry(wallPts, 128);
+  const recessWallMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.55),
+    roughness: 0.6,
+    metalness: 0.15,
+    envMapIntensity: 0.3,
   });
-  const edgeRing = new THREE.Mesh(edgeGeo, edgeMat);
-  edgeRing.position.set(0, subY, 0.2);
-  clockGroup.add(edgeRing);
-  markerMeshes.push(edgeRing);
+  const recessWall = new THREE.Mesh(recessGeo, recessWallMat);
+  recessWall.position.set(0, subY, 0);
+  recessWall.rotation.x = Math.PI / 2; // LatheGeometry is Y-up, we need Z-up
+  clockGroup.add(recessWall);
+  markerMeshes.push(recessWall);
 
-  // Mid shadow ring — transitional dark area inside the aperture
-  const midGeo = new THREE.RingGeometry(cutoutR - 2.5, cutoutR - 0.8, 128);
-  const midMat = new THREE.MeshBasicMaterial({
-    color: dialCol.clone().multiplyScalar(0.4),
-    transparent: true,
-    opacity: 0.5,
+  // Thin polished lip ring at top edge — catches HDRI highlight like real watch
+  const lipGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.3, 128);
+  const lipMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.7),
+    roughness: 0.15,
+    metalness: 0.6,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.05,
+    envMapIntensity: 2.0,
   });
-  const midRing = new THREE.Mesh(midGeo, midMat);
-  midRing.position.set(0, subY, 0.15);
-  clockGroup.add(midRing);
-  markerMeshes.push(midRing);
+  const lipRing = new THREE.Mesh(lipGeo, lipMat);
+  lipRing.position.set(0, subY, 0.1);
+  clockGroup.add(lipRing);
+  markerMeshes.push(lipRing);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

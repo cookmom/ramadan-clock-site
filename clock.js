@@ -673,10 +673,10 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess wall — Nomos style: very fine hairline circle
-  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.1, cutoutR + 0.1, 128);
+  // Subdial recess wall — Nomos style: very fine hairline dark circle
+  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
   const recessWallMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.82),
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.65),
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
   recessWall.position.set(0, subY, -0.5);
@@ -1191,15 +1191,17 @@ function buildQibla() {
   qiblaGroup.add(baseDisc);
 
   // ── Nomos-style subdial tick ring ──
-  // Fine tick marks around subdial periphery (60 second marks)
-  const tickRingR = gaugeR - 1.0;
+  // Fine tick marks around subdial periphery — dark on colored dials, dark on white
+  // Nomos reference: 60 fine ticks, longer at 10-sec intervals, dark hairline marks
+  const tickRingR = gaugeR - 0.8;
   const sdTickGroup = new THREE.Group();
-  const sdTickColor = new THREE.Color(d.lume || 0xffffff).multiplyScalar(0.4);
+  // Nomos uses dark tick marks that contrast subtly against the dial color
+  const sdTickColor = new THREE.Color(d.bg).multiplyScalar(0.55);
   for(let i = 0; i < 60; i++) {
     const ang = (i / 60) * Math.PI * 2;
     const isMajor = (i % 10 === 0); // 0,10,20,30,40,50
-    const tH = isMajor ? gaugeR * 0.12 : gaugeR * 0.06;
-    const tW = isMajor ? 0.4 : 0.25;
+    const tH = isMajor ? gaugeR * 0.10 : gaugeR * 0.05;
+    const tW = isMajor ? 0.3 : 0.18;
     const tGeo = new THREE.PlaneGeometry(tW, tH);
     const tMat = new THREE.MeshBasicMaterial({ color: sdTickColor });
     const tick = new THREE.Mesh(tGeo, tMat);
@@ -1319,16 +1321,16 @@ function buildQibla() {
   if (isFullscreen || CONTAINED) rotorDisc.visible = false;
   qiblaRotor.add(rotorDisc);
   
-  // Cardinal tick marks on rotor rim (N, E, S, W as subtle lines)
-  const tickLen = gaugeR * 0.12;
-  const tickW = 0.4;
+  // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic
+  const tickLen = gaugeR * 0.10;
+  const tickW = 0.3;
+  const cardinalColor = new THREE.Color(d.bg).multiplyScalar(0.5);
   for(let i = 0; i < 4; i++) {
-    const ang = (i/4) * Math.PI * 2; // 0=N(up), π/2=E, π=S, 3π/2=W
+    const ang = (i/4) * Math.PI * 2;
     const isNorth = i === 0;
-    const tGeo = new THREE.BoxGeometry(tickW, isNorth ? tickLen*1.4 : tickLen, 0.3);
-    const tColor = isNorth ? 0xf0f0f0 : new THREE.Color(d.lume).multiplyScalar(0.8);
-    const tMat = new THREE.MeshPhysicalMaterial({
-      color: tColor, roughness: 0.2, metalness: 0.3, envMapIntensity: 1.5
+    const tGeo = new THREE.BoxGeometry(tickW, isNorth ? tickLen*1.3 : tickLen, 0.2);
+    const tMat = new THREE.MeshBasicMaterial({
+      color: isNorth ? new THREE.Color(d.bg).multiplyScalar(0.35) : cardinalColor,
     });
     const tick = new THREE.Mesh(tGeo, tMat);
     const tr = rotorR - tickLen*0.55;
@@ -1336,15 +1338,14 @@ function buildQibla() {
     tick.rotation.z = -ang;
     qiblaRotor.add(tick);
   }
-  
-  // 8 minor ticks (every 45°, skip cardinals)
+
+  // 8 minor ticks (every 45°, skip cardinals) — subtle dark hairlines
   for(let i = 0; i < 8; i++) {
-    if(i % 2 === 0) continue; // skip cardinals
+    if(i % 2 === 0) continue;
     const ang = (i/8) * Math.PI * 2;
-    const mtGeo = new THREE.BoxGeometry(0.3, tickLen*0.5, 0.2);
-    const mtMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(d.lume).multiplyScalar(0.5),
-      roughness: 0.3, metalness: 0.2, envMapIntensity: 1.0,
+    const mtGeo = new THREE.BoxGeometry(0.2, tickLen*0.45, 0.15);
+    const mtMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(d.bg).multiplyScalar(0.6),
     });
     const mt = new THREE.Mesh(mtGeo, mtMat);
     const mtr = rotorR - tickLen*0.3;
@@ -1375,12 +1376,12 @@ function buildQibla() {
   const needleLen = innerR * 1.25;
   const needleW = innerR * 0.05;
   const pipR = innerR * 0.1;          // small filled circle at tail
-  const triLume = d.lume || d.hand;
+  // Subdial hand — Nomos style: orange lacquer needle (same as second hand)
   const triMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(triLume),
-    roughness: 0.15, metalness: 0.5,
-    emissive: new THREE.Color(triLume), emissiveIntensity: 0.15,
-    envMapIntensity: 2.0,
+    color: new THREE.Color(0xF56623),
+    roughness: 0.08, metalness: 0.0,
+    clearcoat: 1.0, clearcoatRoughness: 0.01,
+    envMapIntensity: 1.5,
   });
   // Tapered needle — gradual taper matching main hands
   const nhw = needleW / 2;

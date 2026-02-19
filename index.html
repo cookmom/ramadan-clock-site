@@ -131,7 +131,7 @@
 </script>
 <script>
 // Instant dark screen if opening in clock mode — prevents landing page flash
-if(location.hash==='#clock'){document.documentElement.classList.add('clock-direct');document.documentElement.style.cssText='background:#585860;overflow:hidden';}
+if(location.hash==='#clock'){document.documentElement.classList.add('clock-direct');document.documentElement.style.cssText='background:#5d6278;overflow:hidden';}
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -320,7 +320,7 @@ footer a:hover{color:var(--text)}
 }
 
 /* ── Fullscreen Clock Overlay ── */
-.clock-fs-overlay{position:fixed;inset:0;z-index:200;background:#585860;display:none;flex-direction:column;align-items:center;justify-content:center}
+.clock-fs-overlay{position:fixed;inset:0;z-index:200;background:#5d6278;display:none;flex-direction:column;align-items:center;justify-content:center}
 .clock-fs-overlay.active{display:flex}
 .clock-fs-overlay::after{content:'';position:absolute;inset:0;z-index:1;background-image:url(grain-fine.png);background-repeat:repeat;background-size:148.5px auto;mix-blend-mode:var(--grain-blend,soft-light);opacity:var(--grain-opacity,0.4);pointer-events:none}
 .clock-fs-overlay canvas{z-index:20}
@@ -1641,6 +1641,10 @@ function openClockFullscreen() {
   // Reset to default dial (slate) for consistent look
   if(window.switchDial) window.switchDial(6);
 
+  // Sync overlay bg to current dial color before showing (prevents flash of wrong color)
+  const dialColor = DIAL_COLORS[DIALS[dialIdx]] || '#5d6278';
+  overlay.style.background = dialColor;
+
   // Move canvas into fullscreen overlay
   overlay.appendChild(canvas);
   overlay.classList.add('active');
@@ -1767,7 +1771,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=265';
+_cs.type='module';_cs.src='clock.js?v=266';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

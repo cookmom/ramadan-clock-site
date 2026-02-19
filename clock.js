@@ -151,7 +151,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.825; // unified exposure — landing page matches fullscreen
+renderer.toneMappingExposure = 0.9; // slightly brighter — Nomos product photography has clean, well-lit dials
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -213,7 +213,7 @@ let studioEnvMap;
   const envRT = pmrem.fromEquirectangular(hdrTex);
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
-  scene.environmentIntensity = 0.65; // subtle bump — hands and markers need env to read as metal
+  scene.environmentIntensity = 0.8; // hands and markers need strong env to read as polished rhodium
   scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
@@ -360,23 +360,26 @@ function metalMat(color) {
   return m;
 }
 // Rhodium-plated hands — NOMOS Club Campus reference
-// Polished rhodium: warm silver with crisp HDRI reflections, not flat white
+// Pure rhodium: cool silver independent of dial color, brushed center with polished bevels
+// Reference macro shots show hands catching studio light with crisp mirror-like highlights
 function brushedHandMat(color) {
+  // Nomos hands are always pure rhodium regardless of dial — no dial color influence
+  const rhodium = new THREE.Color(0xC0C0C8); // cool neutral rhodium
   const m = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(color).lerp(new THREE.Color(0xD8D8E0), 0.25), // less white wash — keep dial color influence
-    roughness: 0.12,        // more polished — crisp reflections like NOMOS macro shots
+    color: rhodium,
+    roughness: 0.08,        // very polished — mirror-like at steep angles per Nomos macro
     metalness: 1.0,
-    anisotropy: 0.3,        // subtle lengthwise grain
+    anisotropy: 0.4,        // lengthwise brush lines visible in macro — characteristic of Nomos
     anisotropyRotation: 0,
-    clearcoat: 0.8,         // strong clearcoat — visible wet-look protective coat
-    clearcoatRoughness: 0.02,
-    reflectivity: 0.95,
-    ior: 2.4,               // rhodium IOR
+    clearcoat: 0.9,         // strong clearcoat — wet protective coat visible in reference
+    clearcoatRoughness: 0.01, // near-mirror clearcoat
+    reflectivity: 1.0,
+    ior: 2.5,               // rhodium IOR (~2.5)
     polygonOffset: true,
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1,
   });
-  m.envMapIntensity = 3.5; // stronger env reflections — hands should catch studio light
+  m.envMapIntensity = 4.5; // strong env reflections — hands are the primary reflective element
   return m;
 }
 function lumeMat(color) {
@@ -385,11 +388,13 @@ function lumeMat(color) {
 }
 function secMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
-    color, roughness: 0.08, metalness: 0.3,
-    clearcoat: 1.0, clearcoatRoughness: 0.02,  // lacquered finish — glossy and vibrant
+    color, roughness: 0.05, metalness: 0.0,  // zero metalness — lacquer is paint, not metal
+    clearcoat: 1.0, clearcoatRoughness: 0.01, // mirror-like lacquer coat per Nomos reference
     emissive: color, emissiveIntensity: 0,
+    specularIntensity: 0.8,
+    specularColor: new THREE.Color(0xffffff),
   });
-  m.envMapIntensity = 3.5; return m; // second hand — wet lacquer finish with clearcoat
+  m.envMapIntensity = 2.5; return m; // second hand — wet lacquer, vivid color with sharp highlights
 }
 
 // ══════════════════════════════════════════
@@ -671,8 +676,8 @@ function buildDial() {
   // Subdial recess wall — thin ring showing the step down
   const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.3, cutoutR + 0.3, 64);
   const recessWallMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.55),
-    roughness: 0.5, metalness: 0.3,
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.45),
+    roughness: 0.35, metalness: 0.4, // slightly metallic rim — catches light like real step
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
   recessWall.position.set(0, subY, -1);
@@ -872,10 +877,11 @@ function buildMarkers() {
         const baseGeo = new THREE.ExtrudeGeometry(baseShape, {depth, bevelEnabled:false});
         const baseMatl = new THREE.MeshPhysicalMaterial({
           color: mkBase,
-          roughness: 0.45, metalness: 0.0,
+          roughness: 0.3, metalness: 0.7,  // rhodium-like applied index body
+          clearcoat: 0.5, clearcoatRoughness: 0.08,
           emissive: mk, emissiveIntensity: 0,
         });
-        baseMatl.envMapIntensity = 0.3;
+        baseMatl.envMapIntensity = 2.0; // visible tilt response like real applied indices
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
         baseMesh.position.set(px, py, 1.5); // base ON TOP — forms the channel walls
         baseMesh.rotation.z = ang + Math.PI/2;
@@ -884,11 +890,12 @@ function buildMarkers() {
         // Lume fill — RECESSED inside the channel, glossy lacquer finish
         const lumeGeo = new THREE.BoxGeometry(cW, cH, depth*0.5);
         const lumeMatl = new THREE.MeshPhysicalMaterial({
-          color: mk, roughness: 0.08, metalness: 0.0,
-          clearcoat: 1.0, clearcoatRoughness: 0.03,
+          color: mk, roughness: 0.06, metalness: 0.0,
+          clearcoat: 1.0, clearcoatRoughness: 0.02,
           emissive: mk, emissiveIntensity: 0,
+          specularIntensity: 0.5,
         });
-        lumeMatl.envMapIntensity = 0.8;
+        lumeMatl.envMapIntensity = 1.2;
         const lumeMesh = new THREE.Mesh(lumeGeo, lumeMatl);
         lumeMesh.position.set(px, py, 0.3); // BELOW base — recessed in channel
         lumeMesh.rotation.z = ang + Math.PI/2;
@@ -951,14 +958,15 @@ function buildNumerals() {
     
     const mk = c.marker || c.lume;
     const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
-    // Layer 1: complementary base — visibly larger border
+    // Layer 1: rhodium base — visibly larger border, metallic applied index
     const baseGeo = geo.clone();
     const baseMatl = new THREE.MeshPhysicalMaterial({
       color: mkBase,
-      roughness: 0.45, metalness: 0.0,
+      roughness: 0.3, metalness: 0.7,  // rhodium-like applied index body
+      clearcoat: 0.5, clearcoatRoughness: 0.08,
       emissive: mk, emissiveIntensity: 0,
     });
-    baseMatl.envMapIntensity = 0.3;
+    baseMatl.envMapIntensity = 2.0;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
     baseMesh.position.set(nx, ny, 0.5);
     baseMesh.scale.setScalar(1.18); // 18% larger = visible border
@@ -968,13 +976,14 @@ function buildNumerals() {
     numeralSprites.push(baseMesh);
     numeralMats.push(baseMatl);
     
-    // Layer 2: lume fill — same position but smaller + higher renderOrder
+    // Layer 2: lume fill — glossy lacquer, sitting above the metallic base
     const topMatl = new THREE.MeshPhysicalMaterial({
-      color: mk, roughness: 0.08, metalness: 0.0,
-      clearcoat: 1.0, clearcoatRoughness: 0.03,
+      color: mk, roughness: 0.06, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.02,
       emissive: mk, emissiveIntensity: 0,
+      specularIntensity: 0.5,
     });
-    topMatl.envMapIntensity = 0.8;
+    topMatl.envMapIntensity = 1.2;
     const mesh = new THREE.Mesh(geo, topMatl);
     mesh.position.set(nx, ny, 0.5 + EXTRUDE_DEPTH + 0.5); // above base extrusion top
     mesh.scale.setScalar(1.0);
@@ -1118,7 +1127,7 @@ function buildHands() {
   markerMeshes.push(capMesh);
   // Rivet — smaller raised dome on top (like NOMOS reference)
   const rivetGeo = new THREE.SphereGeometry(R*0.018, 24, 16, 0, Math.PI*2, 0, Math.PI/2);
-  const rivetMat = new THREE.MeshPhysicalMaterial({color:c.hand, metalness:0.95, roughness:0.1, clearcoat:1.0, clearcoatRoughness:0.05});
+  const rivetMat = new THREE.MeshPhysicalMaterial({color:0xD0D0D8, metalness:1.0, roughness:0.03, clearcoat:1.0, clearcoatRoughness:0.01, envMapIntensity:5.0});
   const rivetMesh = new THREE.Mesh(rivetGeo, rivetMat);
   rivetMesh.position.z = 29; // sits on top of cap
   rivetMesh.rotation.x = -Math.PI/2; // dome faces camera
@@ -1172,11 +1181,11 @@ function buildQibla() {
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — matches main dial surface (same color/material + grain texture)
-  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.92); // slightly darker from recess
+  // Base disc — slightly darker than main dial (recessed shadow effect per Nomos reference)
+  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.88); // noticeably recessed
   const baseMat = new THREE.MeshPhysicalMaterial({
     color: subDialColor,
-    roughness: 0.4, metalness: 0.0,
+    roughness: 0.45, metalness: 0.0,
     roughnessMap: dialGrainTex, // same grain texture as dial surface
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);

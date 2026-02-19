@@ -643,7 +643,11 @@ const DIAL_THICKNESS = 0.5; // thin disc — no more cutout walls clipping hands
 const DIAL_GAP = 0.5; // minimal gap — thin disc means no visible cutout walls
 let cutoutR = R*0.38;
 let mainCrystalMesh = null;
+let _recessMeshes = [];
 function buildDial() {
+  // Clean up previous recess geometry
+  _recessMeshes.forEach(m => clockGroup.remove(m));
+  _recessMeshes = [];
   if(dialMesh) clockGroup.remove(dialMesh);
   if(dialLowerMesh) clockGroup.remove(dialLowerMesh);
   if(mainCrystalMesh) clockGroup.remove(mainCrystalMesh);
@@ -673,58 +677,55 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — real 3D extruded ring geometry.
-  // Creates a physical step-down from the dial surface into the subdial well.
-  // The extruded ring has a visible top surface (dial color) and an inner wall
-  // that faces inward and catches HDRI lighting differently, reading as depth.
+  // Subdial recess — 3D tapered frustum (cone) creating visible recessed well
+  // A tapered cone (wider at top, narrower at bottom) makes the inner wall VISIBLE
+  // from a top-down camera angle — unlike a straight cylinder whose wall is edge-on.
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
-  const recessDepth = 3; // how deep the step goes (Z units)
-  const ringWidth = 4;  // radial width of the visible step ring
+  const recessDepth = 3.0;
+  const taperAmount = 3.0; // how much narrower the bottom is than the top — controls wall visibility
 
-  // Extruded annular ring — the actual 3D recess geometry
-  // Shape: flat ring (annulus) extruded downward to create a well wall
-  const recessShape = new THREE.Shape();
-  recessShape.absarc(0, 0, cutoutR + ringWidth, 0, Math.PI*2, false);
-  const recessHole = new THREE.Path();
-  recessHole.absarc(0, 0, cutoutR, 0, Math.PI*2, true);
-  recessShape.holes.push(recessHole);
-  const recessGeo = new THREE.ExtrudeGeometry(recessShape, {
-    depth: recessDepth,
-    bevelEnabled: true,
-    bevelThickness: 0.3,
-    bevelSize: 0.3,
-    bevelSegments: 3,
-    curveSegments: 128,
-  });
-  // PBR material — top surface catches HDRI, inner wall catches less light = reads as shadow
-  const recessMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone(),
-    roughness: 0.45,
-    metalness: 0.15,
+  // Tapered inner wall — cone shape so the angled wall catches HDRI light from above
+  const coneTopR = cutoutR;             // matches cutout hole at top
+  const coneBotR = cutoutR - taperAmount; // narrows toward bottom
+  const coneGeo = new THREE.CylinderGeometry(coneTopR, coneBotR, recessDepth, 128, 1, true);
+  const coneMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.35),
+    roughness: 0.4,
+    metalness: 0.2,
     envMapIntensity: 0.6,
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.4,
+    side: THREE.BackSide,
   });
-  const recessMesh = new THREE.Mesh(recessGeo, recessMat);
-  // Position: centered on subdial, top surface at z=0.5 (slightly above dial plane)
-  // ExtrudeGeometry extrudes along +Z, so we rotate 180° to go downward
-  recessMesh.rotation.x = Math.PI; // flip so extrusion goes into -Z (into the dial)
-  recessMesh.position.set(0, -subY, 0.5); // note: rotation flips Y, so negate subY
-  clockGroup.add(recessMesh);
-  markerMeshes.push(recessMesh);
+  const coneWall = new THREE.Mesh(coneGeo, coneMat);
+  coneWall.rotation.x = Math.PI / 2;
+  coneWall.position.set(0, subY, -recessDepth / 2 + 0.1);
+  clockGroup.add(coneWall);
+  _recessMeshes.push(coneWall);
 
-  // Floor disc at the bottom of the recess well — slightly darker than dial
-  const floorGeo = new THREE.CircleGeometry(cutoutR, 128);
-  const floorMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.82),
-    roughness: 0.55,
-    metalness: 0.05,
-    envMapIntensity: 0.25,
+  // Polished lip ring at the top edge — thin bright ring defining the aperture
+  const lipWidth = 0.6;
+  const lipGeo = new THREE.RingGeometry(cutoutR, cutoutR + lipWidth, 128);
+  const lipMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone().multiplyScalar(0.75),
+    roughness: 0.15,
+    metalness: 0.5,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.05,
+    envMapIntensity: 2.0,
+  });
+  const lipRing = new THREE.Mesh(lipGeo, lipMat);
+  lipRing.position.set(0, subY, 0.2);
+  clockGroup.add(lipRing);
+  _recessMeshes.push(lipRing);
+
+  // Floor disc at bottom of recess — darker, gives visual depth
+  const floorGeo = new THREE.CircleGeometry(coneBotR, 128);
+  const floorMat = new THREE.MeshBasicMaterial({
+    color: dialCol.clone().multiplyScalar(0.7),
   });
   const floorDisc = new THREE.Mesh(floorGeo, floorMat);
-  floorDisc.position.set(0, subY, 0.5 - recessDepth); // at the bottom of the well
+  floorDisc.position.set(0, subY, -recessDepth + 0.1);
   clockGroup.add(floorDisc);
-  markerMeshes.push(floorDisc);
+  _recessMeshes.push(floorDisc);
   
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {

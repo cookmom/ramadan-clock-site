@@ -1224,7 +1224,7 @@ function buildQibla() {
   const moonMat = new THREE.MeshBasicMaterial({
     color: new THREE.Color(d.bg).lerp(new THREE.Color(0xf8f4e8), 0.15),
     transparent: true,
-    opacity: (isFullscreen || CONTAINED) ? 0.5 : 1.0,  // semi-transparent so grain shows through
+    opacity: (isFullscreen || CONTAINED) ? 0.25 : 1.0,  // low opacity so grain shows through clearly
   });
   const moonDisc = new THREE.Mesh(new THREE.CircleGeometry(moonR, 64), moonMat);
   moonDisc.position.z = 0.1;

@@ -673,49 +673,56 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — visible stepped complication aperture.
-  // The camera is nearly straight-on (2° tilt), so a cylinder wall is invisible.
-  // Instead: surround ring (dial color PBR) + dark inner bevel ring + recessed floor disc.
-  // The contrast between surround → bevel → floor creates the depth illusion.
+  // Subdial recess — real 3D extruded ring geometry.
+  // Creates a physical step-down from the dial surface into the subdial well.
+  // The extruded ring has a visible top surface (dial color) and an inner wall
+  // that faces inward and catches HDRI lighting differently, reading as depth.
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
+  const recessDepth = 3; // how deep the step goes (Z units)
+  const ringWidth = 4;  // radial width of the visible step ring
 
-  // 1. Surround ring — PBR dial surface that stays visible when dialMesh is hidden
-  const surroundWidth = 5;
-  const surroundShape = new THREE.Shape();
-  surroundShape.absarc(0, 0, cutoutR + surroundWidth, 0, Math.PI*2, false);
-  const surroundHole = new THREE.Path();
-  surroundHole.absarc(0, 0, cutoutR, 0, Math.PI*2, true);
-  surroundShape.holes.push(surroundHole);
-  const surroundGeo = new THREE.ShapeGeometry(surroundShape, 128);
-  const surroundMat = dialMat(DIALS[currentDial].bg);
-  const surroundRing = new THREE.Mesh(surroundGeo, surroundMat);
-  surroundRing.position.set(0, subY, 0.3); // raised above floor — creates actual step
-  clockGroup.add(surroundRing);
-  markerMeshes.push(surroundRing);
-
-  // 2. Dark inner bevel ring — crisp dark border at the step edge.
-  // Width 2px, very dark — the primary visual cue that says "this area is recessed."
-  const bevelWidth = 2.0;
-  const bevelGeo = new THREE.RingGeometry(cutoutR - bevelWidth, cutoutR + 0.5, 128, 1);
-  const bevelMat = new THREE.MeshBasicMaterial({
-    color: dialCol.clone().multiplyScalar(0.2), // near-black — strong shadow line
+  // Extruded annular ring — the actual 3D recess geometry
+  // Shape: flat ring (annulus) extruded downward to create a well wall
+  const recessShape = new THREE.Shape();
+  recessShape.absarc(0, 0, cutoutR + ringWidth, 0, Math.PI*2, false);
+  const recessHole = new THREE.Path();
+  recessHole.absarc(0, 0, cutoutR, 0, Math.PI*2, true);
+  recessShape.holes.push(recessHole);
+  const recessGeo = new THREE.ExtrudeGeometry(recessShape, {
+    depth: recessDepth,
+    bevelEnabled: true,
+    bevelThickness: 0.3,
+    bevelSize: 0.3,
+    bevelSegments: 3,
+    curveSegments: 128,
   });
-  const bevelRing = new THREE.Mesh(bevelGeo, bevelMat);
-  bevelRing.position.set(0, subY, 0.28);
-  clockGroup.add(bevelRing);
-  markerMeshes.push(bevelRing);
+  // PBR material — top surface catches HDRI, inner wall catches less light = reads as shadow
+  const recessMat = new THREE.MeshPhysicalMaterial({
+    color: dialCol.clone(),
+    roughness: 0.45,
+    metalness: 0.15,
+    envMapIntensity: 0.6,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.4,
+  });
+  const recessMesh = new THREE.Mesh(recessGeo, recessMat);
+  // Position: centered on subdial, top surface at z=0.5 (slightly above dial plane)
+  // ExtrudeGeometry extrudes along +Z, so we rotate 180° to go downward
+  recessMesh.rotation.x = Math.PI; // flip so extrusion goes into -Z (into the dial)
+  recessMesh.position.set(0, -subY, 0.5); // note: rotation flips Y, so negate subY
+  clockGroup.add(recessMesh);
+  markerMeshes.push(recessMesh);
 
-  // 3. Floor disc — noticeably darker than the surround, creating visible depth contrast.
-  // The contrast between surround (full dial color) and floor (darker) IS the recess.
-  const floorGeo = new THREE.CircleGeometry(cutoutR - bevelWidth, 128);
+  // Floor disc at the bottom of the recess well — slightly darker than dial
+  const floorGeo = new THREE.CircleGeometry(cutoutR, 128);
   const floorMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.75), // 25% darker than dial — visible contrast
-    roughness: 0.5,
+    color: dialCol.clone().multiplyScalar(0.82),
+    roughness: 0.55,
     metalness: 0.05,
-    envMapIntensity: 0.3,
+    envMapIntensity: 0.25,
   });
   const floorDisc = new THREE.Mesh(floorGeo, floorMat);
-  floorDisc.position.set(0, subY, 0.02);
+  floorDisc.position.set(0, subY, 0.5 - recessDepth); // at the bottom of the well
   clockGroup.add(floorDisc);
   markerMeshes.push(floorDisc);
   

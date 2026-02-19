@@ -651,9 +651,9 @@ function buildDial() {
   const subY = -R*0.5;
   cutoutR = R*0.342; // 10% smaller subdial (was 0.38)
   
-  // Lower disc — solid, subtly darker, recessed (Nomos: barely visible step)
+  // Lower disc — solid, barely darker, recessed (Nomos: nearly invisible step)
   const lowerGeo = new THREE.CylinderGeometry(caseR, caseR, DIAL_THICKNESS, 128);
-  const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.88);
+  const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.96);
   const lowerMat = new THREE.MeshBasicMaterial({color:lowerColor}); // unlit — recessed dial
   dialLowerMesh = new THREE.Mesh(lowerGeo, lowerMat);
   dialLowerMesh.rotation.x = Math.PI/2;
@@ -673,10 +673,10 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess wall — Nomos style: very fine dark circle line
-  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
+  // Subdial recess wall — Nomos style: very fine hairline circle
+  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.1, cutoutR + 0.1, 128);
   const recessWallMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.7),
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.82),
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
   recessWall.position.set(0, subY, -0.5);
@@ -1194,7 +1194,7 @@ function buildQibla() {
   // Fine tick marks around subdial periphery (60 second marks)
   const tickRingR = gaugeR - 1.0;
   const sdTickGroup = new THREE.Group();
-  const sdTickColor = new THREE.Color(d.lume || 0xffffff).multiplyScalar(0.7);
+  const sdTickColor = new THREE.Color(d.lume || 0xffffff).multiplyScalar(0.4);
   for(let i = 0; i < 60; i++) {
     const ang = (i / 60) * Math.PI * 2;
     const isMajor = (i % 10 === 0); // 0,10,20,30,40,50
@@ -1219,12 +1219,12 @@ function buildQibla() {
   const moonPhase = dayOfRamadan / RAMADAN_DAYS; // 0→1 over the month
   window._hijriMoonPhase = moonPhase;
   
-  // Moon disc — bright circle
+  // Moon disc — subtle warm tone, barely lighter than dial
   const moonR = gaugeR * 0.42;
-  const moonMat = new THREE.MeshPhysicalMaterial({
-    color: 0xf8f4e8, roughness: 0.6, metalness: 0.05,
-    emissive: 0xf8f4e8, emissiveIntensity: 0.05,
-    envMapIntensity: 0.1
+  const moonMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(d.bg).lerp(new THREE.Color(0xf8f4e8), 0.15),
+    transparent: true,
+    opacity: (isFullscreen || CONTAINED) ? 0.5 : 1.0,  // semi-transparent so grain shows through
   });
   const moonDisc = new THREE.Mesh(new THREE.CircleGeometry(moonR, 64), moonMat);
   moonDisc.position.z = 0.1;
@@ -1248,8 +1248,8 @@ function buildQibla() {
   mCtx.arc(cx, cy, mr, 0, Math.PI*2);
   mCtx.clip();
   
-  // Dark background (shadow)
-  const bgCol = new THREE.Color(d.bg).multiplyScalar(0.5);
+  // Dark background (shadow) — very close to dial color for subtle blend
+  const bgCol = new THREE.Color(d.bg).multiplyScalar(0.92);
   mCtx.fillStyle = `rgb(${bgCol.r*255|0},${bgCol.g*255|0},${bgCol.b*255|0})`;
   mCtx.fillRect(0, 0, 256, 256);
   
@@ -1309,12 +1309,13 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — unlit to match flat CSS dial background (no PBR glow)
+  // Rotor disc — hidden in fullscreen/contained so CSS bg + grain shows through uniformly
   const rotorR = gaugeR - 2;
   const rotorMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.98),
+    color: new THREE.Color(d.bg),
   });
   const rotorDisc = new THREE.Mesh(new THREE.CircleGeometry(rotorR, 64), rotorMat);
+  if (isFullscreen || CONTAINED) rotorDisc.visible = false;
   qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim (N, E, S, W as subtle lines)
@@ -1360,11 +1361,13 @@ function buildQibla() {
   qiblaInnerRotor = new THREE.Group();
   qiblaInnerRotor.position.z = 1;
   
+  // Inner rotor — hidden in fullscreen/contained so CSS bg + grain shows through
   const innerR = gaugeR * 0.28;
   const innerMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.96),
+    color: new THREE.Color(d.bg),
   });
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
+  if (isFullscreen || CONTAINED) innerDisc.visible = false;
   qiblaInnerRotor.add(innerDisc);
   
   // Qibla marker — NOMOS subdial hand: thin tapered needle + filled circle counterweight

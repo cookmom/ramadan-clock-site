@@ -676,7 +676,7 @@ function buildDial() {
   // Subdial recess wall — Nomos style: very fine dark circle line
   const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
   const recessWallMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.35),
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.7),
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
   recessWall.position.set(0, subY, -0.5);
@@ -1182,7 +1182,7 @@ function buildQibla() {
   
   // Base disc — unlit MeshBasicMaterial to match the flat CSS dial background
   // Main dial is CSS bg (no 3D geometry) — subdial must also be unlit or it glows brighter
-  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.97); // barely perceptible recess per Nomos
+  const subDialColor = new THREE.Color(d.bg); // exact dial color — Nomos subdial is same as dial
   const baseMat = new THREE.MeshBasicMaterial({
     color: subDialColor,
   });
@@ -1311,7 +1311,7 @@ function buildQibla() {
   // Rotor disc — unlit to match flat CSS dial background (no PBR glow)
   const rotorR = gaugeR - 2;
   const rotorMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.94),
+    color: new THREE.Color(d.bg).multiplyScalar(0.98),
   });
   const rotorDisc = new THREE.Mesh(new THREE.CircleGeometry(rotorR, 64), rotorMat);
   qiblaRotor.add(rotorDisc);
@@ -1361,7 +1361,7 @@ function buildQibla() {
   
   const innerR = gaugeR * 0.28;
   const innerMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.91),
+    color: new THREE.Color(d.bg).multiplyScalar(0.96),
   });
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
   qiblaInnerRotor.add(innerDisc);

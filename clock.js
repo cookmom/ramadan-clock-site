@@ -171,10 +171,10 @@ const scene = new THREE.Scene();
 const aspect = W/H;
 const camFOV = 24; // narrow FOV = telephoto = minimal distortion
 const camDist = 380;
-const camTiltDeg = 7; // degrees off perpendicular — NOMOS product photography angle
+const camTiltDeg = 2; // subtle bottom-up angle — like looking up at a wall clock, matches NOMOS close-up photography
 const camTiltRad = camTiltDeg * Math.PI / 180;
 const cam = new THREE.PerspectiveCamera(camFOV, aspect, 1, 2000);
-cam.position.set(0, -Math.sin(camTiltRad) * camDist, Math.cos(camTiltRad) * camDist); // negative Y = camera above dial center, tilted toward 12
+cam.position.set(0, Math.sin(camTiltRad) * camDist, Math.cos(camTiltRad) * camDist); // positive Y = camera below center, looking slightly up
 cam.lookAt(0, 0, 0);
 
 // ══════════════════════════════════════════

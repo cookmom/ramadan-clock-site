@@ -677,17 +677,33 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — straight cylinder wall, visible at 7° bottom-up camera angle
+  // Subdial recess — smooth torus bevel at the lip + shallow cylinder wall
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
-  const recessDepth = 2.5;
+  const recessDepth = 0.8; // shallow — Nomos subdials barely step down
 
-  // Cylinder inner wall — BackSide rendering shows the inside of the well
-  const wallGeo = new THREE.CylinderGeometry(cutoutR, cutoutR, recessDepth, 128, 1, true);
+  // Smooth torus bevel at the lip edge — rounded transition, not a hard edge
+  const bevelTubeR = 0.35;
+  const bevelTorus = new THREE.Mesh(
+    new THREE.TorusGeometry(cutoutR - bevelTubeR * 0.3, bevelTubeR, 16, 128),
+    new THREE.MeshPhysicalMaterial({
+      color: dialCol.clone().multiplyScalar(0.55),
+      roughness: 0.4,
+      metalness: 0.2,
+      envMapIntensity: 0.3,
+    })
+  );
+  bevelTorus.rotation.x = Math.PI / 2;
+  bevelTorus.position.set(0, subY, -bevelTubeR * 0.5);
+  clockGroup.add(bevelTorus);
+  _recessMeshes.push(bevelTorus);
+
+  // Shallow cylinder wall behind the bevel
+  const wallGeo = new THREE.CylinderGeometry(cutoutR - bevelTubeR * 0.6, cutoutR - bevelTubeR * 0.6, recessDepth, 128, 1, true);
   const wallMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.4),
-    roughness: 0.5,
-    metalness: 0.15,
-    envMapIntensity: 0.4,
+    color: dialCol.clone().multiplyScalar(0.45),
+    roughness: 0.6,
+    metalness: 0.05,
+    envMapIntensity: 0.1,
     side: THREE.BackSide,
   });
   const recessWall = new THREE.Mesh(wallGeo, wallMat);
@@ -696,27 +712,15 @@ function buildDial() {
   clockGroup.add(recessWall);
   _recessMeshes.push(recessWall);
 
-  // Thin lip ring at aperture edge
-  const lipGeo = new THREE.RingGeometry(cutoutR, cutoutR + 0.4, 128);
-  const lipMat = new THREE.MeshPhysicalMaterial({
-    color: dialCol.clone().multiplyScalar(0.8),
-    roughness: 0.2,
-    metalness: 0.4,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.05,
-    envMapIntensity: 1.5,
-  });
-  const lipRing = new THREE.Mesh(lipGeo, lipMat);
-  lipRing.position.set(0, subY, 0.1);
-  clockGroup.add(lipRing);
-  _recessMeshes.push(lipRing);
-  
+  // No surround ring — caused tonal mismatch with CSS bg
+
   // Update fullscreen PBR background to match new dial material
   if(fsBgPlane) {
     fsBgPlane.material.dispose();
     fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
-  // In fullscreen/contained, dial geometry hidden — CSS background IS the dial
+  // Hide dial mesh in fullscreen/contained — CSS bg + grain is the dial surface
+  // Torus bevel at subdial lip provides the recessed look without needing the full dial
   if(isFullscreen || CONTAINED) {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
@@ -1203,7 +1207,7 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = -2; // physically recessed below dial surface (NOMOS reference)
+  qiblaGroup.position.z = -0.8; // shallow recess — Nomos subdials are barely stepped down
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
@@ -1340,17 +1344,14 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — ring shape (hole for moonphase)
-  // MeshBasicMaterial: unlit, color-matched to CSS bg + grain overlay appearance
+  // Rotor disc — MeshBasicMaterial with grain texture to match CSS bg tone
+  // PBR catches HDRI and renders brighter than the flat CSS background
   const rotorR = gaugeR - 2;
-  // Rotor disc — unlit flat color, slightly darker than dial bg to read as recessed
-  // No map/texture — CSS grain overlay handles the surface texture through transparent canvas
-  const rotorCol = new THREE.Color(d.bg).multiplyScalar(0.88);
-  const rotorMat = new THREE.MeshBasicMaterial({
-    color: rotorCol,
-  });
-  const rotorGeo = new THREE.RingGeometry(moonR + 0.5, rotorR, 64);
-  const rotorDisc = new THREE.Mesh(rotorGeo, rotorMat);
+  // Rotor disc — subtle tint so CSS bg + grain shows through, with slight darkening for depth
+  const rotorDisc = new THREE.Mesh(
+    new THREE.RingGeometry(moonR + 0.5, rotorR, 64),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.06 })
+  );
   qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic

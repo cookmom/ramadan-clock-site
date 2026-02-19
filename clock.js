@@ -651,10 +651,10 @@ function buildDial() {
   const subY = -R*0.5;
   cutoutR = R*0.342; // 10% smaller subdial (was 0.38)
   
-  // Lower disc — solid, darker, recessed
+  // Lower disc — solid, subtly darker, recessed (Nomos: barely visible step)
   const lowerGeo = new THREE.CylinderGeometry(caseR, caseR, DIAL_THICKNESS, 128);
-  const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-  const lowerMat = new THREE.MeshBasicMaterial({color:lowerColor}); // unlit // recessed dial — barely there
+  const lowerColor = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.88);
+  const lowerMat = new THREE.MeshBasicMaterial({color:lowerColor}); // unlit — recessed dial
   dialLowerMesh = new THREE.Mesh(lowerGeo, lowerMat);
   dialLowerMesh.rotation.x = Math.PI/2;
   dialLowerMesh.position.z = -(DIAL_THICKNESS/2 + DIAL_GAP + DIAL_THICKNESS);
@@ -673,14 +673,14 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess wall — thin ring showing the step down
-  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.3, cutoutR + 0.3, 64);
+  // Subdial recess wall — Nomos style: very fine dark circle line
+  const recessWallGeo = new THREE.RingGeometry(cutoutR - 0.15, cutoutR + 0.15, 128);
   const recessWallMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.45),
-    roughness: 0.35, metalness: 0.4, // slightly metallic rim — catches light like real step
+    color: new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.35),
+    roughness: 0.5, metalness: 0.1, // subtle dark line, not metallic
   });
   const recessWall = new THREE.Mesh(recessWallGeo, recessWallMat);
-  recessWall.position.set(0, subY, -1);
+  recessWall.position.set(0, subY, -0.5);
   clockGroup.add(recessWall);
   markerMeshes.push(recessWall);
   
@@ -1181,15 +1181,35 @@ function buildQibla() {
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — slightly darker than main dial (recessed shadow effect per Nomos reference)
-  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.88); // noticeably recessed
+  // Base disc — Nomos style: same dial color, very subtle recess (barely darker)
+  const subDialColor = new THREE.Color(d.bg).multiplyScalar(0.94); // subtle recess per Nomos close-ups
   const baseMat = new THREE.MeshPhysicalMaterial({
     color: subDialColor,
-    roughness: 0.45, metalness: 0.0,
+    roughness: 0.55, metalness: 0.0, // matte like main dial
     roughnessMap: dialGrainTex, // same grain texture as dial surface
   });
   const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
   qiblaGroup.add(baseDisc);
+
+  // ── Nomos-style subdial tick ring ──
+  // Fine tick marks around subdial periphery (60 second marks)
+  const tickRingR = gaugeR - 1.0;
+  const sdTickGroup = new THREE.Group();
+  const sdTickColor = new THREE.Color(d.lume || 0xffffff).multiplyScalar(0.7);
+  for(let i = 0; i < 60; i++) {
+    const ang = (i / 60) * Math.PI * 2;
+    const isMajor = (i % 10 === 0); // 0,10,20,30,40,50
+    const tH = isMajor ? gaugeR * 0.12 : gaugeR * 0.06;
+    const tW = isMajor ? 0.4 : 0.25;
+    const tGeo = new THREE.PlaneGeometry(tW, tH);
+    const tMat = new THREE.MeshBasicMaterial({ color: sdTickColor });
+    const tick = new THREE.Mesh(tGeo, tMat);
+    const tr = tickRingR - tH * 0.5;
+    tick.position.set(Math.sin(ang) * tr, Math.cos(ang) * tr, 0.08);
+    tick.rotation.z = -ang;
+    sdTickGroup.add(tick);
+  }
+  qiblaGroup.add(sdTickGroup);
   
   // ── Moon phase (Hijri calendar) ──
   // Ramadan 2026: Feb 17 – Mar 18 (approx)
@@ -1290,12 +1310,12 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — slightly smaller, different tone
+  // Rotor disc — Nomos-inspired: subtle tone shift from subdial base, less metallic
   const rotorR = gaugeR - 2;
   const rotorMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.75),
-    roughness: 0.2, metalness: 0.6,
-    clearcoat: 0.6, envMapIntensity: 3.0,
+    color: new THREE.Color(d.bg).multiplyScalar(0.85),
+    roughness: 0.4, metalness: 0.15,
+    clearcoat: 0.3, envMapIntensity: 1.5,
   });
   const rotorDisc = new THREE.Mesh(new THREE.CircleGeometry(rotorR, 64), rotorMat);
   qiblaRotor.add(rotorDisc);
@@ -1345,9 +1365,9 @@ function buildQibla() {
   
   const innerR = gaugeR * 0.28;
   const innerMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg).multiplyScalar(0.75),
-    roughness: 0.45, metalness: 0.2,
-    envMapIntensity: 0.5,
+    color: new THREE.Color(d.bg).multiplyScalar(0.88),
+    roughness: 0.5, metalness: 0.1,
+    envMapIntensity: 0.8,
   });
   const innerDisc = new THREE.Mesh(new THREE.CircleGeometry(innerR, 48), innerMat);
   qiblaInnerRotor.add(innerDisc);

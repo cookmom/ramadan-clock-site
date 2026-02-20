@@ -1340,19 +1340,25 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — unlit with fine grain texture to match dial surface
-  // Must be MeshBasicMaterial (unlit) to match CSS background tone
-  // Uses a subtle grain map for surface texture without catching scene lights
+  // Rotor disc — textured like the dial (grain roughnessMap visible through env reflections)
   const rotorR = gaugeR - 2;
-  const fineGrain = makeGrainTexture(512, 245, 6); // bright, very subtle grain
+  const rotorCol = new THREE.Color(d.bg).multiplyScalar(0.72);
+  const rotorGrain = makeGrainTexture(512, 215, 40); // Stronger grain for visible texture
+  const rotorMat = new THREE.MeshPhysicalMaterial({
+    color: rotorCol,
+    map: rotorGrain,              // Visible grain COLOR variation (textured look)
+    roughnessMap: rotorGrain,     // Grain also modulates glossiness
+    roughness: 0.45,
+    metalness: 0.08,
+    envMapIntensity: 0.35,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.5,
+  });
   const rotorDisc = new THREE.Mesh(
     new THREE.CircleGeometry(rotorR, 128),
-    new THREE.MeshBasicMaterial({
-      color: new THREE.Color(d.bg).multiplyScalar(0.96),
-      map: fineGrain,
-    })
+    rotorMat
   );
-  rotorDisc.position.z = -0.45; // Below moonphase (moonDisc z=0.1, moonOverlay z=0.15 in parent qiblaGroup; qiblaRotor z=0.5)
+  rotorDisc.position.z = -0.45;
   qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic

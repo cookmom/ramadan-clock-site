@@ -921,55 +921,42 @@ function buildMarkers() {
         lumeMeshes.push(mesh); // glow at night
       }
       // Also draw hour marker at non-numeral hour positions
-      // NOMOS two-layer applied index: base with recessed lume channel
+      // Round disc on larger round disc base (applied dot indices)
       if(isHour && !isNumeralPos){
-        const mH=R*0.16, mW=R*0.03, depth=2.5;
-        const midR = (R - R*0.04 - mH/2) * 0.92;
+        const dotR = R * 0.032;       // top lume disc radius
+        const baseR = dotR * 1.7;     // base disc visibly larger
+        const baseDepth = 2.0;
+        const lumeDepth = 1.8;
+        const midR = (R - R*0.04 - baseR) * 0.92;
         const px = Math.cos(ang)*midR, py = Math.sin(ang)*midR;
         const mk = c.marker || c.lume;
         const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
-        // Base with channel cutout (extruded shape with hole)
-        const bW = mW*1.8, bH = mH*1.08;
-        const baseShape = new THREE.Shape();
-        baseShape.moveTo(-bW/2, -bH/2);
-        baseShape.lineTo(bW/2, -bH/2);
-        baseShape.lineTo(bW/2, bH/2);
-        baseShape.lineTo(-bW/2, bH/2);
-        baseShape.closePath();
-        // Cut channel hole — same proportions as lume fill
-        const cW = mW*0.85, cH = mH*0.88;
-        const channel = new THREE.Path();
-        channel.moveTo(-cW/2, -cH/2);
-        channel.lineTo(cW/2, -cH/2);
-        channel.lineTo(cW/2, cH/2);
-        channel.lineTo(-cW/2, cH/2);
-        channel.closePath();
-        baseShape.holes.push(channel);
-        const baseGeo = new THREE.ExtrudeGeometry(baseShape, {depth, bevelEnabled:false});
+        // Base disc — larger, polished rhodium
+        const baseGeo = new THREE.CylinderGeometry(baseR, baseR, baseDepth, 32);
         const baseMatl = new THREE.MeshPhysicalMaterial({
           color: mkBase,
-          roughness: 0.3, metalness: 0.7,  // rhodium-like applied index body
-          clearcoat: 0.5, clearcoatRoughness: 0.08,
+          roughness: 0.2, metalness: 0.75,
+          clearcoat: 0.6, clearcoatRoughness: 0.06,
           emissive: mk, emissiveIntensity: 0,
         });
-        baseMatl.envMapIntensity = 2.0; // visible tilt response like real applied indices
+        baseMatl.envMapIntensity = 2.5;
         const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
-        baseMesh.position.set(px, py, 1.5); // base ON TOP — forms the channel walls
-        baseMesh.rotation.z = ang + Math.PI/2;
+        baseMesh.position.set(px, py, baseDepth/2);
+        baseMesh.rotation.x = Math.PI/2;
         clockGroup.add(baseMesh); markerMeshes.push(baseMesh);
         lumeMeshes.push(baseMesh);
-        // Lume fill — RECESSED inside the channel, glossy lacquer finish
-        const lumeGeo = new THREE.BoxGeometry(cW, cH, depth*0.5);
+        // Top lume disc — smaller, glossy lacquer, sits on top of base
+        const lumeGeo = new THREE.CylinderGeometry(dotR, dotR, lumeDepth, 32);
         const lumeMatl = new THREE.MeshPhysicalMaterial({
           color: mk, roughness: 0.06, metalness: 0.0,
           clearcoat: 1.0, clearcoatRoughness: 0.02,
           emissive: mk, emissiveIntensity: 0,
           specularIntensity: 0.5,
         });
-        lumeMatl.envMapIntensity = 1.2;
+        lumeMatl.envMapIntensity = 1.5;
         const lumeMesh = new THREE.Mesh(lumeGeo, lumeMatl);
-        lumeMesh.position.set(px, py, 0.3); // BELOW base — recessed in channel
-        lumeMesh.rotation.z = ang + Math.PI/2;
+        lumeMesh.position.set(px, py, baseDepth + lumeDepth/2);
+        lumeMesh.rotation.x = Math.PI/2;
         clockGroup.add(lumeMesh); markerMeshes.push(lumeMesh);
         lumeMeshes.push(lumeMesh);
       }

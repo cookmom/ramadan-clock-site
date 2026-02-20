@@ -246,6 +246,14 @@ topLight.position.set(0, 0, 300);
 topLight.lookAt(0, 0, 0);
 scene.add(topLight);
 
+// Subdial spotlight — follows gyro/mouse tilt, sweeps across textured subdial
+// Creates interactive light play on the grain texture when you move your phone
+const subY_light = -R * 0.5; // subdial Y position (calculated later but constant)
+const subdialSpot = new THREE.SpotLight(0xfff8f0, 0.4, 250, Math.PI/3, 0.95, 2.0);
+subdialSpot.position.set(0, subY_light, 120);
+subdialSpot.target.position.set(0, subY_light, 0);
+scene.add(subdialSpot);
+scene.add(subdialSpot.target);
 
 // ══════════════════════════════════════════
 // MATERIALS (PBR)
@@ -694,32 +702,17 @@ function buildDial() {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
 
-    // 3D recess — tapered cone wall only (no opaque top surface)
-    // Tapered: wider at top, narrower at bottom = angled wall visible from above
-    // Unlike straight cylinder (edge-on from above), cone wall catches camera
-    const recessDepth = 0.8;
-    const taperInset = 1.2; // how much smaller the bottom radius is
-    const wallGeo = new THREE.CylinderGeometry(
-      cutoutR,                    // top radius (at dial surface)
-      cutoutR - taperInset,       // bottom radius (smaller = tapered inward)
-      recessDepth,                // height (depth of recess)
-      128,                        // segments
-      1,                          // height segments
-      true                        // openEnded — NO caps, just the wall
+    // 3D recess bevel — smooth thin torus at the subdial aperture
+    // Dark, minimal reflections — reads as shadow edge, not a shiny ring
+    const bevelTorus = new THREE.Mesh(
+      new THREE.TorusGeometry(cutoutR, 0.3, 12, 128),
+      new THREE.MeshBasicMaterial({
+        color: dialCol.clone().multiplyScalar(0.5),
+      })
     );
-    // Subtle dark inner wall — visible from above due to taper angle
-    const wallMat = new THREE.MeshPhysicalMaterial({
-      color: dialCol.clone().multiplyScalar(0.55),
-      roughness: 0.5,
-      metalness: 0.15,
-      envMapIntensity: 0.3,
-      side: THREE.BackSide,
-    });
-    const wallMesh = new THREE.Mesh(wallGeo, wallMat);
-    wallMesh.rotation.x = Math.PI / 2;
-    wallMesh.position.set(0, subY, -recessDepth / 2); // top at z=0, bottom at z=-depth
-    clockGroup.add(wallMesh);
-    _recessMeshes.push(wallMesh);
+    bevelTorus.position.set(0, subY, 0);
+    clockGroup.add(bevelTorus);
+    _recessMeshes.push(bevelTorus);
   }
   
   // Main crystal removed — caused visible edge ring on mobile
@@ -1218,6 +1211,32 @@ function buildQibla() {
   if (isFullscreen || CONTAINED) baseDisc.visible = false;
   qiblaGroup.add(baseDisc);
 
+  // Subdial floor disc — PBR textured surface, darker than main dial to read as recessed
+  // Grain roughnessMap creates surface texture that the gyro spotlight reveals interactively
+  // Two-layer approach: unlit base (matches CSS bg) + thin PBR overlay (catches gyro spotlight)
+  // Base layer: MeshBasicMaterial at dial color — unlit, matches CSS background exactly
+  const rotorDiscColor = new THREE.Color(d.bg).multiplyScalar(0.94);
+  const rotorDiscMat = new THREE.MeshBasicMaterial({ color: rotorDiscColor });
+  // PBR overlay: transparent, grain-textured, only responds to the gyro spotlight
+  const rotorGrainMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(d.bg),
+    roughness: 0.5,
+    metalness: 0.03,
+    roughnessMap: dialGrainTex,
+    transparent: true,
+    opacity: 0.2, // very subtle — spotlight reveals grain without adding brightness
+    clearcoat: 0.1,
+    clearcoatRoughness: 0.4,
+  });
+  rotorGrainMat.envMapIntensity = 0.05;
+  const rotorDiscMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorDiscMat);
+  rotorDiscMesh.position.z = 0.05;
+  qiblaGroup.add(rotorDiscMesh);
+  // PBR grain overlay — sits on top, catches gyro spotlight to reveal texture
+  const rotorGrainMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorGrainMat);
+  rotorGrainMesh.position.z = 0.08;
+  qiblaGroup.add(rotorGrainMesh);
+
   // ── Nomos-style subdial tick ring ──
   // Fine tick marks around subdial periphery — dark on colored dials, dark on white
   // Nomos reference: 60 fine ticks, longer at 10-sec intervals, dark hairline marks
@@ -1309,10 +1328,10 @@ function buildQibla() {
   mCtx.fill();
   mCtx.restore();
   
-  // Soft edge
-  const grad = mCtx.createRadialGradient(cx, cy, mr*0.9, cx, cy, mr);
+  // Soft edge — very thin anti-alias fade at the rim
+  const grad = mCtx.createRadialGradient(cx, cy, mr*0.97, cx, cy, mr);
   grad.addColorStop(0, 'rgba(0,0,0,0)');
-  grad.addColorStop(1, 'rgba(0,0,0,1)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.4)');
   mCtx.fillStyle = grad;
   mCtx.fillRect(0, 0, 256, 256);
   
@@ -1339,27 +1358,8 @@ function buildQibla() {
   // Outer rotor — the main Ressence-style rotating disc
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
-  
-  // Rotor disc — textured like the dial (grain roughnessMap visible through env reflections)
+
   const rotorR = gaugeR - 2;
-  const rotorCol = new THREE.Color(d.bg).multiplyScalar(0.72);
-  const rotorGrain = makeGrainTexture(512, 215, 40); // Stronger grain for visible texture
-  const rotorMat = new THREE.MeshPhysicalMaterial({
-    color: rotorCol,
-    map: rotorGrain,              // Visible grain COLOR variation (textured look)
-    roughnessMap: rotorGrain,     // Grain also modulates glossiness
-    roughness: 0.45,
-    metalness: 0.08,
-    envMapIntensity: 0.35,
-    clearcoat: 0.08,
-    clearcoatRoughness: 0.5,
-  });
-  const rotorDisc = new THREE.Mesh(
-    new THREE.CircleGeometry(rotorR, 128),
-    rotorMat
-  );
-  rotorDisc.position.z = -0.45;
-  qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic
   const tickLen = gaugeR * 0.10;
@@ -2373,6 +2373,9 @@ function animate(){
   keyLight.position.y = 120 + gy * 30;
   fillLight.position.x = 80 - gx * 30;
   fillLight.position.y = -40 - gy * 20;
+  // Subdial spotlight sweeps with gyro — reveals grain texture interactively
+  subdialSpot.position.x = gx * 60;
+  subdialSpot.position.y = subY_light + gy * 40;
   
   updateHands();
   updateFlap();

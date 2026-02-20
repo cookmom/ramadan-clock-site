@@ -213,7 +213,7 @@ let studioEnvMap;
   const envRT = pmrem.fromEquirectangular(hdrTex);
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
-  scene.environmentIntensity = 0.8; // hands and markers need strong env to read as polished rhodium
+  scene.environmentIntensity = 1.6; // HDRI dominant — crisp specular highlights on rhodium hands/markers
   scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
   hdrTex.dispose();
   pmrem.dispose();
@@ -228,20 +228,21 @@ const ambLight = new THREE.AmbientLight(0xfff8f2, 0.3);
 scene.add(ambLight);
 
 // Key light — large soft rect from upper-left (NOMOS product photo style)
-// Warm white mimics studio softbox — creates the primary highlight sweep on hands
-const keyLight = new THREE.RectAreaLight(0xfff4e8, 3.5, 400, 400);
+// REDUCED intensity — HDRI environment should be dominant for crisp specular highlights
+// RectAreaLights provide fill and broad highlights, not the main reflections
+const keyLight = new THREE.RectAreaLight(0xfff4e8, 1.5, 400, 400);
 keyLight.position.set(-60, 120, 280);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
 // Fill light — opposite side, cooler tone creates depth and dimension
-const fillLight = new THREE.RectAreaLight(0xe8f0ff, 1.2, 300, 300);
+const fillLight = new THREE.RectAreaLight(0xe8f0ff, 0.6, 300, 300);
 fillLight.position.set(80, -40, 220);
 fillLight.lookAt(0, 0, 0);
 scene.add(fillLight);
 
-// Top light — even overhead wash (prevents dark spots, neutral white)
-const topLight = new THREE.RectAreaLight(0xffffff, 1.8, 350, 350);
+// Top light — subtle overhead wash (prevents dark spots)
+const topLight = new THREE.RectAreaLight(0xffffff, 0.8, 350, 350);
 topLight.position.set(0, 0, 300);
 topLight.lookAt(0, 0, 0);
 scene.add(topLight);
@@ -702,12 +703,13 @@ function buildDial() {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
 
-    // 3D recess bevel — smooth thin torus at the subdial aperture
-    // Dark, minimal reflections — reads as shadow edge, not a shiny ring
+    // 3D recess bevel — torus at the subdial aperture, thicker to match deep recess
     const bevelTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(cutoutR, 0.3, 12, 128),
-      new THREE.MeshBasicMaterial({
-        color: dialCol.clone().multiplyScalar(0.5),
+      new THREE.TorusGeometry(cutoutR, 0.6, 16, 128),
+      new THREE.MeshPhysicalMaterial({
+        color: dialCol.clone().multiplyScalar(0.35),
+        roughness: 0.7,
+        metalness: 0.1,
       })
     );
     bevelTorus.position.set(0, subY, 0);
@@ -1196,7 +1198,7 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = -1.0; // recess depth matches the annular ring extrusion
+  qiblaGroup.position.z = -5; // deep recess — visible step from 7° bottom-up camera
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
@@ -1211,31 +1213,16 @@ function buildQibla() {
   if (isFullscreen || CONTAINED) baseDisc.visible = false;
   qiblaGroup.add(baseDisc);
 
-  // Subdial floor disc — PBR textured surface, darker than main dial to read as recessed
-  // Grain roughnessMap creates surface texture that the gyro spotlight reveals interactively
-  // Two-layer approach: unlit base (matches CSS bg) + thin PBR overlay (catches gyro spotlight)
-  // Base layer: MeshBasicMaterial at dial color — unlit, matches CSS background exactly
-  const rotorDiscColor = new THREE.Color(d.bg).multiplyScalar(0.94);
-  const rotorDiscMat = new THREE.MeshBasicMaterial({ color: rotorDiscColor });
-  // PBR overlay: transparent, grain-textured, only responds to the gyro spotlight
-  const rotorGrainMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(d.bg),
-    roughness: 0.5,
-    metalness: 0.03,
-    roughnessMap: dialGrainTex,
+  // Subdial floor — semi-transparent dark tint so CSS bg + grain shows through
+  // Just enough opacity to darken the area slightly = reads as recessed
+  const rotorDiscMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
     transparent: true,
-    opacity: 0.2, // very subtle — spotlight reveals grain without adding brightness
-    clearcoat: 0.1,
-    clearcoatRoughness: 0.4,
+    opacity: 0.12,
   });
-  rotorGrainMat.envMapIntensity = 0.05;
   const rotorDiscMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorDiscMat);
   rotorDiscMesh.position.z = 0.05;
   qiblaGroup.add(rotorDiscMesh);
-  // PBR grain overlay — sits on top, catches gyro spotlight to reveal texture
-  const rotorGrainMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorGrainMat);
-  rotorGrainMesh.position.z = 0.08;
-  qiblaGroup.add(rotorGrainMesh);
 
   // ── Nomos-style subdial tick ring ──
   // Fine tick marks around subdial periphery — dark on colored dials, dark on white
@@ -2358,24 +2345,24 @@ function animate(){
   // Camera parallax — perspective cam with subtle tilt
   const baseY = Math.sin(camTiltRad) * camDist;
   const baseZ = Math.cos(camTiltRad) * camDist;
-  if(!CONTAINED || isFullscreen) { cam.position.x = gx * 8; }
-  cam.position.y = baseY + gy * 5;
+  if(!CONTAINED || isFullscreen) { cam.position.x = gx * 15; }
+  cam.position.y = baseY + gy * 10;
   cam.position.z = baseZ;
   cam.lookAt(0, 0, 0);
   
-  // HDRI rotation with tilt — softboxes sweep across hands from pleasing rest position
+  // HDRI rotation with tilt — dramatic sweep for visible specular shifts on hands/markers
   if(scene.environmentRotation) {
-    scene.environmentRotation.y = 2.8 + gx * 0.6;  // base offset + tilt sweep
-    scene.environmentRotation.x = 0.1 + gy * 0.3;
+    scene.environmentRotation.y = 2.8 + gx * 1.4;  // wide sweep — specular highlights slide across hands
+    scene.environmentRotation.x = 0.1 + gy * 0.8;
   }
-  // Lights follow tilt subtly for material response
-  keyLight.position.x = -60 + gx * 40;
-  keyLight.position.y = 120 + gy * 30;
-  fillLight.position.x = 80 - gx * 30;
-  fillLight.position.y = -40 - gy * 20;
-  // Subdial spotlight sweeps with gyro — reveals grain texture interactively
-  subdialSpot.position.x = gx * 60;
-  subdialSpot.position.y = subY_light + gy * 40;
+  // Lights follow tilt aggressively for visible material response
+  keyLight.position.x = -60 + gx * 80;
+  keyLight.position.y = 120 + gy * 60;
+  fillLight.position.x = 80 - gx * 60;
+  fillLight.position.y = -40 - gy * 40;
+  // Subdial spotlight sweeps with gyro
+  subdialSpot.position.x = gx * 80;
+  subdialSpot.position.y = subY_light + gy * 60;
   
   updateHands();
   updateFlap();

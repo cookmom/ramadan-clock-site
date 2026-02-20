@@ -36,19 +36,19 @@ window.DIALS = DIALS;
 // Night lume palettes — modeled after real SuperLuminova variants
 // Each matches the daytime lume character but amplified for glow
 const NIGHT_LUME = {
-  // NOMOS Campus — all use blue Superluminova (blue luminescence)
-  deep_pink:  { emissive: 0x80c0ff },  // Blue superluminova on pink
-  red:        { emissive: 0x80c0ff },  // Blue superluminova on red
-  coral:      { emissive: 0x80c0ff },  // Blue superluminova on coral
-  starlight:  { emissive: 0x80c0ff },  // Blue superluminova on yellow
-  green:      { emissive: 0x80c0ff },  // Blue superluminova on green
-  teal:       { emissive: 0x80c0ff },  // Blue superluminova on teal
-  slate:      { emissive: 0x80c0ff },  // Blue superluminova on slate
-  navy:       { emissive: 0x80c0ff },  // Blue superluminova on navy
-  white:      { emissive: 0x80c0ff },  // Blue superluminova on white
+  // Lume glow = dial bg color brightened to survive bloom
+  deep_pink:  { emissive: 0xd86a9a },  // Pink (from bg 0xbc4b79)
+  red:        { emissive: 0xe86858 },  // Red (from bg 0xdf473a)
+  coral:      { emissive: 0xf0b098 },  // Coral (from bg 0xe8967a)
+  starlight:  { emissive: 0xe8e4a0 },  // Yellow (from bg 0xd8d580)
+  green:      { emissive: 0x50d0a0 },  // Green (from bg 0x30b080)
+  teal:       { emissive: 0x88c8d0 },  // Teal (from bg 0x63afb9)
+  slate:      { emissive: 0x8088a0 },  // Slate (from bg 0x5d6278)
+  navy:       { emissive: 0x304880 },  // Navy (from bg 0x132653)
+  white:      { emissive: 0xe8e8e8 },  // White (from bg 0xe0e0e0)
   // Special dials
-  kawthar:{ emissive: 0xffa0c0 },  // Soft pink glow
-  rainbow:{ emissive: 0xf0d8a0 },  // Warm champagne
+  kawthar:{ emissive: 0xff80b0 },  // Vivid pink
+  rainbow:{ emissive: 0xe0c060 },  // Warm gold
 };
 const DIAL_NAMES = Object.keys(DIALS);
 const ARABIC = ['١٢','١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١'];
@@ -1077,7 +1077,7 @@ function buildBrandText() {
   const mk = c.marker || c.lume;
   const mkBase = c.markerBase || new THREE.Color(mk).multiplyScalar(0.75);
 
-  // Canvas-based Arabic brand — هدية الوقت (Arabic can't use TextGeometry/latin font)
+  // Canvas-based Arabic brand — هدية الوقت — raised with smooth gloss white finish
   {
     const dpr = 3;
     const cW = 512, cH = 128;
@@ -1086,8 +1086,7 @@ function buildBrandText() {
     const ctx = cvs.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, cW, cH);
-    const lumeCol = '#' + new THREE.Color(mk).getHexString();
-    ctx.fillStyle = lumeCol;
+    ctx.fillStyle = '#ffffff';
     ctx.globalAlpha = 1;
     ctx.font = "600 52px 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif";
     ctx.textAlign = 'center';
@@ -1096,17 +1095,22 @@ function buildBrandText() {
     const tex = new THREE.CanvasTexture(cvs);
     tex.anisotropy = 4;
     const pw = R * 1.2;
-    const geo = new THREE.PlaneGeometry(pw, pw * 0.25);
-    const mat = new THREE.MeshBasicMaterial({
-      map: tex, transparent: true, depthWrite: false, side: THREE.FrontSide
+
+    // Gloss white text plane — raised off the dial
+    const planeGeo = new THREE.PlaneGeometry(pw, pw * 0.25);
+    const glossMat = new THREE.MeshPhysicalMaterial({
+      map: tex, transparent: true, depthWrite: true,
+      color: 0xffffff, roughness: 0.06, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.03,
+      envMapIntensity: 1.2, side: THREE.FrontSide
     });
-    mat._isBrandTex = true;
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, R * 0.33, 4);
+    glossMat._isBrandTex = true;
+    const mesh = new THREE.Mesh(planeGeo, glossMat);
+    mesh.position.set(0, R * 0.33, 8); // raised higher off dial
     clockGroup.add(mesh);
     brandMeshes.push(mesh);
     mesh.userData.brandCanvas = { cvs, ctx, text: 'هدية الوقت', fontSpec: "600 52px 'Noto Naskh Arabic'", alpha: 1, cW, cH, dpr };
-    brandLumeMats.push(mat);
+    brandLumeMats.push(glossMat);
   }
 
   // "AGIFTOFTIME.APP" — hidden for now (revisit later)
@@ -2207,7 +2211,7 @@ function animate(){
   const lumeEmCol = new THREE.Color(nightLume.emissive);
   // Subtle lume breathing — very slow, barely perceptible (±5%)
   const lumeBreathe = 1.0 + Math.sin(Date.now() * 0.0005) * 0.05;
-  const lumeIntensity = modeBlend * 2.0 * lumeBreathe;
+  const lumeIntensity = modeBlend * 1.2 * lumeBreathe;
   lumeMeshes.forEach(m=>{
     m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     // Kawthar candy buttons: cap glow to prevent blowout
@@ -2228,8 +2232,8 @@ function animate(){
     const {cvs, ctx, text, fontSpec, alpha, cW, cH, dpr} = bd;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cW, cH);
-    // Blend from lume color to emissive glow
-    const dayCol = new THREE.Color(DIALS[currentDial].lume);
+    // White logo in day, dial-tinted glow at night
+    const dayCol = new THREE.Color(0xffffff);
     const nightCol = lumeEmCol.clone().multiplyScalar(1 + modeBlend * 1.5);
     const blended = dayCol.lerp(nightCol, modeBlend);
     ctx.fillStyle = '#' + blended.getHexString();

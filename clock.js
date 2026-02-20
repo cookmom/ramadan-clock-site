@@ -923,7 +923,7 @@ function buildMarkers() {
       // Also draw hour marker at non-numeral hour positions
       // Round disc on larger round disc base (applied dot indices)
       if(isHour && !isNumeralPos){
-        const dotR = R * 0.032;       // top lume disc radius
+        const dotR = R * 0.042;       // top lume disc radius (30% bigger)
         const baseR = dotR * 1.7;     // base disc visibly larger
         const baseDepth = 2.0;
         const lumeDepth = 1.8;

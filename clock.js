@@ -703,18 +703,36 @@ function buildDial() {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
 
-    // 3D recess bevel — torus at the subdial aperture, thicker to match deep recess
+    // 3D recess bevel — torus at the subdial aperture
+    // Medium tube (0.8) — visible but not heavy. Polished lip for Nomos look
     const bevelTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(cutoutR, 0.6, 16, 128),
+      new THREE.TorusGeometry(cutoutR, 0.8, 24, 128),
       new THREE.MeshPhysicalMaterial({
-        color: dialCol.clone().multiplyScalar(0.35),
-        roughness: 0.7,
-        metalness: 0.1,
+        color: dialCol.clone().multiplyScalar(0.4),
+        roughness: 0.3,
+        metalness: 0.4,
+        envMapIntensity: 0.5,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.2,
       })
     );
     bevelTorus.position.set(0, subY, 0);
     clockGroup.add(bevelTorus);
     _recessMeshes.push(bevelTorus);
+
+    // Inner shadow cylinder — dark wall visible at 7° camera angle with z=-8 depth
+    const wallGeo = new THREE.CylinderGeometry(cutoutR - 0.5, cutoutR - 0.5, 8, 64, 1, true);
+    const wallMat = new THREE.MeshPhysicalMaterial({
+      color: dialCol.clone().multiplyScalar(0.2),
+      roughness: 0.8,
+      metalness: 0.05,
+      side: THREE.BackSide,
+    });
+    const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+    wallMesh.rotation.x = Math.PI / 2;
+    wallMesh.position.set(0, subY, -4); // centered in the 8-unit deep well
+    clockGroup.add(wallMesh);
+    _recessMeshes.push(wallMesh);
   }
   
   // Main crystal removed — caused visible edge ring on mobile
@@ -1161,7 +1179,7 @@ function buildHands() {
 // ══════════════════════════════════════════
 // QIBLA ORBITAL COMPASS — Ressence-inspired
 // ══════════════════════════════════════════
-let qiblaGroup, qiblaRotor, qiblaInnerRotor;
+let qiblaGroup, qiblaRotor, qiblaInnerRotor, rotorDiscMat_;
 let hasCompassData = false;
 let compassHeading = 0, targetCompassHeading = 0;
 let qiblaBearing = 0; // degrees from north
@@ -1198,7 +1216,7 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = -5; // deep recess — visible step from 7° bottom-up camera
+  qiblaGroup.position.z = -8; // deep recess — visible step from 7° bottom-up camera
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
@@ -1213,13 +1231,29 @@ function buildQibla() {
   if (isFullscreen || CONTAINED) baseDisc.visible = false;
   qiblaGroup.add(baseDisc);
 
-  // Subdial floor — semi-transparent dark tint so CSS bg + grain shows through
-  // Just enough opacity to darken the area slightly = reads as recessed
-  const rotorDiscMat = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: 0.12,
-  });
+  // Subdial floor — MeshBasicMaterial (unlit) with onBeforeCompile shader mod
+  // Adds a subtle radial grain pattern that responds to env map rotation via uniform
+  // This avoids scene lights making it too bright while still showing texture
+  const floorColor = new THREE.Color(d.bg).multiplyScalar(0.82);
+  const rotorDiscMat = new THREE.MeshBasicMaterial({ color: floorColor });
+  rotorDiscMat_ = rotorDiscMat; // module-level ref for animate loop
+  // Add subtle grain via shader — modulates color slightly based on position
+  rotorDiscMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uEnvRot = { value: 0.0 };
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <color_fragment>',
+      `#include <color_fragment>
+       // Procedural galvanized grain — visible texture like sandblasted metal
+       vec2 p = vUv * 200.0;
+       float grain = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+       float grain2 = fract(sin(dot(p * 0.7, vec2(78.233, 12.9898))) * 23421.631);
+       float combined = mix(grain, grain2, 0.5);
+       // Env rotation modulates grain phase — shifts pattern with tilt
+       float phase = sin(p.x * 2.0 + uEnvRot * 2.0) * 0.04 + sin(p.y * 1.5 + uEnvRot) * 0.03;
+       diffuseColor.rgb *= 0.90 + combined * 0.15 + phase;`
+    );
+    rotorDiscMat.userData.shader = shader;
+  };
   const rotorDiscMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorDiscMat);
   rotorDiscMesh.position.z = 0.05;
   qiblaGroup.add(rotorDiscMesh);
@@ -2268,7 +2302,7 @@ function animate(){
   fillLight.intensity = 1.2 * (1 - modeBlend * 0.8);
   topLight.intensity = 1.8 * (1 - modeBlend * 0.8);
   // Reduce env intensity at night so lume glows dominate
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 0.8 * (1 - modeBlend * 0.7);
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 1.6 * (1 - modeBlend * 0.5);
   renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
   
   // Vignette at night
@@ -2352,8 +2386,8 @@ function animate(){
   
   // HDRI rotation with tilt — dramatic sweep for visible specular shifts on hands/markers
   if(scene.environmentRotation) {
-    scene.environmentRotation.y = 2.8 + gx * 1.4;  // wide sweep — specular highlights slide across hands
-    scene.environmentRotation.x = 0.1 + gy * 0.8;
+    scene.environmentRotation.y = 2.8 + gx * 2.0;  // wider sweep — env map slides visibly with tilt
+    scene.environmentRotation.x = 0.1 + gy * 1.2;
   }
   // Lights follow tilt aggressively for visible material response
   keyLight.position.x = -60 + gx * 80;
@@ -2363,6 +2397,10 @@ function animate(){
   // Subdial spotlight sweeps with gyro
   subdialSpot.position.x = gx * 80;
   subdialSpot.position.y = subY_light + gy * 60;
+  // Update subdial floor grain shader with env rotation
+  if(rotorDiscMat_ && rotorDiscMat_.userData.shader) {
+    rotorDiscMat_.userData.shader.uniforms.uEnvRot.value = scene.environmentRotation ? scene.environmentRotation.y : 0;
+  }
   
   updateHands();
   updateFlap();

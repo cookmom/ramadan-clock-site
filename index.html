@@ -1168,8 +1168,8 @@ function setupScrollObservers(){
     'sec-qibla':   ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(true); },
     'sec-prayer':  ()=>{ setNightMode(false); if(window._clockQiblaDemo) window._clockQiblaDemo(false); },
     'sec-dials':   ()=>{ setNightMode(false); startDialCycle(); },
-    'sec-night':   ()=>{ setNightMode(true); },
-    'sec-adhan':   ()=>{ setNightMode(true); },
+    'sec-night':   ()=>{ setNightMode(true); stopDialCycle(); },
+    'sec-adhan':   ()=>{ setNightMode(true); stopDialCycle(); },
     'sec-install': ()=>{ setNightMode(false); },
   };
   const ratios={};
@@ -1766,7 +1766,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=368';
+_cs.type='module';_cs.src='clock.js?v=369';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

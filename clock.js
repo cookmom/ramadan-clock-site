@@ -279,7 +279,7 @@ function makeGrainTexture(size = 512, baseVal = 235, spread = 20) {
   tex.repeat.set(2, 2); // tile for finer grain
   return tex;
 }
-const dialGrainTex = makeGrainTexture(512, 235, 20);     // standard dials: high roughness grain
+const dialGrainTex = makeGrainTexture(512, 235, 6);      // standard dials: subtle roughness grain (low spread prevents dirty look on light dials)
 const metalGrainTex = makeGrainTexture(256, 140, 15);    // qamar/kawthar: subtler, lower roughness grain
 const subdialGrainTex = makeGrainTexture(512, 255, 20);  // subdial floor: same grain character as dial, centered at white so base color = final tone
 

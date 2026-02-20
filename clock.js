@@ -1271,7 +1271,7 @@ function buildQibla() {
   const tickRingR = gaugeR - 0.8;
   const sdTickGroup = new THREE.Group();
   // Nomos uses dark tick marks that contrast subtly against the dial color
-  const sdTickColor = new THREE.Color(d.bg).multiplyScalar(0.62);
+  const sdTickColor = new THREE.Color(0xffffff);
   for(let i = 0; i < 60; i++) {
     const ang = (i / 60) * Math.PI * 2;
     const isMajor = (i % 10 === 0); // 0,10,20,30,40,50
@@ -1392,13 +1392,13 @@ function buildQibla() {
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic
   const tickLen = gaugeR * 0.10;
   const tickW = 0.3;
-  const cardinalColor = new THREE.Color(d.bg).multiplyScalar(0.5);
+  const cardinalColor = new THREE.Color(0xffffff);
   for(let i = 0; i < 4; i++) {
     const ang = (i/4) * Math.PI * 2;
     const isNorth = i === 0;
     const tGeo = new THREE.BoxGeometry(tickW, isNorth ? tickLen*1.3 : tickLen, 0.2);
     const tMat = new THREE.MeshBasicMaterial({
-      color: isNorth ? new THREE.Color(d.bg).multiplyScalar(0.35) : cardinalColor,
+      color: isNorth ? new THREE.Color(0xffffff) : cardinalColor,
     });
     const tick = new THREE.Mesh(tGeo, tMat);
     const tr = rotorR - tickLen*0.55;
@@ -1413,7 +1413,7 @@ function buildQibla() {
     const ang = (i/8) * Math.PI * 2;
     const mtGeo = new THREE.BoxGeometry(0.2, tickLen*0.45, 0.15);
     const mtMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(d.bg).multiplyScalar(0.6),
+      color: new THREE.Color(0xffffff),
     });
     const mt = new THREE.Mesh(mtGeo, mtMat);
     const mtr = rotorR - tickLen*0.3;
@@ -2255,7 +2255,7 @@ function animate(){
   // Dial surface picks up faint lume ambient bounce
   if(dialMesh && dialMesh.material) {
     const dayColor = new THREE.Color(DIALS[currentDial].bg);
-    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
+    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7);
     dialMesh.material.color.copy(nightDialColor);
     if(dialMesh.material.emissive) { // PBR materials only (kawthar, qamar)
       dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
@@ -2265,12 +2265,12 @@ function animate(){
   // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
     const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x060608), modeBlend * 0.9));
+    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7));
   }
   // Sync fullscreen PBR background with dial color — one continuous surface
   if(fsBgPlane && fsBgPlane.material && fsBgPlane.visible) {
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
-    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x080810), modeBlend * 0.92);
+    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7);
     fsBgPlane.material.color.copy(nightBgColor);
   }
   
@@ -2299,21 +2299,21 @@ function animate(){
   // (subdial rings removed)
   
   // Bloom ramps up in night mode — soft, dreamy glow
-  bloomPass.strength = modeBlend * 0.8;
+  bloomPass.strength = modeBlend * 0.45;
   bloomPass.radius = 0.4 + modeBlend * 0.3;
   bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
   
   // Dim scene lights for night — let lume own the scene
-  ambLight.intensity = 0.3 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 3.5 * (1 - modeBlend * 0.85);
-  fillLight.intensity = 1.2 * (1 - modeBlend * 0.8);
-  topLight.intensity = 1.8 * (1 - modeBlend * 0.8);
+  ambLight.intensity = 0.3 * (1 - modeBlend * 0.5);
+  keyLight.intensity = 3.5 * (1 - modeBlend * 0.6);
+  fillLight.intensity = 1.2 * (1 - modeBlend * 0.5);
+  topLight.intensity = 1.8 * (1 - modeBlend * 0.5);
   // Reduce env intensity at night so lume glows dominate
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 1.6 * (1 - modeBlend * 0.5);
-  renderer.toneMappingExposure = 0.825 - modeBlend * 0.25;
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 1.6 * (1 - modeBlend * 0.3);
+  renderer.toneMappingExposure = 0.825 - modeBlend * 0.15;
   
   // Vignette at night
-  if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.8;
+  if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.4;
   
   // Second hand subtle glow at night
   if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;
@@ -2372,10 +2372,10 @@ function animate(){
   }
   
   // BG color blend
-  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x0a0e18), modeBlend);
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.45);
   bgPlaneMat.color.copy(nightBg);
   if(isFullscreen || CONTAINED) {
-    scene.background = null; // keep canvas transparent — CSS bg + grain shows through
+    scene.background = modeBlend > 0.01 ? nightBg : null; // night: use scene bg so bloom doesn't black out CSS bg; day: transparent for CSS grain
   } else if(!EMBED) {
     scene.background = nightBg;
   }

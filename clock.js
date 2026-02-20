@@ -30,7 +30,7 @@ const DIALS = {
   white:      {bg:0xe0e0e0, marker:0x8a5a4a, markerBase:0xa08070, lume:0x8a5a4a, hand:0x555560, sec:0xcc0000, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
-  rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},
+  rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.05},
 };
 window.DIALS = DIALS;
 // Night lume palettes — modeled after real SuperLuminova variants
@@ -43,8 +43,8 @@ const NIGHT_LUME = {
   starlight:  { emissive: 0xe0c810 },  // Rich saturated gold (from bg 0xd8d580)
   green:      { emissive: 0x10ff70 },  // Electric emerald (from bg 0x30b080)
   teal:       { emissive: 0x30e0f0 },  // Vivid cyan (from bg 0x63afb9)
-  slate:      { emissive: 0x6070c0 },  // Saturated indigo-blue (from bg 0x5d6278)
-  navy:       { emissive: 0x2050e0 },  // Deep vivid blue (from bg 0x132653)
+  slate:      { emissive: 0x90a0ff },  // Bright periwinkle-blue — needs contrast against dark grey bg
+  navy:       { emissive: 0x60a0ff },  // Bright sky-blue — needs contrast against dark navy bg
   white:      { emissive: 0xc0d0e8 },  // Cool blue-white (from bg 0xe0e0e0)
   // Special dials
   kawthar:{ emissive: 0xff50a0 },  // Vivid hot pink (from bg 0xf2dce0)
@@ -351,17 +351,19 @@ function dialMat(color) {
   const cd = currentDial;
   const special = {
     kawthar: { roughness:0.6, metalness:0.15, sheen:0.8, sheenColor:0xd4909a, sheenRoughness:0.3 },
+    rainbow: { roughness:0.02, metalness:0.6, sheen:0, sheenColor:0x000000, sheenRoughness:0.8,
+               clearcoat:1.0, clearcoatRoughness:0.005, envMapIntensity:4.0 }, // grand feu enamel — mirror-gloss black lacquer
   };
   const s = special[cd] || { roughness:0.5, metalness:0.05, sheen:0, sheenColor:0x000000, sheenRoughness:0.8 };
   const m = new THREE.MeshPhysicalMaterial({
     color,
     roughness: s.roughness,
     metalness: s.metalness,
-    roughnessMap: dialGrainTex,       // procedural grain — micro-texture responds to HDRI sweep
-    clearcoat: 0.15,                  // faint protective coat — visible on macro
-    clearcoatRoughness: 0.3,          // diffuse clearcoat — not glossy, sandblasted character
+    roughnessMap: s.clearcoat ? null : dialGrainTex,  // glossy dials skip grain texture
+    clearcoat: s.clearcoat || 0.15,
+    clearcoatRoughness: s.clearcoatRoughness || 0.3,
   });
-  m.envMapIntensity = 0.6; // subtle environment reflection — dial should be calm, not flashy
+  m.envMapIntensity = s.envMapIntensity || 0.6;
   if (s.sheen > 0) { m.sheen = s.sheen; m.sheenColor = new THREE.Color(s.sheenColor); m.sheenRoughness = s.sheenRoughness; }
   return m;
 }
@@ -408,13 +410,14 @@ function lumeMat(color) {
 }
 function secMat(color) {
   const m = new THREE.MeshPhysicalMaterial({
-    color, roughness: 0.05, metalness: 0.0,  // zero metalness — lacquer is paint, not metal
+    color, roughness: 0.05, metalness: 0.3,  // partial metalness — lacquer catches light like glossy paint
     clearcoat: 1.0, clearcoatRoughness: 0.01, // mirror-like lacquer coat per Nomos reference
     emissive: color, emissiveIntensity: 0,
-    specularIntensity: 0.8,
+    specularIntensity: 1.0,
     specularColor: new THREE.Color(0xffffff),
+    reflectivity: 1.0,
   });
-  m.envMapIntensity = 2.5; return m; // second hand — wet lacquer, vivid color with sharp highlights
+  m.envMapIntensity = 4.0; return m; // second hand — wet lacquer, strong env reflections for light interaction
 }
 
 // ══════════════════════════════════════════
@@ -1311,13 +1314,20 @@ function buildQibla() {
   const moonPhase = dayOfRamadan / RAMADAN_DAYS; // 0→1 over the month
   window._hijriMoonPhase = moonPhase;
   
-  // Moon disc — subtle warm tone, barely lighter than dial
+  // Moon disc — grand feu enamel finish, ultra-glossy like polished porcelain
   const moonR = gaugeR * 0.42;
-  const moonMat = new THREE.MeshBasicMaterial({
+  const moonMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(d.bg).lerp(new THREE.Color(0xf8f4e8), 0.5),
+    roughness: 0.005,           // near-mirror — polished enamel
+    metalness: 0.15,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.003,  // ultra-smooth clearcoat — wet glass finish
+    reflectivity: 1.0,
+    ior: 1.8,                   // glass-like refraction
     transparent: true,
     opacity: 1.0,
   });
+  moonMat.envMapIntensity = 5.0; // strong reflections — the glossiest surface on the dial
   const moonDisc = new THREE.Mesh(new THREE.CircleGeometry(moonR, 64), moonMat);
   moonDisc.position.z = -4 + 0.1; // Level 3: moonphase floor (z=-4 relative to qiblaGroup = z=-8 absolute)
   qiblaGroup.add(moonDisc);
@@ -1381,7 +1391,7 @@ function buildQibla() {
   const moonTex = new THREE.CanvasTexture(moonCv);
   const moonOverlay = new THREE.Mesh(
     new THREE.CircleGeometry(moonR, 64),
-    new THREE.MeshBasicMaterial({map: moonTex, transparent: true})
+    new THREE.MeshPhysicalMaterial({map: moonTex, transparent: true, roughness: 0.005, clearcoat: 1.0, clearcoatRoughness: 0.003, reflectivity: 1.0, ior: 1.8, envMapIntensity: 5.0})
   );
   moonOverlay.position.z = -4 + 0.15; // Level 3: moonphase floor
   // Keep moonphase visible in all modes — it's a key visual element
@@ -2221,19 +2231,21 @@ function animate(){
   const lumeEmCol = new THREE.Color(nightLume.emissive);
   // Subtle lume breathing — very slow, barely perceptible (±5%)
   const lumeBreathe = 1.0 + Math.sin(Date.now() * 0.0005) * 0.05;
-  const lumeIntensity = modeBlend * 0.85 * lumeBreathe;
+  // Per-dial lume caps — lighter emissive colors need less multiplier to avoid blowout
+  const lumeCap = { white: 4.0, starlight: 4.5, coral: 5.5, kawthar: 7.5 };
+  const lumeIntensity = modeBlend * (lumeCap[currentDial] || 8.0) * lumeBreathe;
   lumeMeshes.forEach(m=>{
     m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     // Kawthar candy buttons: cap glow to prevent blowout
     m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.6 : lumeIntensity;
   });
-  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity * 0.9; }
-  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity * 0.9; }
+  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity * 0.5; }
+  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity * 0.5; }
   
   // Numerals glow — subtle, not dominant
   numeralMats.forEach(m=>{
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.55;
+    m.emissiveIntensity = lumeIntensity * 0.4;
   });
   // Brand text glow — canvas textures, redraw with glow color in night mode
   brandMeshes.forEach(mesh=>{
@@ -2270,7 +2282,7 @@ function animate(){
   // Dial surface darkens at night — no emissive bounce (keeps glow on markers only)
   if(dialMesh && dialMesh.material) {
     const dayColor = new THREE.Color(DIALS[currentDial].bg);
-    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x1a1e28), modeBlend * 0.88);
+    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x040608), modeBlend * 0.99);
     dialMesh.material.color.copy(nightDialColor);
     if(dialMesh.material.emissive) {
       dialMesh.material.emissive.setScalar(0);
@@ -2280,12 +2292,12 @@ function animate(){
   // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
     const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x101418), modeBlend * 0.9));
+    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x040608), modeBlend * 0.97));
   }
   // Sync fullscreen PBR background with dial color — one continuous surface
   if(fsBgPlane && fsBgPlane.material && fsBgPlane.visible) {
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
-    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x101418), modeBlend * 0.9);
+    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x040608), modeBlend * 0.97);
     fsBgPlane.material.color.copy(nightBgColor);
   }
   
@@ -2313,11 +2325,11 @@ function animate(){
   
   // (subdial rings removed)
   
-  // Bloom — very tight, contained glow on marker pips ONLY. No screen bleed.
-  // Ultra-low strength + high threshold + tiny radius = lume dots glow, nothing else
-  bloomPass.strength = modeBlend * 0.15;   // was 0.25 — halved to kill screen wash
-  bloomPass.radius = 0.08 + modeBlend * 0.07; // was 0.15+0.1 — much tighter pip glow
-  bloomPass.threshold = 0.95 - modeBlend * 0.08; // floor 0.87 — only the absolute hottest emissive pips bloom
+  // Bloom — intense but contained. High strength + high threshold + tiny radius.
+  // Only the absolute hottest emissive peaks bloom — creates tight halos, not screen wash.
+  bloomPass.strength = modeBlend * 2.2;    // strong glow intensity on qualifying emissives
+  bloomPass.radius = 0.005;                // ultra-tight — halo hugs the pip, no spread
+  bloomPass.threshold = 0.96 - modeBlend * 0.02; // floor 0.94 — only peak HDR values bloom
 
   // Per-dial lighting — lighter dials get reduced exposure/env to prevent washout
   const dlOverride = DIAL_LIGHTING[currentDial] || {};
@@ -2326,19 +2338,19 @@ function animate(){
 
   // Dim scene lights for night — let lume own the scene
   // Day values: key 3.2, fill 0.4, top 0.3, amb 0.15 — ~8:1 key-to-fill ratio for strong hand shaping
-  ambLight.intensity = 0.15 * (1 - modeBlend * 0.6);
-  keyLight.intensity = 3.2 * (1 - modeBlend * 0.7);
-  fillLight.intensity = 0.4 * (1 - modeBlend * 0.6);
-  topLight.intensity = 0.3 * (1 - modeBlend * 0.6);
-  // Per-dial env intensity — lighter dials use less to avoid washing out hand contrast
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = dayEnv * (1 - modeBlend * 0.4);
-  renderer.toneMappingExposure = dayExposure - modeBlend * 0.2;
+  ambLight.intensity = 0.15 * (1 - modeBlend * 0.85);
+  keyLight.intensity = 3.2 * (1 - modeBlend * 0.88);
+  fillLight.intensity = 0.4 * (1 - modeBlend * 0.85);
+  topLight.intensity = 0.3 * (1 - modeBlend * 0.85);
+  // Per-dial env intensity — drops heavily at night so lume contrast pops
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = dayEnv * (1 - modeBlend * 0.7);
+  renderer.toneMappingExposure = dayExposure - modeBlend * 0.35;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.4;
   
-  // Second hand subtle glow at night
-  if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;
+  // Second hand glow at night — visible sweep across dark dial
+  if(secMat_) secMat_.emissiveIntensity = modeBlend * 1.2;
   
   // Hands — very faint lume tint, not a glow source (polished steel catches ambient only)
   if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(lumeEmCol).multiplyScalar(0.02); hourMat_.emissiveIntensity = modeBlend * 0.3; }
@@ -2394,7 +2406,7 @@ function animate(){
   }
   
   // BG color blend — darker at night so lume pips pop against dark background
-  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x141820), modeBlend * 0.65);
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x060810), modeBlend * 0.85);
   bgPlaneMat.color.copy(nightBg);
   if(isFullscreen || CONTAINED) {
     scene.background = modeBlend > 0.01 ? nightBg : null; // night: use scene bg so bloom doesn't black out CSS bg; day: transparent for CSS grain

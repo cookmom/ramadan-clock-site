@@ -2203,7 +2203,7 @@ function animate(){
   try {
   
   // Night blend
-  if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.024;
+  if(Math.abs(modeBlend-modeTarget)>0.001) modeBlend+=(modeTarget-modeBlend)*0.08;
   else modeBlend=modeTarget;
   
   // Night mode: lume glow with per-dial color
@@ -2260,7 +2260,7 @@ function animate(){
   // Dial surface picks up faint lume ambient bounce
   if(dialMesh && dialMesh.material) {
     const dayColor = new THREE.Color(DIALS[currentDial].bg);
-    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7);
+    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84);
     dialMesh.material.color.copy(nightDialColor);
     if(dialMesh.material.emissive) { // PBR materials only (kawthar, qamar)
       dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
@@ -2270,12 +2270,12 @@ function animate(){
   // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
     const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7));
+    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84));
   }
   // Sync fullscreen PBR background with dial color — one continuous surface
   if(fsBgPlane && fsBgPlane.material && fsBgPlane.visible) {
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
-    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.7);
+    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84);
     fsBgPlane.material.color.copy(nightBgColor);
   }
   

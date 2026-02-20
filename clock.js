@@ -281,7 +281,7 @@ function makeGrainTexture(size = 512, baseVal = 235, spread = 20) {
 }
 const dialGrainTex = makeGrainTexture(512, 235, 20);     // standard dials: high roughness grain
 const metalGrainTex = makeGrainTexture(256, 140, 15);    // qamar/kawthar: subtler, lower roughness grain
-const subdialGrainTex = makeGrainTexture(1024, 248, 8);  // subdial floor: very fine grain for color map use
+const subdialGrainTex = makeGrainTexture(512, 255, 20);  // subdial floor: same grain character as dial, centered at white so base color = final tone
 
 // ── Procedural bump map for applied numerals ──
 // Renders numeral outlines to a canvas, used as bumpMap to fake depth
@@ -1265,15 +1265,17 @@ function buildQibla() {
   subdialShape.holes.push(moonHole);
 
   const subdialFloorGeo = new THREE.ShapeGeometry(subdialShape, 64);
-  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.92);
-  const subdialFloorMat = new THREE.MeshBasicMaterial({
-    color: subdialFloorColor,
-    map: subdialGrainTex,
+  // Subdial floor: transparent with a subtle dark tint overlay
+  // CSS bg + grain shows through identically to the dial — the tint adds recessed shadow
+  rotorDiscMat_ = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    opacity: 0.08, // very subtle darkening — reads as recessed shadow
+    depthWrite: false,
   });
-  rotorDiscMat_ = subdialFloorMat;
-  const subdialFloor = new THREE.Mesh(subdialFloorGeo, subdialFloorMat);
-  subdialFloor.position.z = 0.05;
-  qiblaGroup.add(subdialFloor);
+  const subdialFloorMesh = new THREE.Mesh(subdialFloorGeo, rotorDiscMat_);
+  subdialFloorMesh.position.z = 0.05; // just above qiblaGroup floor
+  qiblaGroup.add(subdialFloorMesh);
 
   // ── Nomos-style subdial tick ring ──
   // Fine tick marks around subdial periphery — dark on colored dials, dark on white

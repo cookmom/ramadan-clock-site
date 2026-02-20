@@ -22,7 +22,7 @@ const DIALS = {
   deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0x78ab92, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},   // sage green complement, yellow-orange sec (Nomos: avoids warm-on-warm clash)
   red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0x70b0b8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},   // teal complement, yellow-orange sec (Nomos: avoids red-on-red clash)
   coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0x88b4c0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},      // steel blue complement
-  starlight:  {bg:0xd8d580, marker:0xc07030, markerBase:0x8078a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xd03010, text:'#5a4a30', minuteTick:0xffffff, dotTop:0xffffff, surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},        // deeper amber marker + richer lavender base, white minute ticks + white hour dots
+  starlight:  {bg:0xd8d580, marker:0xc07030, markerBase:0x8078a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xd03010, text:'#5a4a30', minuteTick:0xffffff, dotTop:0xffffff, numeralTop:0xffffff, surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},        // deeper amber marker + richer lavender base, white minute ticks + white hour dots + white numeral tops
   green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0xa86878, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},    // dusty rose complement
   teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0xb08880, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},    // terracotta complement
   slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0xa89868, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},      // warm amber complement
@@ -1036,10 +1036,11 @@ function buildNumerals() {
     numeralMats.push(baseMatl);
     
     // Layer 2: lume fill — glossy lacquer, sitting above the metallic base
+    const numTopColor = c.numeralTop || mk;
     const topMatl = new THREE.MeshPhysicalMaterial({
-      color: mk, roughness: 0.06, metalness: 0.0,
+      color: numTopColor, roughness: 0.06, metalness: 0.0,
       clearcoat: 1.0, clearcoatRoughness: 0.02,
-      emissive: mk, emissiveIntensity: 0,
+      emissive: numTopColor, emissiveIntensity: 0,
       specularIntensity: 0.5,
     });
     topMatl.envMapIntensity = 1.2;

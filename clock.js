@@ -36,19 +36,28 @@ window.DIALS = DIALS;
 // Night lume palettes — modeled after real SuperLuminova variants
 // Each matches the daytime lume character but amplified for glow
 const NIGHT_LUME = {
-  // Lume glow = dial bg color brightened to survive bloom
-  deep_pink:  { emissive: 0xd86a9a },  // Pink (from bg 0xbc4b79)
-  red:        { emissive: 0xe86858 },  // Red (from bg 0xdf473a)
-  coral:      { emissive: 0xf0b098 },  // Coral (from bg 0xe8967a)
-  starlight:  { emissive: 0xe8e4a0 },  // Yellow (from bg 0xd8d580)
-  green:      { emissive: 0x50d0a0 },  // Green (from bg 0x30b080)
-  teal:       { emissive: 0x88c8d0 },  // Teal (from bg 0x63afb9)
-  slate:      { emissive: 0x8088a0 },  // Slate (from bg 0x5d6278)
-  navy:       { emissive: 0x304880 },  // Navy (from bg 0x132653)
-  white:      { emissive: 0xe8e8e8 },  // White (from bg 0xe0e0e0)
+  // Hardcoded saturated lume — close to dial bg color, punchy and chromatic for night
+  deep_pink:  { emissive: 0xff4090 },  // Saturated magenta-pink (from bg 0xbc4b79)
+  red:        { emissive: 0xff3020 },  // Pure vivid red (from bg 0xdf473a)
+  coral:      { emissive: 0xff7040 },  // Deep coral-orange, more red (from bg 0xe8967a)
+  starlight:  { emissive: 0xe0c810 },  // Rich saturated gold (from bg 0xd8d580)
+  green:      { emissive: 0x10ff70 },  // Electric emerald (from bg 0x30b080)
+  teal:       { emissive: 0x30e0f0 },  // Vivid cyan (from bg 0x63afb9)
+  slate:      { emissive: 0x6070c0 },  // Saturated indigo-blue (from bg 0x5d6278)
+  navy:       { emissive: 0x2050e0 },  // Deep vivid blue (from bg 0x132653)
+  white:      { emissive: 0xc0d0e8 },  // Cool blue-white (from bg 0xe0e0e0)
   // Special dials
-  kawthar:{ emissive: 0xff80b0 },  // Vivid pink
-  rainbow:{ emissive: 0xe0c060 },  // Warm gold
+  kawthar:{ emissive: 0xff50a0 },  // Vivid hot pink (from bg 0xf2dce0)
+  rainbow:{ emissive: 0xf0b020 },  // Rich amber gold (from bg 0x1a1a1a + gold accents)
+};
+// Per-dial lighting overrides — lighter dials need less exposure/env to avoid washing out hands
+// exposure: toneMappingExposure override, env: scene.environmentIntensity override
+const DIAL_LIGHTING = {
+  coral:     { exposure: 0.72, env: 1.2 },    // light warm — pulls back to show hand contrast
+  starlight: { exposure: 0.68, env: 1.0 },    // lightest dial — strongest pullback
+  white:     { exposure: 0.65, env: 0.9 },     // near-white — needs most reduction
+  kawthar:   { exposure: 0.72, env: 1.1 },    // light pink — similar to coral
+  // Dark/saturated dials use defaults (0.85 exposure, 1.6 env)
 };
 const DIAL_NAMES = Object.keys(DIALS);
 const ARABIC = ['١٢','١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١'];
@@ -151,7 +160,7 @@ renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio, CONTAINED ? 2 
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9; // slightly brighter — Nomos product photography has clean, well-lit dials
+renderer.toneMappingExposure = 0.85; // balanced — per-dial overrides handle lighter dials
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 (CONTAINED ? CONTAINER : document.body).appendChild(renderer.domElement);
 if(CONTAINED) {
@@ -186,8 +195,8 @@ composer.addPass(new RenderPass(scene, cam));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(W, H),
   0.0,   // strength — will animate with modeBlend
-  0.4,   // radius — soft spread
-  0.85   // threshold — only bright emissives bloom
+  0.15,  // radius — tight, contained pip glow
+  0.92   // threshold — only hottest emissives bloom
 );
 composer.addPass(bloomPass);
 let _bloomFailed = false; // fallback if GPU OOM kills framebuffers
@@ -214,36 +223,37 @@ let studioEnvMap;
   studioEnvMap = envRT.texture;
   scene.environment = studioEnvMap;
   scene.environmentIntensity = 1.6; // HDRI dominant — crisp specular highlights on rhodium hands/markers
-  scene.environmentRotation = new THREE.Euler(0.15, 2.8, 0); // start offset — softbox pre-positioned for hand reflections at rest
+  scene.environmentRotation = new THREE.Euler(0.2, 2.4, 0); // rotated to catch strong diagonal spec across hands — key light direction aligned
   hdrTex.dispose();
   pmrem.dispose();
 }
 
 // ── NOMOS product photography lighting ──
-// Clean, even illumination. Soft upper-left key creates subtle dial gradient.
-// Minimal shadows — watch photography is about material quality, not drama.
+// Asymmetric key/fill creates light shaping across hands and markers.
+// Key from upper-left sweeps diagonally — hands catch bright edge vs shadow side.
+// Fill opposite at low intensity preserves shadow depth.
 
-// Ambient — gentle shadow fill, warm tint
-const ambLight = new THREE.AmbientLight(0xfff8f2, 0.3);
+// Ambient — very subtle shadow fill, warm tint (kept low to preserve contrast)
+const ambLight = new THREE.AmbientLight(0xfff8f2, 0.15);
 scene.add(ambLight);
 
-// Key light — large soft rect from upper-left (NOMOS product photo style)
-// REDUCED intensity — HDRI environment should be dominant for crisp specular highlights
-// RectAreaLights provide fill and broad highlights, not the main reflections
-const keyLight = new THREE.RectAreaLight(0xfff4e8, 1.5, 400, 400);
-keyLight.position.set(-60, 120, 280);
+// Key light — narrow soft rect from upper-left, raked steeply across hands
+// Wide lateral offset + low height = strong diagonal shading on vertical hand/marker surfaces
+const keyLight = new THREE.RectAreaLight(0xfff4e8, 3.2, 180, 280);
+keyLight.position.set(-180, 60, 220);
 keyLight.lookAt(0, 0, 0);
 scene.add(keyLight);
 
-// Fill light — opposite side, cooler tone creates depth and dimension
-const fillLight = new THREE.RectAreaLight(0xe8f0ff, 0.6, 300, 300);
-fillLight.position.set(80, -40, 220);
+// Fill light — opposite side, cooler, much dimmer for shadow fill only
+// High key-to-fill ratio (~8:1) creates strong dimensional contrast on metallic hands
+const fillLight = new THREE.RectAreaLight(0xe0ecff, 0.4, 250, 250);
+fillLight.position.set(120, -80, 200);
 fillLight.lookAt(0, 0, 0);
 scene.add(fillLight);
 
-// Top light — subtle overhead wash (prevents dark spots)
-const topLight = new THREE.RectAreaLight(0xffffff, 0.8, 350, 350);
-topLight.position.set(0, 0, 300);
+// Top light — very subtle overhead, prevents total black on horizontal surfaces
+const topLight = new THREE.RectAreaLight(0xffffff, 0.3, 300, 300);
+topLight.position.set(10, 20, 320);
 topLight.lookAt(0, 0, 0);
 scene.add(topLight);
 
@@ -2211,19 +2221,19 @@ function animate(){
   const lumeEmCol = new THREE.Color(nightLume.emissive);
   // Subtle lume breathing — very slow, barely perceptible (±5%)
   const lumeBreathe = 1.0 + Math.sin(Date.now() * 0.0005) * 0.05;
-  const lumeIntensity = modeBlend * 1.2 * lumeBreathe;
+  const lumeIntensity = modeBlend * 0.85 * lumeBreathe;
   lumeMeshes.forEach(m=>{
     m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     // Kawthar candy buttons: cap glow to prevent blowout
-    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.7 : lumeIntensity;
+    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.6 : lumeIntensity;
   });
-  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity; }
-  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity; }
+  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity * 0.9; }
+  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity * 0.9; }
   
-  // Numerals glow
+  // Numerals glow — subtle, not dominant
   numeralMats.forEach(m=>{
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.85;
+    m.emissiveIntensity = lumeIntensity * 0.55;
   });
   // Brand text glow — canvas textures, redraw with glow color in night mode
   brandMeshes.forEach(mesh=>{
@@ -2250,52 +2260,52 @@ function animate(){
     }
     mesh.material.map.needsUpdate = true;
   });
-  // Extruded brand letters — night mode emissive glow
+  // Extruded brand letters — very subtle night glow (avoid bloom contribution)
   brandLumeMats.forEach(m=>{
     if(m._isBrandTex) return; // skip canvas-based Arabic text
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.7;
+    m.emissiveIntensity = lumeIntensity * 0.35;
   });
   
-  // Dial surface picks up faint lume ambient bounce
+  // Dial surface darkens at night — no emissive bounce (keeps glow on markers only)
   if(dialMesh && dialMesh.material) {
     const dayColor = new THREE.Color(DIALS[currentDial].bg);
-    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84);
+    const nightDialColor = dayColor.clone().lerp(new THREE.Color(0x1a1e28), modeBlend * 0.88);
     dialMesh.material.color.copy(nightDialColor);
-    if(dialMesh.material.emissive) { // PBR materials only (kawthar, qamar)
-      dialMesh.material.emissive.copy(lumeEmCol).multiplyScalar(0.08);
-      dialMesh.material.emissiveIntensity = modeBlend;
+    if(dialMesh.material.emissive) {
+      dialMesh.material.emissive.setScalar(0);
+      dialMesh.material.emissiveIntensity = 0;
     }
   }
   // Darken lower dial too
   if(dialLowerMesh && dialLowerMesh.material) {
     const dayLower = new THREE.Color(DIALS[currentDial].bg).multiplyScalar(0.75);
-    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84));
+    dialLowerMesh.material.color.copy(dayLower.lerp(new THREE.Color(0x101418), modeBlend * 0.9));
   }
   // Sync fullscreen PBR background with dial color — one continuous surface
   if(fsBgPlane && fsBgPlane.material && fsBgPlane.visible) {
     const dayBg = new THREE.Color(DIALS[currentDial].bg);
-    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.84);
+    const nightBgColor = dayBg.clone().lerp(new THREE.Color(0x101418), modeBlend * 0.9);
     fsBgPlane.material.color.copy(nightBgColor);
   }
   
-  // Rainbow bezel gems glow at night
+  // Rainbow bezel gems — restrained glow
   bezelMeshes.forEach(m => {
     if(m.material && m.material.emissiveIntensity !== undefined && m.material.ior) {
-      m.material.emissiveIntensity = 0.1 + modeBlend * 0.6;
+      m.material.emissiveIntensity = 0.05 + modeBlend * 0.35;
     }
   });
   
-  // Qibla compass elements glow at night
+  // Qibla compass elements — contained glow, no bleed
   if(qiblaGroup) {
     qiblaGroup.traverse(child => {
       if(child.material && child.material.emissive) {
         if(child.material === window._qiblaTriMat) {
-          // Qibla green triangle — strong glow
-          child.material.emissiveIntensity = 0.15 + modeBlend * 1.0;
+          // Qibla green triangle — moderate glow
+          child.material.emissiveIntensity = 0.1 + modeBlend * 0.6;
         } else if(child.material.emissiveIntensity !== undefined) {
-          // Compass ticks — subtle lume glow
-          child.material.emissiveIntensity = modeBlend * 0.5;
+          // Compass ticks — very subtle
+          child.material.emissiveIntensity = modeBlend * 0.25;
         }
       }
     });
@@ -2303,19 +2313,26 @@ function animate(){
   
   // (subdial rings removed)
   
-  // Bloom ramps up in night mode — soft, dreamy glow
-  bloomPass.strength = modeBlend * 0.45;
-  bloomPass.radius = 0.4 + modeBlend * 0.3;
-  bloomPass.threshold = 0.85 - modeBlend * 0.25; // floor 0.6 — only hottest emissives bloom
-  
+  // Bloom — very tight, contained glow on marker pips ONLY. No screen bleed.
+  // Ultra-low strength + high threshold + tiny radius = lume dots glow, nothing else
+  bloomPass.strength = modeBlend * 0.15;   // was 0.25 — halved to kill screen wash
+  bloomPass.radius = 0.08 + modeBlend * 0.07; // was 0.15+0.1 — much tighter pip glow
+  bloomPass.threshold = 0.95 - modeBlend * 0.08; // floor 0.87 — only the absolute hottest emissive pips bloom
+
+  // Per-dial lighting — lighter dials get reduced exposure/env to prevent washout
+  const dlOverride = DIAL_LIGHTING[currentDial] || {};
+  const dayExposure = dlOverride.exposure || 0.85;
+  const dayEnv = dlOverride.env || 1.6;
+
   // Dim scene lights for night — let lume own the scene
-  ambLight.intensity = 0.3 * (1 - modeBlend * 0.5);
-  keyLight.intensity = 3.5 * (1 - modeBlend * 0.6);
-  fillLight.intensity = 1.2 * (1 - modeBlend * 0.5);
-  topLight.intensity = 1.8 * (1 - modeBlend * 0.5);
-  // Reduce env intensity at night so lume glows dominate
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = 1.6 * (1 - modeBlend * 0.3);
-  renderer.toneMappingExposure = 0.825 - modeBlend * 0.15;
+  // Day values: key 3.2, fill 0.4, top 0.3, amb 0.15 — ~8:1 key-to-fill ratio for strong hand shaping
+  ambLight.intensity = 0.15 * (1 - modeBlend * 0.6);
+  keyLight.intensity = 3.2 * (1 - modeBlend * 0.7);
+  fillLight.intensity = 0.4 * (1 - modeBlend * 0.6);
+  topLight.intensity = 0.3 * (1 - modeBlend * 0.6);
+  // Per-dial env intensity — lighter dials use less to avoid washing out hand contrast
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = dayEnv * (1 - modeBlend * 0.4);
+  renderer.toneMappingExposure = dayExposure - modeBlend * 0.2;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.4;
@@ -2323,9 +2340,9 @@ function animate(){
   // Second hand subtle glow at night
   if(secMat_) secMat_.emissiveIntensity = modeBlend * 0.3;
   
-  // Hands catch faint lume-tinted spec at night (simulates lume bounce on polished steel)
-  if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(lumeEmCol).multiplyScalar(0.04); hourMat_.emissiveIntensity = modeBlend; }
-  if(minMat_) { minMat_.emissive = minMat_.emissive || new THREE.Color(0); minMat_.emissive.copy(lumeEmCol).multiplyScalar(0.04); minMat_.emissiveIntensity = modeBlend; }
+  // Hands — very faint lume tint, not a glow source (polished steel catches ambient only)
+  if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(lumeEmCol).multiplyScalar(0.02); hourMat_.emissiveIntensity = modeBlend * 0.3; }
+  if(minMat_) { minMat_.emissive = minMat_.emissive || new THREE.Color(0); minMat_.emissive.copy(lumeEmCol).multiplyScalar(0.02); minMat_.emissiveIntensity = modeBlend * 0.3; }
   
   // Stars — staggered fade-in, tinted to lume palette
   starMeshes.forEach((m,i)=>{
@@ -2338,8 +2355,8 @@ function animate(){
     // Stars gently scale in
     const sc = 0.6 + starBlend * 0.4;
     m.scale.setScalar(sc);
-    const starCol = new THREE.Color(2.2, 2.2, 1.9); // HDR for bloom pickup
-    starCol.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.5), modeBlend * 0.3);
+    const starCol = new THREE.Color(1.4, 1.4, 1.2); // moderate HDR — visible but no bloom bleed
+    starCol.lerp(new THREE.Color(lumeEmCol).multiplyScalar(0.8), modeBlend * 0.2);
     m.material.color.copy(starCol);
   });
   
@@ -2367,17 +2384,17 @@ function animate(){
       moonMesh.material.color.copy(mc);
     }
     if(moonGlowMesh) {
-      moonGlowMesh.material.opacity = moonBlend * 0.15;
-      const gc = new THREE.Color(1.2, 1.15, 1.0);
-      gc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(1.2), 0.2);
+      moonGlowMesh.material.opacity = moonBlend * 0.08;
+      const gc = new THREE.Color(1.0, 0.98, 0.92);
+      gc.lerp(new THREE.Color(lumeEmCol).multiplyScalar(0.6), 0.1);
       moonGlowMesh.material.color.copy(gc);
     }
     
     // Moon phase: TODO — canvas texture approach for proper crescent
   }
   
-  // BG color blend
-  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x2a2e3a), modeBlend * 0.45);
+  // BG color blend — darker at night so lume pips pop against dark background
+  const nightBg = new THREE.Color(DIALS[currentDial].bg).lerp(new THREE.Color(0x141820), modeBlend * 0.65);
   bgPlaneMat.color.copy(nightBg);
   if(isFullscreen || CONTAINED) {
     scene.background = modeBlend > 0.01 ? nightBg : null; // night: use scene bg so bloom doesn't black out CSS bg; day: transparent for CSS grain

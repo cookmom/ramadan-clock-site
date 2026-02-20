@@ -1252,7 +1252,7 @@ function buildQibla() {
   // Moon disc — subtle warm tone, barely lighter than dial
   const moonR = gaugeR * 0.42;
   const moonMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(d.bg).lerp(new THREE.Color(0xf8f4e8), 0.15),
+    color: new THREE.Color(d.bg).lerp(new THREE.Color(0xf8f4e8), 0.5),
     transparent: true,
     opacity: 1.0,
   });
@@ -1278,15 +1278,15 @@ function buildQibla() {
   mCtx.arc(cx, cy, mr, 0, Math.PI*2);
   mCtx.clip();
   
-  // Dark background (shadow) — very close to dial color for subtle blend
-  const bgCol = new THREE.Color(d.bg).multiplyScalar(0.92);
+  // Dark background (shadow) — noticeably darker than dial for visible crescent
+  const bgCol = new THREE.Color(d.bg).multiplyScalar(0.55);
   mCtx.fillStyle = `rgb(${bgCol.r*255|0},${bgCol.g*255|0},${bgCol.b*255|0})`;
   mCtx.fillRect(0, 0, 256, 256);
   
   // Lit portion — draw as crescent/gibbous
   // p=0: new moon (dark), p=0.5: full moon, p=1: new moon again
   // Hijri month: day 1 ≈ thin crescent, day 15 ≈ full, day 29 ≈ thin crescent
-  mCtx.fillStyle = '#f8f4e8';
+  mCtx.fillStyle = '#fffff0';
   mCtx.beginPath();
   if(p <= 0.5) {
     // Waxing: right side grows from nothing to full
@@ -1352,7 +1352,7 @@ function buildQibla() {
       map: fineGrain,
     })
   );
-  rotorDisc.position.z = 0.05;
+  rotorDisc.position.z = -0.45; // Below moonphase (moonDisc z=0.1, moonOverlay z=0.15 in parent qiblaGroup; qiblaRotor z=0.5)
   qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic

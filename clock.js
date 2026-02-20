@@ -727,13 +727,8 @@ function buildDial() {
     // Polished lip ring at the dial surface where the hole begins
     const chamferTorus = new THREE.Mesh(
       new THREE.TorusGeometry(cutoutR, 0.25, 12, 128),
-      new THREE.MeshPhysicalMaterial({
-        color: dialCol.clone().multiplyScalar(0.55),
-        roughness: 0.08,
-        metalness: 0.9,
-        envMapIntensity: 4.0,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.01,
+      new THREE.MeshBasicMaterial({
+        color: dialCol.clone().multiplyScalar(0.45),
       })
     );
     chamferTorus.position.set(0, subY, -0.25);
@@ -761,13 +756,8 @@ function buildDial() {
     // ── Chamfer ring at subdial → moonphase aperture ──
     const chamfer2 = new THREE.Mesh(
       new THREE.TorusGeometry(moonCutoutR, 0.15, 12, 64),
-      new THREE.MeshPhysicalMaterial({
-        color: dialCol.clone().multiplyScalar(0.45),
-        roughness: 0.1,
-        metalness: 0.85,
-        envMapIntensity: 3.0,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.01,
+      new THREE.MeshBasicMaterial({
+        color: dialCol.clone().multiplyScalar(0.35),
       })
     );
     chamfer2.position.set(0, subY, LEVEL2_Z - 0.15);

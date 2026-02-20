@@ -281,6 +281,7 @@ function makeGrainTexture(size = 512, baseVal = 235, spread = 20) {
 }
 const dialGrainTex = makeGrainTexture(512, 235, 20);     // standard dials: high roughness grain
 const metalGrainTex = makeGrainTexture(256, 140, 15);    // qamar/kawthar: subtler, lower roughness grain
+const subdialGrainTex = makeGrainTexture(1024, 248, 8);  // subdial floor: very fine grain for color map use
 
 // ── Procedural bump map for applied numerals ──
 // Renders numeral outlines to a canvas, used as bumpMap to fake depth
@@ -1264,9 +1265,10 @@ function buildQibla() {
   subdialShape.holes.push(moonHole);
 
   const subdialFloorGeo = new THREE.ShapeGeometry(subdialShape, 64);
-  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.93);
+  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.92);
   const subdialFloorMat = new THREE.MeshBasicMaterial({
     color: subdialFloorColor,
+    map: subdialGrainTex,
   });
   rotorDiscMat_ = subdialFloorMat;
   const subdialFloor = new THREE.Mesh(subdialFloorGeo, subdialFloorMat);

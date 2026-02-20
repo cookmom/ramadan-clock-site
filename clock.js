@@ -40,15 +40,15 @@ const NIGHT_LUME = {
   deep_pink:  { emissive: 0xff4090 },  // Saturated magenta-pink (from bg 0xbc4b79)
   red:        { emissive: 0xff3020 },  // Pure vivid red (from bg 0xdf473a)
   coral:      { emissive: 0xff7040 },  // Deep coral-orange, more red (from bg 0xe8967a)
-  starlight:  { emissive: 0xe0c810 },  // Rich saturated gold (from bg 0xd8d580)
+  starlight:  { emissive: 0xffc020 },  // Deep warm gold — survives bloom desaturation
   green:      { emissive: 0x10ff70 },  // Electric emerald (from bg 0x30b080)
   teal:       { emissive: 0x30e0f0 },  // Vivid cyan (from bg 0x63afb9)
   slate:      { emissive: 0x90a0ff },  // Bright periwinkle-blue — needs contrast against dark grey bg
   navy:       { emissive: 0x60a0ff },  // Bright sky-blue — needs contrast against dark navy bg
-  white:      { emissive: 0xc0d0e8 },  // Cool blue-white (from bg 0xe0e0e0)
+  white:      { emissive: 0x80b0ff },  // Distinct cool blue — reads as blue lume, not just white
   // Special dials
   kawthar:{ emissive: 0xff50a0 },  // Vivid hot pink (from bg 0xf2dce0)
-  rainbow:{ emissive: 0xf0b020 },  // Rich amber gold (from bg 0x1a1a1a + gold accents)
+  rainbow:{ emissive: 0xffa010 },  // Deep amber-orange — saturated gold against black enamel
 };
 // Per-dial lighting overrides — lighter dials need less exposure/env to avoid washing out hands
 // exposure: toneMappingExposure override, env: scene.environmentIntensity override
@@ -2232,20 +2232,20 @@ function animate(){
   // Subtle lume breathing — very slow, barely perceptible (±5%)
   const lumeBreathe = 1.0 + Math.sin(Date.now() * 0.0005) * 0.05;
   // Per-dial lume caps — lighter emissive colors need less multiplier to avoid blowout
-  const lumeCap = { white: 3.5, starlight: 3.5, coral: 5.0, kawthar: 4.0, green: 6.0, teal: 6.0 };
-  const lumeIntensity = modeBlend * (lumeCap[currentDial] || 8.0) * lumeBreathe;
+  const lumeCap = { white: 1.5, starlight: 1.5, coral: 1.75, kawthar: 3.0, green: 1.75, teal: 0.75 };
+  const lumeIntensity = modeBlend * (lumeCap[currentDial] || 2.0) * lumeBreathe;
   lumeMeshes.forEach(m=>{
     m.material.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
     // Kawthar candy buttons: cap glow to prevent blowout
-    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.45 : lumeIntensity;
+    m.material.emissiveIntensity = m.userData?.kawtharButton ? lumeIntensity * 0.7 : lumeIntensity;
   });
-  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity * 0.35; }
-  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity * 0.35; }
+  if(hLumeMat_) { hLumeMat_.emissive.lerp(lumeEmCol, modeBlend); hLumeMat_.emissiveIntensity = lumeIntensity * 0.175; }
+  if(mLumeMat_) { mLumeMat_.emissive.lerp(lumeEmCol, modeBlend); mLumeMat_.emissiveIntensity = lumeIntensity * 0.175; }
   
   // Numerals glow — subtle, not dominant
   numeralMats.forEach(m=>{
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.4;
+    m.emissiveIntensity = lumeIntensity * 0.2;
   });
   // Brand text glow — canvas textures, redraw with glow color in night mode
   brandMeshes.forEach(mesh=>{
@@ -2276,7 +2276,7 @@ function animate(){
   brandLumeMats.forEach(m=>{
     if(m._isBrandTex) return; // skip canvas-based Arabic text
     m.emissive.copy(new THREE.Color(0x000000).lerp(lumeEmCol, modeBlend));
-    m.emissiveIntensity = lumeIntensity * 0.35;
+    m.emissiveIntensity = lumeIntensity * 0.175;
   });
   
   // Dial surface darkens at night — no emissive bounce (keeps glow on markers only)
@@ -2328,9 +2328,9 @@ function animate(){
   
   // Bloom — intense but contained. High strength + high threshold + tiny radius.
   // Only the absolute hottest emissive peaks bloom — creates tight halos, not screen wash.
-  bloomPass.strength = modeBlend * 2.5;    // intense glow — sells the lume character
-  bloomPass.radius = 0.012;                // visible halo but contained — no dial wash
-  bloomPass.threshold = 0.94 - modeBlend * 0.01; // floor 0.93 — markers bloom, dial stays clean
+  bloomPass.strength = modeBlend * 1.1;    // halved — subtle halo, not heavy glow
+  bloomPass.radius = 0.012;                // tight radius — hugs the pips
+  bloomPass.threshold = 0.90 - modeBlend * 0.02; // floor 0.88 — only the hottest markers bloom
 
   // Per-dial lighting — lighter dials get reduced exposure/env to prevent washout
   const dlOverride = DIAL_LIGHTING[currentDial] || {};
@@ -2340,18 +2340,18 @@ function animate(){
   // Dim scene lights for night — let lume own the scene
   // Day values: key 3.2, fill 0.4, top 0.3, amb 0.15 — ~8:1 key-to-fill ratio for strong hand shaping
   ambLight.intensity = 0.15 * (1 - modeBlend * 0.85);
-  keyLight.intensity = 3.2 * (1 - modeBlend * 0.88);
+  keyLight.intensity = 3.2 * (1 - modeBlend * 0.82);
   fillLight.intensity = 0.4 * (1 - modeBlend * 0.85);
   topLight.intensity = 0.3 * (1 - modeBlend * 0.85);
-  // Per-dial env intensity — drops heavily at night so lume contrast pops
-  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = dayEnv * (1 - modeBlend * 0.7);
+  // Per-dial env intensity — drops at night but keeps enough for hand reflections
+  if(scene.environmentIntensity !== undefined) scene.environmentIntensity = dayEnv * (1 - modeBlend * 0.55);
   renderer.toneMappingExposure = dayExposure - modeBlend * 0.35;
   
   // Vignette at night
   if(vignetteEl) vignetteEl.style.opacity = modeBlend * 0.4;
   
   // Second hand glow at night — visible sweep across dark dial
-  if(secMat_) secMat_.emissiveIntensity = modeBlend * 2.0;
+  if(secMat_) secMat_.emissiveIntensity = modeBlend * 1.0;
   
   // Hands — very faint lume tint, not a glow source (polished steel catches ambient only)
   if(hourMat_) { hourMat_.emissive = hourMat_.emissive || new THREE.Color(0); hourMat_.emissive.copy(lumeEmCol).multiplyScalar(0.02); hourMat_.emissiveIntensity = modeBlend * 0.3; }

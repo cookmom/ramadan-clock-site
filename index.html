@@ -1284,16 +1284,13 @@ function updateNavClock(){
   if(elNext){
     let nextP='',nextS=0;
     t5.forEach(p=>{const ps=toSec(t[p]);if(!nextP&&ps>nowS){nextP=p;nextS=ps;}});
-    if(nextP){
-      let diff=nextS-nowS;
-      const h=Math.floor(diff/3600);diff%=3600;
-      const m=Math.floor(diff/60);
-      const s=diff%60;
-      const label=h>0?h+'h '+m+'m '+s+'s':m>0?m+'m '+s+'s':s+'s';
-      elNext.textContent=nextP+' in '+label;
-    }else{
-      elNext.textContent='';
-    }
+    if(!nextP){nextP='Fajr';nextS=toSec(t['Fajr'])+86400;} // wrap to tomorrow's Fajr
+    let diff=nextS-nowS;
+    const h=Math.floor(diff/3600);diff%=3600;
+    const m=Math.floor(diff/60);
+    const s=diff%60;
+    const label=h>0?h+'h '+m+'m '+s+'s':m>0?m+'m '+s+'s':s+'s';
+    elNext.textContent=nextP+' in '+label;
   }
   // All prayer times
   const elTimes=document.getElementById('navTimes');
@@ -1769,7 +1766,7 @@ function fsPlaySurah() {
 // Load 3D clock immediately
 window._clockContainer=document.getElementById('dialHero');
 const _cs=document.createElement('script');
-_cs.type='module';_cs.src='clock.js?v=367';
+_cs.type='module';_cs.src='clock.js?v=368';
 document.head.appendChild(_cs);
 
 // ══════════════════════════════════════════

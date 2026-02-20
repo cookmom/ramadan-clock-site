@@ -27,12 +27,26 @@ h2{font-weight:400;font-size:1.1rem;margin:2rem 0 .75rem;color:#555}
 p,li{font-weight:300;font-size:.95rem;color:#444;margin-bottom:.75rem}
 ul{padding-left:1.25rem}
 a{color:#1a1a1a}
+nav{
+  padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #e8e7e4;margin-bottom:0;
+}
+.nav-logo{font-weight:500;font-size:.9rem;letter-spacing:.02em;text-decoration:none;color:#1a1a1a}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.25rem;border-radius:100px;font-family:'Inter',system-ui,sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;border:none;text-decoration:none}
+.btn-primary{background:#1a1a1a;color:#f8f7f4}
 .back{font-weight:300;font-size:.9rem;display:inline-block;margin-bottom:2rem;color:#888;text-decoration:none}
 .back:hover{color:#1a1a1a}
 footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #e8e7e4;font-size:.85rem;font-weight:300;color:#888}
 </style>
 </head>
 <body>
+<nav>
+  <div>
+    <a href="/" class="nav-logo">A Gift of Time</a>
+    <div id="navNext" style="font-size:.6rem;font-weight:500;letter-spacing:.06em;color:#888;margin-top:1px"></div>
+  </div>
+  <a href="/#clock" class="btn btn-primary">Open Clock</a>
+</nav>
 <div class="container">
 <a href="/" class="back">← Back</a>
 <h1>Privacy & Terms</h1>
@@ -62,5 +76,39 @@ footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #e8e7e4;font-size
 <p>A Gift of Time — Made with care for the Muslim community</p>
 </footer>
 </div>
+<script>
+/* ── Next prayer countdown ── */
+(async()=>{
+  let apiUrl;
+  try{
+    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}):j());
+    apiUrl=`https://api.aladhan.com/v1/timings?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&method=2`;
+  }catch(e){
+    let city='Los Angeles';
+    try{city=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ');}catch(e2){}
+    apiUrl=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=US&method=2`;
+  }
+  try{
+    const r=await fetch(apiUrl);const j=await r.json();if(j.code!==200)return;
+    const t=j.data.timings;
+    const t5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+    const toSec=s=>{const[hh,mm]=s.split(':').map(Number);return hh*3600+mm*60;};
+    const el=document.getElementById('navNext');
+    if(!el)return;
+    setInterval(()=>{
+      const now=new Date();
+      const nowS=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+      let nextP='',nextS=0;
+      t5.forEach(p=>{const ps=toSec(t[p]);if(!nextP&&ps>nowS){nextP=p;nextS=ps;}});
+      if(!nextP){nextP='Fajr';nextS=toSec(t['Fajr'])+86400;}
+      let diff=nextS-nowS;
+      const h=Math.floor(diff/3600);diff%=3600;
+      const m=Math.floor(diff/60);const s=diff%60;
+      const label=h>0?h+'h '+m+'m '+s+'s':m>0?m+'m '+s+'s':s+'s';
+      el.textContent=nextP+' in '+label;
+    },1000);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

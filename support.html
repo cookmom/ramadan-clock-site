@@ -109,7 +109,10 @@ footer a:hover{color:var(--text)}
 <body>
 
 <nav>
-  <a href="./" class="nav-logo">A Gift of Time</a>
+  <div>
+    <a href="./" class="nav-logo">A Gift of Time</a>
+    <div id="navNext" style="font-size:.6rem;font-weight:500;letter-spacing:.06em;color:var(--text-muted);margin-top:1px"></div>
+  </div>
   <a href="./#clock" class="btn btn-primary" style="font-size:.8rem;padding:.55rem 1.25rem">Open Clock</a>
 </nav>
 
@@ -198,6 +201,40 @@ footer a:hover{color:var(--text)}
 
 </div>
 
+<script>
+/* ── Next prayer countdown ── */
+(async()=>{
+  let apiUrl;
+  try{
+    const pos=await new Promise((r,j)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,j,{maximumAge:300000,timeout:3000}):j());
+    apiUrl=`https://api.aladhan.com/v1/timings?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&method=2`;
+  }catch(e){
+    let city='Los Angeles';
+    try{city=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ');}catch(e2){}
+    apiUrl=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=US&method=2`;
+  }
+  try{
+    const r=await fetch(apiUrl);const j=await r.json();if(j.code!==200)return;
+    const t=j.data.timings;
+    const t5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+    const toSec=s=>{const[hh,mm]=s.split(':').map(Number);return hh*3600+mm*60;};
+    const el=document.getElementById('navNext');
+    if(!el)return;
+    setInterval(()=>{
+      const now=new Date();
+      const nowS=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+      let nextP='',nextS=0;
+      t5.forEach(p=>{const ps=toSec(t[p]);if(!nextP&&ps>nowS){nextP=p;nextS=ps;}});
+      if(!nextP){nextP='Fajr';nextS=toSec(t['Fajr'])+86400;}
+      let diff=nextS-nowS;
+      const h=Math.floor(diff/3600);diff%=3600;
+      const m=Math.floor(diff/60);const s=diff%60;
+      const label=h>0?h+'h '+m+'m '+s+'s':m>0?m+'m '+s+'s':s+'s';
+      el.textContent=nextP+' in '+label;
+    },1000);
+  }catch(e){}
+})();
+</script>
 <script>
 const SB_URL='https://ypniokxbftuebagppxzj.supabase.co/rest/v1';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwbmlva3hiZnR1ZWJhZ3BweHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTQ2MjcsImV4cCI6MjA4Njc3MDYyN30.u63gpVUX7bOm5WQZkgt1elVWwwSBx_UGektwDTnllhw';

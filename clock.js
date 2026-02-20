@@ -19,15 +19,15 @@ const DIALS = {
   // marker = printed marker/numeral color (NOT metal — painted applied indices)
   // lume = night glow base color (SuperLuminova)
   // Per-dial grain: grainBlend + grainOpacity override the adaptive defaults
-  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0x78ab92, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},   // sage green complement, yellow-orange sec (Nomos: avoids warm-on-warm clash)
-  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0x70b0b8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},   // teal complement, yellow-orange sec (Nomos: avoids red-on-red clash)
-  coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0x88b4c0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},      // steel blue complement
-  starlight:  {bg:0xd8d580, marker:0xc07030, markerBase:0x8078a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xd03010, text:'#5a4a30', minuteTick:0xffffff, dotTop:0xffffff, numeralTop:0xffffff, surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},        // deeper amber marker + richer lavender base, white minute ticks + white hour dots + white numeral tops
-  green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0xa86878, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf5a020, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},    // dusty rose complement
-  teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0xb08880, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},    // terracotta complement
-  slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0xa89868, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xf56623, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},      // warm amber complement
-  navy:       {bg:0x132653, marker:0xf0ecf0, markerBase:0xa89060, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xf56623, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},     // burnished copper complement
-  white:      {bg:0xe0e0e0, marker:0x8a5a4a, markerBase:0xa08070, lume:0x8a5a4a, hand:0x555560, sec:0xd04020, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},      // rich copper-brown for contrast on light bg
+  deep_pink:  {bg:0xbc4b79, marker:0xe9e6e1, markerBase:0x78ab92, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Al-Wāqiʿah', grainBlend:'soft-light', grainOpacity:0.45},
+  red:        {bg:0xdf473a, marker:0xe9e6e1, markerBase:0x70b0b8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Ash-Shams', grainBlend:'soft-light', grainOpacity:0.45},
+  coral:      {bg:0xe8967a, marker:0xe9e6e1, markerBase:0x88b4c0, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Aḍ-Ḍuḥā', grainBlend:'multiply', grainOpacity:0.18},
+  starlight:  {bg:0xd8d580, marker:0xc07030, markerBase:0x8078a8, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#5a4a30', minuteTick:0xffffff, dotTop:0xffffff, numeralTop:0xffffff, surah:'An-Nūr', grainBlend:'multiply', grainOpacity:0.28},
+  green:      {bg:0x30b080, marker:0xe9e6e1, markerBase:0xa86878, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Ar-Raḥmān', grainBlend:'soft-light', grainOpacity:0.5},
+  teal:       {bg:0x63afb9, marker:0xe9e6e1, markerBase:0xb08880, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Al-Burūj', grainBlend:'soft-light', grainOpacity:0.45},
+  slate:      {bg:0x5d6278, marker:0xe9e6e1, markerBase:0xa89868, lume:0xe9e6e1, hand:0xe9e6e1, sec:0xcc0000, text:'#e9e6e1', surah:'Al-Layl', grainBlend:'soft-light', grainOpacity:0.4},
+  navy:       {bg:0x132653, marker:0xf0ecf0, markerBase:0xa89060, lume:0xf0ecf0, hand:0xf0ecf0, sec:0xcc0000, text:'#f0ecf0', surah:'An-Najm', grainBlend:'soft-light', grainOpacity:0.65},
+  white:      {bg:0xe0e0e0, marker:0x8a5a4a, markerBase:0xa08070, lume:0x8a5a4a, hand:0x555560, sec:0xcc0000, text:'#2a2a30', surah:'Al-Qamar', grainBlend:'multiply', grainOpacity:0.22},
   // ── Special dials (custom behavior) ──
   kawthar:{bg:0xf2dce0, lume:0xc88898, hand:0xc88898, sec:0xc88898, text:'#9a6878', surah:'Al-Kawthar', grainBlend:'multiply', grainOpacity:0.2},
   rainbow:{bg:0x1a1a1a, lume:0xc8a878, hand:0xc8a878, sec:0xc8a878, text:'#c8a878', surah:'Al-Insān', bezel:true, grainBlend:'soft-light', grainOpacity:0.7},

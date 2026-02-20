@@ -1266,9 +1266,13 @@ function buildQibla() {
   const subdialFloorGeo = new THREE.ShapeGeometry(subdialShape, 64);
   // Unlit material — scene lights can't brighten it beyond CSS background tone
   // Slightly darker than dial = reads as recessed shadow
-  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.88);
+  // Unlit material with grain as color map — scene lights can't brighten it
+  // The grain roughnessMap (baseVal 235, spread 20) used as map creates
+  // subtle brightness variation: 235±10 → 0.88-0.96 multiplier on base color
+  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.97);
   const subdialFloorMat = new THREE.MeshBasicMaterial({
     color: subdialFloorColor,
+    map: dialGrainTex,
   });
   rotorDiscMat_ = subdialFloorMat;
   const subdialFloor = new THREE.Mesh(subdialFloorGeo, subdialFloorMat);

@@ -1027,7 +1027,7 @@ function buildNumerals() {
     baseMatl.envMapIntensity = 2.0;
     const baseMesh = new THREE.Mesh(baseGeo, baseMatl);
     baseMesh.position.set(nx, ny, 0.5);
-    baseMesh.scale.setScalar(1.18); // 18% larger = visible border
+    baseMesh.scale.setScalar(1.30); // 30% larger = visible border under numerals
     baseMesh.castShadow = true;
     baseMesh.renderOrder = 1;
     clockGroup.add(baseMesh);

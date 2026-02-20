@@ -686,9 +686,6 @@ function buildDial() {
   dialMesh.position.z = 0; // flat at origin
   clockGroup.add(dialMesh);
   
-  // Subdial recess — use the dial mesh itself (it has the cutout hole)
-  // In fullscreen/contained: show dial mesh with MeshBasicMaterial so it matches CSS bg
-  // The cutout hole reveals the recessed qiblaGroup behind it = real 3D recess
   const dialCol = new THREE.Color(DIALS[currentDial].bg);
 
   // Update fullscreen PBR background to match new dial material
@@ -696,43 +693,86 @@ function buildDial() {
     fsBgPlane.material.dispose();
     fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
-  // In fullscreen/contained: hide full dial mesh, create 3D recess ring only
-  // Full dial mesh can't match CSS bg+grain (canvas sits above CSS grain overlay)
-  // Instead: thick extruded annular ring around cutout = real 3D recess geometry
+
+  // ── 3-LEVEL SUBDIAL RECESS ──
+  // Level 1: Top dial surface (z=0) — main clock face with cutout hole
+  // Level 2: Subdial ring (z=-4) — rotating qibla compass ring
+  // Level 3: Moonphase dial (z=-8) — deepest, the moon phase disc
+  // Cylindrical walls connect each level for physically correct depth
+  const LEVEL2_Z = -4;   // subdial ring floor
+  const LEVEL3_Z = -8;   // moonphase floor
+
   if(isFullscreen || CONTAINED) {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
 
-    // 3D recess bevel — torus at the subdial aperture
-    // Medium tube (0.8) — visible but not heavy. Polished lip for Nomos look
-    const bevelTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(cutoutR, 0.8, 24, 128),
-      new THREE.MeshPhysicalMaterial({
-        color: dialCol.clone().multiplyScalar(0.4),
-        roughness: 0.3,
-        metalness: 0.4,
-        envMapIntensity: 0.5,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.2,
-      })
-    );
-    bevelTorus.position.set(0, subY, 0);
-    clockGroup.add(bevelTorus);
-    _recessMeshes.push(bevelTorus);
-
-    // Inner shadow cylinder — dark wall visible at 7° camera angle with z=-8 depth
-    const wallGeo = new THREE.CylinderGeometry(cutoutR - 0.5, cutoutR - 0.5, 8, 64, 1, true);
-    const wallMat = new THREE.MeshPhysicalMaterial({
-      color: dialCol.clone().multiplyScalar(0.2),
-      roughness: 0.8,
-      metalness: 0.05,
+    // ── Wall 1: Top dial → Subdial ring (z=0 to z=-4) ──
+    // Cylindrical wall at the cutout boundary, seen from inside via BackSide
+    const wall1Depth = Math.abs(LEVEL2_Z);
+    const wall1Geo = new THREE.CylinderGeometry(cutoutR, cutoutR, wall1Depth, 64, 1, true);
+    const wall1Mat = new THREE.MeshPhysicalMaterial({
+      color: dialCol.clone().multiplyScalar(0.35),
+      roughness: 0.5,
+      metalness: 0.2,
+      envMapIntensity: 0.4,
       side: THREE.BackSide,
     });
-    const wallMesh = new THREE.Mesh(wallGeo, wallMat);
-    wallMesh.rotation.x = Math.PI / 2;
-    wallMesh.position.set(0, subY, -4); // centered in the 8-unit deep well
-    clockGroup.add(wallMesh);
-    _recessMeshes.push(wallMesh);
+    const wall1 = new THREE.Mesh(wall1Geo, wall1Mat);
+    wall1.rotation.x = Math.PI / 2;
+    wall1.position.set(0, subY, LEVEL2_Z / 2); // centered between z=0 and LEVEL2_Z
+    clockGroup.add(wall1);
+    _recessMeshes.push(wall1);
+
+    // ── Chamfer ring at top aperture ──
+    // Polished lip ring at the dial surface where the hole begins
+    const chamferTorus = new THREE.Mesh(
+      new THREE.TorusGeometry(cutoutR, 0.25, 12, 128),
+      new THREE.MeshPhysicalMaterial({
+        color: dialCol.clone().multiplyScalar(0.55),
+        roughness: 0.08,
+        metalness: 0.9,
+        envMapIntensity: 4.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.01,
+      })
+    );
+    chamferTorus.position.set(0, subY, -0.25);
+    clockGroup.add(chamferTorus);
+    _recessMeshes.push(chamferTorus);
+
+    // ── Wall 2: Subdial ring → Moonphase (z=-4 to z=-8) ──
+    // Smaller cylinder inside the subdial, connecting the rotor floor to the moonphase well
+    const moonCutoutR = cutoutR * 0.45; // moonphase aperture in the subdial floor
+    const wall2Depth = Math.abs(LEVEL3_Z - LEVEL2_Z);
+    const wall2Geo = new THREE.CylinderGeometry(moonCutoutR, moonCutoutR, wall2Depth, 48, 1, true);
+    const wall2Mat = new THREE.MeshPhysicalMaterial({
+      color: dialCol.clone().multiplyScalar(0.25),
+      roughness: 0.6,
+      metalness: 0.15,
+      envMapIntensity: 0.2,
+      side: THREE.BackSide,
+    });
+    const wall2 = new THREE.Mesh(wall2Geo, wall2Mat);
+    wall2.rotation.x = Math.PI / 2;
+    wall2.position.set(0, subY, (LEVEL2_Z + LEVEL3_Z) / 2);
+    clockGroup.add(wall2);
+    _recessMeshes.push(wall2);
+
+    // ── Chamfer ring at subdial → moonphase aperture ──
+    const chamfer2 = new THREE.Mesh(
+      new THREE.TorusGeometry(moonCutoutR, 0.15, 12, 64),
+      new THREE.MeshPhysicalMaterial({
+        color: dialCol.clone().multiplyScalar(0.45),
+        roughness: 0.1,
+        metalness: 0.85,
+        envMapIntensity: 3.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.01,
+      })
+    );
+    chamfer2.position.set(0, subY, LEVEL2_Z - 0.15);
+    clockGroup.add(chamfer2);
+    _recessMeshes.push(chamfer2);
   }
   
   // Main crystal removed — caused visible edge ring on mobile
@@ -1216,47 +1256,34 @@ function buildQibla() {
   if(qiblaGroup) clockGroup.remove(qiblaGroup);
   qiblaGroup = new THREE.Group();
   qiblaGroup.position.y = -R*0.5;
-  qiblaGroup.position.z = -8; // deep recess — visible step from 7° bottom-up camera
+  qiblaGroup.position.z = -4; // Level 2: subdial ring floor
   
   const gaugeR = cutoutR - 1.5;
   const d = DIALS[currentDial];
   
-  // Base disc — hidden in fullscreen/contained mode so CSS background + grain shows through
-  // uniformly (no brightness mismatch). Visible only in standalone mode where 3D dial is shown.
+  // ── Level 2 floor: Subdial ring disc ──
+  // Annular ring with hole for moonphase — the rotating qibla compass sits on this
   const subDialColor = new THREE.Color(d.bg);
-  const baseMat = new THREE.MeshBasicMaterial({
-    color: subDialColor,
-  });
-  const baseDisc = new THREE.Mesh(new THREE.CircleGeometry(gaugeR, 64), baseMat);
-  if (isFullscreen || CONTAINED) baseDisc.visible = false;
-  qiblaGroup.add(baseDisc);
+  const moonCutoutR = cutoutR * 0.45; // matches Wall 2 radius
 
-  // Subdial floor — MeshBasicMaterial (unlit) with onBeforeCompile shader mod
-  // Adds a subtle radial grain pattern that responds to env map rotation via uniform
-  // This avoids scene lights making it too bright while still showing texture
-  const floorColor = new THREE.Color(d.bg).multiplyScalar(0.82);
-  const rotorDiscMat = new THREE.MeshBasicMaterial({ color: floorColor });
-  rotorDiscMat_ = rotorDiscMat; // module-level ref for animate loop
-  // Add subtle grain via shader — modulates color slightly based on position
-  rotorDiscMat.onBeforeCompile = (shader) => {
-    shader.uniforms.uEnvRot = { value: 0.0 };
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <color_fragment>',
-      `#include <color_fragment>
-       // Procedural galvanized grain — visible texture like sandblasted metal
-       vec2 p = vUv * 200.0;
-       float grain = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-       float grain2 = fract(sin(dot(p * 0.7, vec2(78.233, 12.9898))) * 23421.631);
-       float combined = mix(grain, grain2, 0.5);
-       // Env rotation modulates grain phase — shifts pattern with tilt
-       float phase = sin(p.x * 2.0 + uEnvRot * 2.0) * 0.04 + sin(p.y * 1.5 + uEnvRot) * 0.03;
-       diffuseColor.rgb *= 0.90 + combined * 0.15 + phase;`
-    );
-    rotorDiscMat.userData.shader = shader;
-  };
-  const rotorDiscMesh = new THREE.Mesh(new THREE.CircleGeometry(gaugeR - 0.5, 64), rotorDiscMat);
-  rotorDiscMesh.position.z = 0.05;
-  qiblaGroup.add(rotorDiscMesh);
+  // Annular shape: outer circle with moonphase hole
+  const subdialShape = new THREE.Shape();
+  subdialShape.absarc(0, 0, gaugeR, 0, Math.PI*2, false);
+  const moonHole = new THREE.Path();
+  moonHole.absarc(0, 0, moonCutoutR, 0, Math.PI*2, true);
+  subdialShape.holes.push(moonHole);
+
+  const subdialFloorGeo = new THREE.ShapeGeometry(subdialShape, 64);
+  // Unlit material — scene lights can't brighten it beyond CSS background tone
+  // Slightly darker than dial = reads as recessed shadow
+  const subdialFloorColor = new THREE.Color(d.bg).multiplyScalar(0.88);
+  const subdialFloorMat = new THREE.MeshBasicMaterial({
+    color: subdialFloorColor,
+  });
+  rotorDiscMat_ = subdialFloorMat;
+  const subdialFloor = new THREE.Mesh(subdialFloorGeo, subdialFloorMat);
+  subdialFloor.position.z = 0.05;
+  qiblaGroup.add(subdialFloor);
 
   // ── Nomos-style subdial tick ring ──
   // Fine tick marks around subdial periphery — dark on colored dials, dark on white
@@ -1297,7 +1324,7 @@ function buildQibla() {
     opacity: 1.0,
   });
   const moonDisc = new THREE.Mesh(new THREE.CircleGeometry(moonR, 64), moonMat);
-  moonDisc.position.z = 0.1;
+  moonDisc.position.z = -4 + 0.1; // Level 3: moonphase floor (z=-4 relative to qiblaGroup = z=-8 absolute)
   qiblaGroup.add(moonDisc);
   
   // Shadow overlay — creates crescent shape via canvas texture
@@ -1361,7 +1388,7 @@ function buildQibla() {
     new THREE.CircleGeometry(moonR, 64),
     new THREE.MeshBasicMaterial({map: moonTex, transparent: true})
   );
-  moonOverlay.position.z = 0.15;
+  moonOverlay.position.z = -4 + 0.15; // Level 3: moonphase floor
   // Keep moonphase visible in all modes — it's a key visual element
   qiblaGroup.add(moonOverlay);
   
@@ -2376,11 +2403,11 @@ function animate(){
   // Parallax + interactive spec light
   gx+=(tgx-gx)*0.08; gy+=(tgy-gy)*0.08;
   // gyro debug dot removed
-  // Camera parallax — perspective cam with subtle tilt
+  // Camera — fixed position, no parallax movement
   const baseY = Math.sin(camTiltRad) * camDist;
   const baseZ = Math.cos(camTiltRad) * camDist;
-  if(!CONTAINED || isFullscreen) { cam.position.x = gx * 15; }
-  cam.position.y = baseY + gy * 10;
+  cam.position.x = 0;
+  cam.position.y = baseY;
   cam.position.z = baseZ;
   cam.lookAt(0, 0, 0);
   

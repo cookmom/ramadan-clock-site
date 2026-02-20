@@ -279,9 +279,9 @@ function makeGrainTexture(size = 512, baseVal = 235, spread = 20) {
   tex.repeat.set(2, 2); // tile for finer grain
   return tex;
 }
-const dialGrainTex = makeGrainTexture(512, 235, 6);      // standard dials: subtle roughness grain (low spread prevents dirty look on light dials)
-const metalGrainTex = makeGrainTexture(256, 140, 15);    // qamar/kawthar: subtler, lower roughness grain
-const subdialGrainTex = makeGrainTexture(512, 255, 20);  // subdial floor: same grain character as dial, centered at white so base color = final tone
+const dialGrainTex = makeGrainTexture(512, 235, 5);      // standard dials: subtle roughness grain (15% reduced spread)
+const metalGrainTex = makeGrainTexture(256, 140, 13);    // qamar/kawthar: subtler, lower roughness grain (15% reduced)
+const subdialGrainTex = makeGrainTexture(512, 255, 17);  // subdial floor: same grain character as dial (15% reduced)
 
 // ── Procedural bump map for applied numerals ──
 // Renders numeral outlines to a canvas, used as bumpMap to fake depth

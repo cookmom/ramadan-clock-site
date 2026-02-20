@@ -924,7 +924,7 @@ function buildMarkers() {
       // Round disc on larger round disc base (applied dot indices)
       if(isHour && !isNumeralPos){
         const dotR = R * 0.042;       // top lume disc radius (30% bigger)
-        const baseR = dotR * 1.7;     // base disc visibly larger
+        const baseR = dotR / 0.9;     // base disc 10% larger than top
         const baseDepth = 2.0;
         const lumeDepth = 1.8;
         const midR = (R - R*0.04 - baseR) * 0.92;

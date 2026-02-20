@@ -607,7 +607,7 @@ window._clockSetFullscreen = function(on, snapNight) {
     // PBR background for depth + CSS grain overlay for visible texture
     if(scene.children.includes(bgPlane)) scene.remove(bgPlane);
     fsBgPlane.visible = false; // CSS background + grain overlay handle this now
-    // Hide dial geometry — elements sit directly on the PBR background
+    // Hide dial geometry — recess ring handles the subdial border
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
@@ -687,25 +687,39 @@ function buildDial() {
     fsBgPlane.material.dispose();
     fsBgPlane.material = fsBgMaterial(DIALS[currentDial].bg);
   }
-  // In fullscreen/contained: hide dial mesh, CSS bg + grain IS the dial surface
+  // In fullscreen/contained: hide full dial mesh, create 3D recess ring only
+  // Full dial mesh can't match CSS bg+grain (canvas sits above CSS grain overlay)
+  // Instead: thick extruded annular ring around cutout = real 3D recess geometry
   if(isFullscreen || CONTAINED) {
     if(dialMesh) dialMesh.visible = false;
     if(dialLowerMesh) dialLowerMesh.visible = false;
-    // Smooth 3D torus recess ring at subdial cutout boundary
-    const torusMainR = cutoutR;
-    const torusTubeR = 0.7;             // thinner tube for subtle bevel
-    const recessTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(torusMainR, torusTubeR, 24, 128),
-      new THREE.MeshPhysicalMaterial({
-        color: dialCol.clone().multiplyScalar(0.65),
-        roughness: 0.4,
-        metalness: 0.3,
-        envMapIntensity: 0.5,
-      })
+
+    // 3D recess — tapered cone wall only (no opaque top surface)
+    // Tapered: wider at top, narrower at bottom = angled wall visible from above
+    // Unlike straight cylinder (edge-on from above), cone wall catches camera
+    const recessDepth = 0.8;
+    const taperInset = 1.2; // how much smaller the bottom radius is
+    const wallGeo = new THREE.CylinderGeometry(
+      cutoutR,                    // top radius (at dial surface)
+      cutoutR - taperInset,       // bottom radius (smaller = tapered inward)
+      recessDepth,                // height (depth of recess)
+      128,                        // segments
+      1,                          // height segments
+      true                        // openEnded — NO caps, just the wall
     );
-    recessTorus.position.set(0, subY, -0.15);
-    clockGroup.add(recessTorus);
-    _recessMeshes.push(recessTorus);
+    // Subtle dark inner wall — visible from above due to taper angle
+    const wallMat = new THREE.MeshPhysicalMaterial({
+      color: dialCol.clone().multiplyScalar(0.55),
+      roughness: 0.5,
+      metalness: 0.15,
+      envMapIntensity: 0.3,
+      side: THREE.BackSide,
+    });
+    const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+    wallMesh.rotation.x = Math.PI / 2;
+    wallMesh.position.set(0, subY, -recessDepth / 2); // top at z=0, bottom at z=-depth
+    clockGroup.add(wallMesh);
+    _recessMeshes.push(wallMesh);
   }
   
   // Main crystal removed — caused visible edge ring on mobile
@@ -1326,13 +1340,19 @@ function buildQibla() {
   qiblaRotor = new THREE.Group();
   qiblaRotor.position.z = 0.5;
   
-  // Rotor disc — visible, textured to match dial surface
+  // Rotor disc — unlit with fine grain texture to match dial surface
+  // Must be MeshBasicMaterial (unlit) to match CSS background tone
+  // Uses a subtle grain map for surface texture without catching scene lights
   const rotorR = gaugeR - 2;
-  const rotorDiscColor = new THREE.Color(d.bg).multiplyScalar(0.93);
+  const fineGrain = makeGrainTexture(512, 245, 6); // bright, very subtle grain
   const rotorDisc = new THREE.Mesh(
-    new THREE.RingGeometry(moonR + 0.5, rotorR, 64),
-    new THREE.MeshBasicMaterial({ color: rotorDiscColor })
+    new THREE.CircleGeometry(rotorR, 128),
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color(d.bg).multiplyScalar(0.96),
+      map: fineGrain,
+    })
   );
+  rotorDisc.position.z = 0.05;
   qiblaRotor.add(rotorDisc);
   
   // Cardinal tick marks on rotor rim — Nomos style: subtle dark marks, not metallic

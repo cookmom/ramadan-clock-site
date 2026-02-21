@@ -891,7 +891,7 @@ function buildMarkers() {
         mesh.position.x = Math.cos(ang)*midR;
         mesh.position.y = Math.sin(ang)*midR;
         mesh.position.z = 1.5;
-        clockGroup.add(mesh); markerMeshes.push(mesh);
+        clockGroup.add(mesh); markerMeshes.push(mesh); lumeMeshes.push(mesh);
       }
     } else if(isRainbow) {
       // ── RAINBOW: sorbet gem minute markers — every minute gets a pastel gem ──
@@ -2426,19 +2426,19 @@ function animate(){
   cam.position.z = baseZ;
   cam.lookAt(0, 0, 0);
   
-  // HDRI rotation with tilt — dramatic sweep for visible specular shifts on hands/markers
+  // HDRI rotation with tilt — refined sweep for elegant specular play without losing the dial
   if(scene.environmentRotation) {
-    scene.environmentRotation.y = 2.8 + gx * 2.0;  // wider sweep — env map slides visibly with tilt
-    scene.environmentRotation.x = 0.1 + gy * 1.2;
+    scene.environmentRotation.y = 2.8 + gx * 0.8;  // subtle env slide — specular highlights shift, dial stays lit
+    scene.environmentRotation.x = 0.1 + gy * 0.5;
   }
-  // Lights follow tilt aggressively for visible material response
-  keyLight.position.x = -60 + gx * 80;
-  keyLight.position.y = 120 + gy * 60;
-  fillLight.position.x = 80 - gx * 60;
-  fillLight.position.y = -40 - gy * 40;
-  // Subdial spotlight sweeps with gyro
-  subdialSpot.position.x = gx * 80;
-  subdialSpot.position.y = subY_light + gy * 60;
+  // Lights follow tilt gently — pretty specular play, never loses the dial or lume
+  keyLight.position.x = -60 + gx * 30;
+  keyLight.position.y = 120 + gy * 25;
+  fillLight.position.x = 80 - gx * 25;
+  fillLight.position.y = -40 - gy * 20;
+  // Subdial spotlight sweeps gently with gyro
+  subdialSpot.position.x = gx * 30;
+  subdialSpot.position.y = subY_light + gy * 25;
   // Update subdial floor grain shader with env rotation
   if(rotorDiscMat_ && rotorDiscMat_.userData.shader) {
     rotorDiscMat_.userData.shader.uniforms.uEnvRot.value = scene.environmentRotation ? scene.environmentRotation.y : 0;

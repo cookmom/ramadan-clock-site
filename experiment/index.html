@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Tawaf — Generative Prayer Clock</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#030306;overflow:hidden;font-family:'Inter',system-ui,sans-serif;touch-action:none}
+canvas{display:block}
+#hud{position:fixed;top:0;left:0;right:0;pointer-events:none;z-index:10;
+  display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+#prayer-name{color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:6px;text-transform:uppercase;
+  transition:color 3s ease}
+#hijri-date{color:rgba(255,255,255,0.25);font-size:9px;letter-spacing:3px;margin-top:6px}
+#progress-bar{width:60px;height:1px;background:rgba(255,255,255,0.08);margin-top:10px;border-radius:1px;overflow:hidden}
+#progress-fill{height:100%;width:0%;transition:width 1s linear}
+#qibla-indicator{position:fixed;bottom:20px;right:20px;pointer-events:none;z-index:10;
+  color:rgba(255,255,255,0.15);font-size:9px;letter-spacing:2px}
+#info{position:fixed;bottom:12px;left:16px;color:rgba(255,255,255,0.12);font-size:9px;letter-spacing:0.5px;z-index:10}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div id="prayer-name"></div>
+  <div id="hijri-date"></div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+</div>
+<div id="qibla-indicator">qibla ↗</div>
+<div id="info">tawaf · generative prayer clock</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ══════════════════════════════════════════════════════════════
+// URL PARAMS
+// ?prayer=fajr      → force prayer
+// ?demo=1           → auto-cycle prayers
+// ?speed=2          → animation speed multiplier
+// ?lat=34&lng=-118  → force location (default: LA)
+// ?lq=1             → force Laylatul Qadr mode
+// ══════════════════════════════════════════════════════════════
+const params = new URLSearchParams(location.search);
+const FORCE_PRAYER = params.get('prayer');
+const DEMO_MODE = params.has('demo');
+const SPEED = parseFloat(params.get('speed') || '1');
+const FORCE_LQ = params.has('lq');
+
+// ══════════════════════════════════════════════════════════════
+// QURANIC CONSTANTS
+// These numbers are drawn from the Quran's structure
+// ══════════════════════════════════════════════════════════════
+const Q = {
+  TAWAF_CIRCUITS: 7,       // circuits of tawaf
+  PRAYERS: 5,              // daily prayers
+  NAMES: 99,               // names of Allah
+  SURAHS: 114,             // chapters in the Quran
+  JUZ: 30,                 // parts of the Quran / days of Ramadan
+  BISMILLAH: 19,           // numerical structure of Bismillah
+  HEAVENS: 7,              // layers of heaven
+  KAWTHAR: 3,              // verses in Surah Al-Kawthar (shortest surah)
+};
+
+// ══════════════════════════════════════════════════════════════
+// LOCATION + QIBLA
+// ══════════════════════════════════════════════════════════════
+const MECCA = { lat: 21.4225, lng: 39.8262 };
+let userLat = parseFloat(params.get('lat') || '34.05');   // default LA
+let userLng = parseFloat(params.get('lng') || '-118.25');
+
+// Try geolocation
+if (!params.has('lat') && navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    recalcQibla();
+  }, () => {}, { timeout: 5000 });
+}
+
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+
+function calcQiblaBearing(lat, lng) {
+  const φ1 = toRad(lat), φ2 = toRad(MECCA.lat);
+  const Δλ = toRad(MECCA.lng - lng);
+  const y = Math.sin(Δλ);
+  const x = Math.cos(φ1) * Math.tan(φ2) - Math.sin(φ1) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+let qiblaBearing = calcQiblaBearing(userLat, userLng);
+let qiblaRad = toRad(qiblaBearing);
+
+function recalcQibla() {
+  qiblaBearing = calcQiblaBearing(userLat, userLng);
+  qiblaRad = toRad(qiblaBearing);
+  const arrow = qiblaBearing < 45 || qiblaBearing > 315 ? '↑' :
+                qiblaBearing < 135 ? '→' :
+                qiblaBearing < 225 ? '↓' : '←';
+  document.getElementById('qibla-indicator').textContent =
+    `qibla ${arrow} ${Math.round(qiblaBearing)}°`;
+}
+recalcQibla();
+
+// ══════════════════════════════════════════════════════════════
+// HIJRI CALENDAR + MOON PHASE
+// ══════════════════════════════════════════════════════════════
+function getHijriDate(date = new Date()) {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const parts = fmt.formatToParts(date);
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+    const month = parts.find(p => p.type === 'month')?.value || '';
+    const year = parseInt(parts.find(p => p.type === 'year')?.value || '1446');
+    return { day, month, year, str: `${day} ${month} ${year} AH` };
+  } catch {
+    return { day: 1, month: 'Ramadan', year: 1446, str: '1 Ramadan 1446 AH' };
+  }
+}
+
+function getMoonPhase(date = new Date()) {
+  // Synodic month = 29.53058770576 days
+  const known = new Date(2000, 0, 6, 18, 14); // known new moon
+  const diff = (date.getTime() - known.getTime()) / 1000;
+  const lunation = 29.53058770576 * 86400;
+  const phase = ((diff % lunation) + lunation) % lunation / lunation;
+  return phase; // 0 = new moon, 0.5 = full moon
+}
+
+function isRamadan(hijri) {
+  return hijri.month.toLowerCase().includes('ramadan') ||
+         hijri.month.toLowerCase().includes('ramaḍān');
+}
+
+function isLaylatulQadr(hijri) {
+  if (!isRamadan(hijri)) return false;
+  // Odd nights of the last 10 days: 21, 23, 25, 27, 29
+  return hijri.day >= 21 && hijri.day % 2 === 1;
+}
+
+// ══════════════════════════════════════════════════════════════
+// PRAYER TIMES (hardcoded for prototype; location-aware later)
+// ══════════════════════════════════════════════════════════════
+const PRAYERS = [
+  { name: 'Fajr',    hour: 5,  min: 32, color: '#3a6adf', fold: 5  },
+  { name: 'Sunrise', hour: 6,  min: 48, color: '#d4913a', fold: 6  },
+  { name: 'Dhuhr',   hour: 12, min: 14, color: '#c4a832', fold: 8  },
+  { name: 'Asr',     hour: 15, min: 15, color: '#b06a3a', fold: 10 },
+  { name: 'Maghrib', hour: 17, min: 42, color: '#c43a6a', fold: 12 },
+  { name: 'Isha',    hour: 19, min: 5,  color: '#6a3ac4', fold: 7  },
+];
+
+const PRAYER_MAP = {};
+PRAYERS.forEach((p, i) => PRAYER_MAP[p.name.toLowerCase()] = i);
+
+function getCurrentPrayer(now = new Date()) {
+  const mins = now.getHours() * 60 + now.getMinutes();
+  let idx = PRAYERS.length - 1;
+  for (let i = PRAYERS.length - 1; i >= 0; i--) {
+    if (mins >= PRAYERS[i].hour * 60 + PRAYERS[i].min) { idx = i; break; }
+  }
+  return idx;
+}
+
+function getPrayerProgress(now = new Date()) {
+  const mins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const idx = getCurrentPrayer(now);
+  const nextIdx = (idx + 1) % PRAYERS.length;
+  const start = PRAYERS[idx].hour * 60 + PRAYERS[idx].min;
+  let end = PRAYERS[nextIdx].hour * 60 + PRAYERS[nextIdx].min;
+  if (end <= start) end += 24 * 60; // crosses midnight
+  let current = mins;
+  if (current < start) current += 24 * 60;
+  return Math.min(1, (current - start) / (end - start));
+}
+
+// ══════════════════════════════════════════════════════════════
+// DETERMINISTIC SEED
+// Same date + prayer + location = same artwork
+// ══════════════════════════════════════════════════════════════
+function hashSeed(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return h;
+}
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+function getArtworkSeed(prayerIdx, date = new Date()) {
+  const hijri = getHijriDate(date);
+  const latBucket = Math.round(userLat * 2);  // ~0.5° resolution
+  const lngBucket = Math.round(userLng * 2);
+  const key = `${hijri.day}-${hijri.month}-${hijri.year}-P${prayerIdx}-${latBucket}-${lngBucket}`;
+  return hashSeed(key);
+}
+
+// ══════════════════════════════════════════════════════════════
+// THREE.JS SETUP
+// ══════════════════════════════════════════════════════════════
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-6, 6, 10, -10, 0.1, 100);
+camera.position.z = 10;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.setClearColor(0x030306);
+document.body.appendChild(renderer.domElement);
+
+function updateCamera() {
+  const aspect = innerWidth / innerHeight;
+  const v = 7;
+  camera.left = -v * aspect; camera.right = v * aspect;
+  camera.top = v; camera.bottom = -v;
+  camera.updateProjectionMatrix();
+}
+updateCamera();
+
+// Post-processing
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(
+  new THREE.Vector2(innerWidth, innerHeight),
+  1.4, 0.6, 0.15
+);
+composer.addPass(bloom);
+
+// ══════════════════════════════════════════════════════════════
+// TAWAF PARTICLES — 7 luminous bodies orbiting anti-clockwise
+// Each represents one circuit of tawaf
+// ══════════════════════════════════════════════════════════════
+const TAWAF_GROUP = new THREE.Group();
+scene.add(TAWAF_GROUP);
+
+// Central point — the Kaaba/axis
+const centerGeo = new THREE.CircleGeometry(0.06, 32);
+const centerMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.4
+});
+const centerDot = new THREE.Mesh(centerGeo, centerMat);
+TAWAF_GROUP.add(centerDot);
+
+// Each tawaf particle: position, trail, force lines
+class TawafParticle {
+  constructor(index, totalCircuits, seed, color) {
+    this.index = index;
+    this.rng = seededRandom(seed + index * 7919);
+
+    // Orbital parameters — derived from seed + Quranic constants
+    const baseRadius = 1.2 + index * 0.7;
+    this.radiusX = baseRadius + this.rng() * 0.3;
+    this.radiusY = baseRadius * (0.85 + this.rng() * 0.3);
+    this.speed = (0.3 + this.rng() * 0.15) / (1 + index * 0.12);
+    this.phaseOffset = (index / totalCircuits) * Math.PI * 2 + this.rng() * 0.5;
+
+    // Eccentricity modulated by moon phase
+    this.baseEccentricity = 0.15 + this.rng() * 0.2;
+
+    // Color
+    this.color = new THREE.Color(color);
+    const hsl = {};
+    this.color.getHSL(hsl);
+    // Each particle slightly shifts hue
+    hsl.h = (hsl.h + index * 0.03) % 1;
+    hsl.l = Math.min(0.7, hsl.l + index * 0.02);
+    this.color.setHSL(hsl.h, hsl.s, hsl.l);
+
+    // Particle body (leading edge — the "pole" / "force")
+    const bodyGeo = new THREE.CircleGeometry(0.08 - index * 0.005, 16);
+    this.bodyMat = new THREE.MeshBasicMaterial({
+      color: this.color, transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    this.body = new THREE.Mesh(bodyGeo, this.bodyMat);
+    TAWAF_GROUP.add(this.body);
+
+    // Inner glow ring around particle
+    const glowGeo = new THREE.RingGeometry(0.1, 0.22 - index * 0.01, 24);
+    this.glowMat = new THREE.MeshBasicMaterial({
+      color: this.color, transparent: true, opacity: 0.3,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+    });
+    this.glow = new THREE.Mesh(glowGeo, this.glowMat);
+    TAWAF_GROUP.add(this.glow);
+
+    // Force lines radiating from particle (4 whiskers)
+    this.whiskers = [];
+    for (let w = 0; w < 4; w++) {
+      const pts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)];
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({
+        color: this.color, transparent: true, opacity: 0.15,
+        blending: THREE.AdditiveBlending
+      });
+      const line = new THREE.Line(geo, mat);
+      TAWAF_GROUP.add(line);
+      this.whiskers.push({ line, geo, angle: (w / 4) * Math.PI * 2 + this.rng() * 0.5 });
+    }
+
+    // Trail buffer
+    this.maxTrail = 1200;
+    this.trailPositions = new Float32Array(this.maxTrail * 3);
+    this.trailAlphas = new Float32Array(this.maxTrail);
+    this.trailGeo = new THREE.BufferGeometry();
+    this.trailGeo.setAttribute('position', new THREE.BufferAttribute(this.trailPositions, 3));
+    this.trailGeo.setAttribute('alpha', new THREE.BufferAttribute(this.trailAlphas, 1));
+
+    this.trailMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: this.color.clone() },
+        uOpacity: { value: 0.0 }
+      },
+      vertexShader: `
+        attribute float alpha;
+        varying float vA;
+        void main() {
+          vA = alpha;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        varying float vA;
+        void main() {
+          gl_FragColor = vec4(uColor, vA * uOpacity * 0.7);
+        }`,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+
+    this.trail = new THREE.Line(this.trailGeo, this.trailMat);
+    TAWAF_GROUP.add(this.trail);
+
+    this.trailCount = 0;
+    this.angle = this.phaseOffset;
+    this.x = 0;
+    this.y = 0;
+  }
+
+  update(dt, progress, moonPhase, opacity, lqMode) {
+    // Anti-clockwise rotation (tawaf direction)
+    const speedMod = lqMode ? 1.5 : 1.0;
+    this.angle -= dt * this.speed * SPEED * speedMod;
+
+    // Moon phase affects orbital shape
+    // Full moon (0.5) = more circular, new moon (0/1) = more eccentric
+    const moonCircularity = 1 - Math.abs(moonPhase - 0.5) * 2; // 0=eccentric, 1=circular
+    const ecc = this.baseEccentricity * (1 - moonCircularity * 0.6);
+
+    const rx = this.radiusX * (1 - ecc);
+    const ry = this.radiusY * (1 + ecc * 0.5);
+
+    this.x = Math.cos(this.angle) * rx;
+    this.y = Math.sin(this.angle) * ry;
+
+    // Position body
+    this.body.position.set(this.x, this.y, 0);
+    this.glow.position.set(this.x, this.y, 0);
+    this.glow.rotation.z += dt * 0.5;
+
+    // Update whiskers (force lines radiating outward)
+    const whiskerLen = 0.3 + Math.sin(this.angle * 3) * 0.15;
+    this.whiskers.forEach((w, wi) => {
+      const wa = w.angle + this.angle * 0.3 + dt * 2;
+      w.angle += dt * (0.5 + wi * 0.2);
+      const dx = Math.cos(wa) * whiskerLen;
+      const dy = Math.sin(wa) * whiskerLen;
+      const pos = w.geo.attributes.position;
+      pos.setXYZ(0, this.x, this.y, 0);
+      pos.setXYZ(1, this.x + dx, this.y + dy, 0);
+      pos.needsUpdate = true;
+      w.line.material.opacity = opacity * 0.2;
+    });
+
+    // Opacity
+    this.bodyMat.opacity = opacity * 0.9;
+    this.glowMat.opacity = opacity * 0.3;
+    this.trailMat.uniforms.uOpacity.value = opacity;
+
+    // Trail — only add if we have some progress
+    if (progress > 0.01) {
+      if (this.trailCount < this.maxTrail) {
+        const idx = this.trailCount * 3;
+        this.trailPositions[idx] = this.x;
+        this.trailPositions[idx + 1] = this.y;
+        this.trailPositions[idx + 2] = 0;
+        this.trailCount++;
+      } else {
+        this.trailPositions.copyWithin(0, 3);
+        const idx = (this.maxTrail - 1) * 3;
+        this.trailPositions[idx] = this.x;
+        this.trailPositions[idx + 1] = this.y;
+        this.trailPositions[idx + 2] = 0;
+      }
+
+      for (let j = 0; j < this.trailCount; j++) {
+        this.trailAlphas[j] = j / this.trailCount;
+      }
+
+      this.trailGeo.attributes.position.needsUpdate = true;
+      this.trailGeo.attributes.alpha.needsUpdate = true;
+      this.trailGeo.setDrawRange(0, this.trailCount);
+    }
+  }
+
+  reset() {
+    this.trailCount = 0;
+    this.trailGeo.setDrawRange(0, 0);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ISLAMIC GEOMETRIC FRAME
+// N-fold symmetry pattern that builds with prayer progress
+// ══════════════════════════════════════════════════════════════
+class IslamicFrame {
+  constructor() {
+    this.group = new THREE.Group();
+    scene.add(this.group);
+    this.lines = [];
+  }
+
+  build(fold, color, seed) {
+    // Clear previous
+    this.lines.forEach(l => this.group.remove(l));
+    this.lines = [];
+
+    const rng = seededRandom(seed);
+    const col = new THREE.Color(color);
+    const mat = (opacity) => new THREE.LineBasicMaterial({
+      color: col, transparent: true, opacity,
+      blending: THREE.AdditiveBlending
+    });
+
+    // Outer ring — n-fold star
+    const R = 5.8;
+    const r = R * (0.4 + rng() * 0.2);
+    const starPts = [];
+    for (let i = 0; i <= fold * 2; i++) {
+      const a = (i / (fold * 2)) * Math.PI * 2 - Math.PI / 2;
+      const radius = i % 2 === 0 ? R : r;
+      starPts.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
+    }
+    const starLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(starPts), mat(0)
+    );
+    this.group.add(starLine);
+    this.lines.push(starLine);
+
+    // Khatam interlace — connect vertices
+    const steps = [2, 3];
+    if (fold >= 8) steps.push(4);
+    if (fold >= 12) steps.push(5);
+
+    steps.forEach(step => {
+      const pts = [];
+      for (let i = 0; i < fold; i++) {
+        const a1 = (i / fold) * Math.PI * 2 - Math.PI / 2;
+        const a2 = ((i + step) / fold) * Math.PI * 2 - Math.PI / 2;
+        pts.push(
+          new THREE.Vector3(Math.cos(a1) * R, Math.sin(a1) * R, 0),
+          new THREE.Vector3(Math.cos(a2) * R, Math.sin(a2) * R, 0)
+        );
+      }
+      const line = new THREE.LineSegments(
+        new THREE.BufferGeometry().setFromPoints(pts), mat(0)
+      );
+      this.group.add(line);
+      this.lines.push(line);
+    });
+
+    // Inner rosette
+    const circlePts = [];
+    for (let i = 0; i <= 96; i++) {
+      const a = (i / 96) * Math.PI * 2;
+      circlePts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
+    }
+    const circLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(circlePts), mat(0)
+    );
+    this.group.add(circLine);
+    this.lines.push(circLine);
+
+    // Inner star — rotated half-fold
+    const ir = r * 0.7;
+    const ir2 = r * 0.35;
+    const innerPts = [];
+    for (let i = 0; i <= fold * 2; i++) {
+      const a = (i / (fold * 2)) * Math.PI * 2 - Math.PI / 2 + Math.PI / fold;
+      const radius = i % 2 === 0 ? ir : ir2;
+      innerPts.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
+    }
+    const innerLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(innerPts), mat(0)
+    );
+    this.group.add(innerLine);
+    this.lines.push(innerLine);
+  }
+
+  update(progress, opacity) {
+    // Reveal lines progressively with prayer progress
+    const perLine = 1 / Math.max(1, this.lines.length);
+    this.lines.forEach((line, i) => {
+      const lineStart = i * perLine;
+      const lineEnd = lineStart + perLine;
+      const lineProgress = Math.max(0, Math.min(1, (progress - lineStart) / perLine));
+      line.material.opacity = lineProgress * opacity * 0.35;
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// QIBLA COMPASS LINE
+// Subtle line pointing toward Mecca from center
+// ══════════════════════════════════════════════════════════════
+const qiblaLinePts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 6.5, 0)];
+const qiblaGeo = new THREE.BufferGeometry().setFromPoints(qiblaLinePts);
+const qiblaMat = new THREE.LineBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.04,
+  blending: THREE.AdditiveBlending
+});
+const qiblaLine = new THREE.Line(qiblaGeo, qiblaMat);
+// Rotate to qibla bearing (bearing is from north, clockwise;
+// Three.js z-rotation is from +y axis, counter-clockwise)
+qiblaLine.rotation.z = -qiblaRad;
+scene.add(qiblaLine);
+
+// Small qibla marker at the end
+const qiblaMarkerGeo = new THREE.CircleGeometry(0.04, 8);
+const qiblaMarkerMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.08
+});
+const qiblaMarker = new THREE.Mesh(qiblaMarkerGeo, qiblaMarkerMat);
+qiblaMarker.position.set(
+  Math.sin(qiblaRad) * 6.3,
+  Math.cos(qiblaRad) * 6.3, 0
+);
+scene.add(qiblaMarker);
+
+// ══════════════════════════════════════════════════════════════
+// INSTANTIATE
+// ══════════════════════════════════════════════════════════════
+let particles = [];
+let frame = new IslamicFrame();
+let currentPrayerIdx = -1;
+let currentSeed = 0;
+
+function setupForPrayer(prayerIdx) {
+  if (prayerIdx === currentPrayerIdx) return;
+  currentPrayerIdx = prayerIdx;
+
+  const prayer = PRAYERS[prayerIdx];
+  const hijri = getHijriDate();
+  currentSeed = getArtworkSeed(prayerIdx);
+  const lq = FORCE_LQ || isLaylatulQadr(hijri);
+
+  // Determine fold — Laylatul Qadr uses 19 (Bismillah structure)
+  const fold = lq ? Q.BISMILLAH : prayer.fold;
+
+  // Clear old particles
+  particles.forEach(p => {
+    TAWAF_GROUP.remove(p.body);
+    TAWAF_GROUP.remove(p.glow);
+    TAWAF_GROUP.remove(p.trail);
+    p.whiskers.forEach(w => TAWAF_GROUP.remove(w.line));
+  });
+
+  // Create 7 tawaf particles
+  particles = [];
+  for (let i = 0; i < Q.TAWAF_CIRCUITS; i++) {
+    particles.push(new TawafParticle(i, Q.TAWAF_CIRCUITS, currentSeed, prayer.color));
+  }
+
+  // Build geometric frame
+  frame.build(fold, prayer.color, currentSeed);
+
+  // Orient entire composition toward qibla
+  TAWAF_GROUP.rotation.z = -qiblaRad * 0.15; // subtle qibla bias
+}
+
+// ══════════════════════════════════════════════════════════════
+// DEMO MODE STATE
+// ══════════════════════════════════════════════════════════════
+let demoIdx = FORCE_PRAYER ? (PRAYER_MAP[FORCE_PRAYER.toLowerCase()] || 0) : 0;
+let demoTimer = 0;
+const DEMO_CYCLE = 10;
+
+// ══════════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ══════════════════════════════════════════════════════════════
+const clock = new THREE.Clock();
+const prayerEl = document.getElementById('prayer-name');
+const hijriEl = document.getElementById('hijri-date');
+const progressFill = document.getElementById('progress-fill');
+
+// Update Hijri display
+const hijri = getHijriDate();
+hijriEl.textContent = hijri.str;
+const moonPhase = getMoonPhase();
+
+let frameCount = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.getElapsedTime();
+  frameCount++;
+
+  // Determine active prayer
+  let prayerIdx, progress;
+
+  if (FORCE_PRAYER) {
+    prayerIdx = PRAYER_MAP[FORCE_PRAYER.toLowerCase()] || 0;
+    progress = Math.min(1, t / 30); // build over 30s for lookdev
+  } else if (DEMO_MODE) {
+    demoTimer += dt;
+    if (demoTimer > DEMO_CYCLE) {
+      demoTimer = 0;
+      demoIdx = (demoIdx + 1) % PRAYERS.length;
+      // Reset trails for new prayer
+      particles.forEach(p => p.reset());
+    }
+    prayerIdx = demoIdx;
+    progress = demoTimer / DEMO_CYCLE;
+  } else {
+    prayerIdx = getCurrentPrayer();
+    progress = getPrayerProgress();
+  }
+
+  // Setup prayer if changed
+  setupForPrayer(prayerIdx);
+
+  const prayer = PRAYERS[prayerIdx];
+  const lq = FORCE_LQ || isLaylatulQadr(getHijriDate());
+
+  // HUD
+  prayerEl.textContent = prayer.name + (lq ? ' · laylatul qadr' : '');
+  prayerEl.style.color = prayer.color;
+  progressFill.style.width = `${progress * 100}%`;
+  progressFill.style.background = prayer.color;
+
+  // Opacity ramps up with progress
+  const opacity = 0.3 + progress * 0.7;
+
+  // Update tawaf particles
+  particles.forEach(p => {
+    p.update(dt, progress, moonPhase, opacity, lq);
+  });
+
+  // Update geometric frame
+  frame.update(progress, opacity);
+
+  // Gentle scene breathing
+  const breathe = Math.sin(t * 0.3) * 0.02;
+  TAWAF_GROUP.scale.setScalar(1 + breathe);
+
+  // Slow global rotation — anti-clockwise, barely perceptible
+  TAWAF_GROUP.rotation.z -= dt * 0.008;
+
+  // Center dot pulses subtly
+  centerMat.opacity = 0.3 + Math.sin(t * 2) * 0.1;
+
+  // Qibla line very subtle pulse
+  qiblaMat.opacity = 0.03 + Math.sin(t * 0.5) * 0.015;
+
+  composer.render();
+}
+
+animate();
+
+// ══════════════════════════════════════════════════════════════
+// RESIZE
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+  updateCamera();
+});
+
+</script>
+</body>
+</html>

@@ -679,23 +679,23 @@ podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
 prismGroup.add(podiumMesh);
 
-// PODIUM LIGHTING — front-facing key to reveal the side faces
-const podiumKey = new THREE.SpotLight(0xe8e0f0, 8);
-podiumKey.position.set(3, 4, 8);
-podiumKey.target.position.set(0, -2, 0);
-podiumKey.angle = 0.5;
+// PODIUM LIGHTING — aimed LOW to light column without flooding cube
+const podiumKey = new THREE.SpotLight(0xe8e0f0, 6);
+podiumKey.position.set(3, -2, 8); // below cube level
+podiumKey.target.position.set(0, -5, 0); // aimed at lower podium
+podiumKey.angle = 0.4;
 podiumKey.penumbra = 0.7;
-podiumKey.decay = 1.5;
+podiumKey.decay = 1.2;
 podiumKey.castShadow = false;
 scene.add(podiumKey, podiumKey.target);
 
-// PODIUM FILL — opposite side, softer, cooler
-const podiumFill = new THREE.SpotLight(0x6060a0, 4);
-podiumFill.position.set(-4, 3, 6);
-podiumFill.target.position.set(0, -3, 0);
-podiumFill.angle = 0.6;
+// PODIUM FILL — opposite side, softer, cooler, also aimed low
+const podiumFill = new THREE.SpotLight(0x6060a0, 3);
+podiumFill.position.set(-4, -1, 6);
+podiumFill.target.position.set(0, -6, 0);
+podiumFill.angle = 0.5;
 podiumFill.penumbra = 0.8;
-podiumFill.decay = 1.5;
+podiumFill.decay = 1.2;
 podiumFill.castShadow = false;
 scene.add(podiumFill, podiumFill.target);
 

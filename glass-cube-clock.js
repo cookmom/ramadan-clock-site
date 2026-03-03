@@ -670,14 +670,14 @@ prismGroup.rotation.y = Math.PI / 4;
 // ─── PODIUM ───────────────────────────────────────────────────────────────────
 // Square column beneath cube. Top face meets cube bottom (y=0).
 // Height is procedural: extends downward to fill visible viewport floor.
-const PODIUM_WIDTH = 1.35; // slightly wider than cube (1.2) for visual base
+const PODIUM_WIDTH = 1.8; // noticeably wider than cube (1.2) — visible base from steep camera
 const podiumMat = new THREE.MeshPhysicalMaterial({
-  color: 0x1a1a2a,
-  roughness: 0.15,
-  metalness: 0.85,
-  reflectivity: 0.8,
-  clearcoat: 0.3,
-  clearcoatRoughness: 0.2,
+  color: 0x22223a,
+  roughness: 0.12,
+  metalness: 0.9,
+  reflectivity: 1.0,
+  clearcoat: 0.5,
+  clearcoatRoughness: 0.15,
 });
 // Start with a default height, recalculated in updatePodiumHeight()
 let podiumGeo = new THREE.BoxGeometry(PODIUM_WIDTH, 4, PODIUM_WIDTH);

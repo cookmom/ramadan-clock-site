@@ -665,7 +665,7 @@ prismGroup.rotation.y = Math.PI / 4;
 const PODIUM_W = 1.2 * 2.2; // 2.64 — double the cube width
 const PODIUM_H = 20; // tall enough to extend past any visible floor
 const podiumMat = new THREE.MeshPhysicalMaterial({
-  color: 0x1a1a2a,
+  color: 0x3a3a3a,
   roughness: 0.15,
   metalness: 0.85,
   reflectivity: 0.9,

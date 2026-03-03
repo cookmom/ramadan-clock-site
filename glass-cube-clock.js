@@ -667,9 +667,10 @@ prismGroup.add(cubeGroup);
 prismGroup.rotation.y = Math.PI / 4;
 
 // ─── PODIUM ───────────────────────────────────────────────────────────────────
-// 110% of cube width, same rotation, extended from cube bottom to floor.
-const PODIUM_W = 1.2 * 1.1; // 1.32 — just slightly wider than cube
-const PODIUM_H = CUBE_Y; // from y=0 (cube bottom) down to floor
+// 110% cube width, same rotation. Top at y=0 (cube bottom), extends down
+// well below floor so it reads as a column going into the ground.
+const PODIUM_W = 1.2 * 1.1; // 1.32
+const PODIUM_H = 20; // tall enough to extend past any visible floor
 const podiumMat = new THREE.MeshPhysicalMaterial({
   color: 0x1a1a2a,
   roughness: 0.15,
@@ -682,10 +683,10 @@ const podiumMesh = new THREE.Mesh(
   new THREE.BoxGeometry(PODIUM_W, PODIUM_H, PODIUM_W),
   podiumMat
 );
-podiumMesh.position.y = CUBE_Y / 2; // center halfway between floor and cube bottom
+podiumMesh.position.y = -PODIUM_H / 2; // top face at y=0, extends down
 podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
-prismGroup.add(podiumMesh); // same group = same 45° rotation as cube
+prismGroup.add(podiumMesh);
 
 // ─── SPECTRAL CLOCK HANDS ─────────────────────────────────────────────────────
 // Three floor rays as H / M / S clock hands, synced to real time.

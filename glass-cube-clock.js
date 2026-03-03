@@ -666,12 +666,14 @@ prismGroup.rotation.y = Math.PI / 4;
 const PODIUM_W = 1.2 * 2.2; // 2.64 — double the cube width
 const PODIUM_H = 20; // tall enough to extend past any visible floor
 const podiumMat = new THREE.MeshPhysicalMaterial({
-  color: 0x2a2a42,
-  roughness: 0.25,
-  metalness: 0.55,
-  reflectivity: 0.7,
-  clearcoat: 0.5,
-  clearcoatRoughness: 0.2,
+  color: 0x303050,
+  roughness: 0.4,
+  metalness: 0.2,
+  reflectivity: 0.4,
+  clearcoat: 0.7,
+  clearcoatRoughness: 0.1,
+  emissive: 0x080810,
+  emissiveIntensity: 1.0,
 });
 const podiumMesh = new THREE.Mesh(
   new THREE.BoxGeometry(PODIUM_W, PODIUM_H, PODIUM_W),
@@ -682,45 +684,27 @@ podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
 scene.add(podiumMesh); // axis-aligned (0°) — sides visible while cube rotates 45°
 
-// PODIUM UPLIGHTS — close side-grazing kickers for edge definition
-// Right kicker — warm, positioned tight to right face
-const podiumUpR = new THREE.SpotLight(0xd0c8e0, 12);
-podiumUpR.position.set(3.0, -2, 2.0); // close to right face, slightly forward
-podiumUpR.target.position.set(1.0, -3, 0); // aimed down along right face
-podiumUpR.angle = 0.6;
-podiumUpR.penumbra = 0.6;
-podiumUpR.decay = 1.5;
+// PODIUM UPLIGHTS — DirectionalLights for guaranteed face illumination
+// Right face (normal = +X) — light coming from right
+const podiumUpR = new THREE.DirectionalLight(0xd0c8e8, 0.4);
+podiumUpR.position.set(1, 0, 0); // direction: from +X
+podiumUpR.target.position.set(0, 0, 0);
 podiumUpR.castShadow = false;
 scene.add(podiumUpR, podiumUpR.target);
 
-// Left fill — cooler, tight to left face
-const podiumUpL = new THREE.SpotLight(0x8080c0, 8);
-podiumUpL.position.set(-3.0, -2, 2.0); // close to left face
-podiumUpL.target.position.set(-1.0, -3, 0);
-podiumUpL.angle = 0.6;
-podiumUpL.penumbra = 0.6;
-podiumUpL.decay = 1.5;
+// Left face (normal = -X) — light coming from left, dimmer
+const podiumUpL = new THREE.DirectionalLight(0x9090c8, 0.25);
+podiumUpL.position.set(-1, 0, 0);
+podiumUpL.target.position.set(0, 0, 0);
 podiumUpL.castShadow = false;
 scene.add(podiumUpL, podiumUpL.target);
 
-// Front wash — defines front face
-const podiumUpC = new THREE.SpotLight(0xc0b8d8, 5);
-podiumUpC.position.set(0, -3, 4.5); // below and in front
-podiumUpC.target.position.set(0, -1.5, 0);
-podiumUpC.angle = 0.45;
-podiumUpC.penumbra = 0.8;
-podiumUpC.decay = 1.2;
+// Front face (normal = +Z) — light coming from front
+const podiumUpC = new THREE.DirectionalLight(0xc0b8d8, 0.3);
+podiumUpC.position.set(0, 0, 1);
+podiumUpC.target.position.set(0, 0, 0);
 podiumUpC.castShadow = false;
 scene.add(podiumUpC, podiumUpC.target);
-
-// Edge-definition point lights — very close to podium edges
-const edgeR = new THREE.PointLight(0xc0b8e0, 3, 6, 2);
-edgeR.position.set(2.0, -2, 1.8); // near right-front edge
-scene.add(edgeR);
-
-const edgeL = new THREE.PointLight(0x7878b0, 2, 6, 2);
-edgeL.position.set(-2.0, -2, 1.8); // near left-front edge
-scene.add(edgeL);
 
 // ─── SPECTRAL CLOCK HANDS ─────────────────────────────────────────────────────
 // Three floor rays as H / M / S clock hands, synced to real time.

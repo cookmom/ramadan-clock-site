@@ -99,6 +99,7 @@ function onResize() {
   fboRT.setSize(W * dpr, H * dpr);
   cubeMat.uniforms.uRes.value.set(W * dpr, H * dpr);
   cubeMat.uniforms.uAspect.value = W / H;
+  if (typeof updatePodiumHeight === 'function') updatePodiumHeight();
 }
 // Only resize on orientation change — NOT on scroll/chrome show/hide
 window.addEventListener('orientationchange', function() {
@@ -665,6 +666,58 @@ cubeMesh.castShadow = true;
 cubeGroup.add(cubeMesh);
 prismGroup.add(cubeGroup);
 prismGroup.rotation.y = Math.PI / 4;
+
+// ─── PODIUM ───────────────────────────────────────────────────────────────────
+// Square column beneath cube. Top face meets cube bottom (y=0).
+// Height is procedural: extends downward to fill visible viewport floor.
+const PODIUM_WIDTH = 1.35; // slightly wider than cube (1.2) for visual base
+const podiumMat = new THREE.MeshPhysicalMaterial({
+  color: 0x1a1a2a,
+  roughness: 0.15,
+  metalness: 0.85,
+  reflectivity: 0.8,
+  clearcoat: 0.3,
+  clearcoatRoughness: 0.2,
+});
+// Start with a default height, recalculated in updatePodiumHeight()
+let podiumGeo = new THREE.BoxGeometry(PODIUM_WIDTH, 4, PODIUM_WIDTH);
+const podiumMesh = new THREE.Mesh(podiumGeo, podiumMat);
+podiumMesh.position.y = -2; // top at y=0, center at -height/2
+podiumMesh.receiveShadow = true;
+podiumMesh.castShadow = true;
+prismGroup.add(podiumMesh);
+
+function updatePodiumHeight() {
+  // Calculate how far below y=0 is visible from the camera
+  // Camera looks at (0, -0.8, 1.0) from (0.2, 9.7, 15.0) with FOV 35°
+  var vFov = camera.fov * Math.PI / 180;
+  var halfVFov = vFov / 2;
+  // Camera elevation above floor (y=0)
+  var camY = camera.position.y; // 9.7
+  var camZ = camera.position.z; // 15.0
+  // Angle from camera to lookAt target
+  var lookY = -0.8;
+  var lookZ = 1.0;
+  var dz = camZ - lookZ;
+  var dy = camY - lookY;
+  var lookAngle = Math.atan2(dy, dz); // angle below horizontal
+  // Bottom of viewport looks further down
+  var bottomAngle = lookAngle + halfVFov;
+  // Where does the bottom ray hit the floor plane (y = floorY)?
+  // We want the podium to extend below the floor to cover visible area
+  // The lowest visible y at the cube's z-position (z≈0 after lookAt)
+  var distToTarget = Math.sqrt(dz * dz + dy * dy);
+  var bottomY = camY - Math.tan(bottomAngle) * camZ;
+  // Podium height: from y=0 down to bottomY (clamped to reasonable range)
+  var pH = Math.max(3, Math.min(20, -bottomY + 1.0));
+  // Update geometry
+  prismGroup.remove(podiumMesh);
+  podiumMesh.geometry.dispose();
+  podiumMesh.geometry = new THREE.BoxGeometry(PODIUM_WIDTH, pH, PODIUM_WIDTH);
+  podiumMesh.position.y = -pH / 2; // top face at y=0
+  prismGroup.add(podiumMesh);
+}
+updatePodiumHeight();
 
 // ─── SPECTRAL CLOCK HANDS ─────────────────────────────────────────────────────
 // Three floor rays as H / M / S clock hands, synced to real time.

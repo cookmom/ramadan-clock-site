@@ -114,10 +114,29 @@ window.addEventListener('orientationchange', function() {
   }, 200);
 });
 
-// ─── FLOOR ────────────────────────────────────────────────────────────────────
+// ─── FLOOR (with podium cutout) ───────────────────────────────────────────────
+// Circle floor with a square hole where the podium passes through.
+// The hole is rotated 45° to match prismGroup rotation.
+const _floorShape = new THREE.Shape();
+_floorShape.absarc(0, 0, 40, 0, Math.PI * 2, false);
+// Square hole for podium — rotated 45° (PI/4) to match prismGroup
+const _holeHalf = (1.2 * 1.1) / 2 + 0.05; // PODIUM_W/2 + tiny margin
+const _cos45 = Math.cos(Math.PI / 4);
+const _sin45 = Math.sin(Math.PI / 4);
+const _holeCorners = [
+  [-_holeHalf, -_holeHalf], [_holeHalf, -_holeHalf],
+  [_holeHalf, _holeHalf], [-_holeHalf, _holeHalf]
+].map(function(p) {
+  return [p[0] * _cos45 - p[1] * _sin45, p[0] * _sin45 + p[1] * _cos45];
+});
+const _holePath = new THREE.Path();
+_holePath.moveTo(_holeCorners[0][0], _holeCorners[0][1]);
+for (var _hi = 1; _hi < 4; _hi++) _holePath.lineTo(_holeCorners[_hi][0], _holeCorners[_hi][1]);
+_holePath.lineTo(_holeCorners[0][0], _holeCorners[0][1]);
+_floorShape.holes.push(_holePath);
 const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(40, 64),
-  new THREE.MeshStandardMaterial({ color: 0x18182a, roughness: 0.88, metalness: 0, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+  new THREE.ShapeGeometry(_floorShape, 64),
+  new THREE.MeshStandardMaterial({ color: 0x18182a, roughness: 0.88, metalness: 0, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, side: THREE.DoubleSide })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;

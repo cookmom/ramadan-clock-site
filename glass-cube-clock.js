@@ -241,8 +241,9 @@ gobo.shadow.mapSize.set(_isMobile ? 1024 : 2048, _isMobile ? 1024 : 2048);
 gobo.shadow.bias = -0.001;
 gobo.shadow.camera.near = 1;
 gobo.shadow.camera.far = 25;
-gobo.map = _makeArchTexture(); // v57: re-enable gobo texture — real light/shadow interaction through arch shape
-scene.add(gobo, gobo.target);
+gobo.map = _makeArchTexture();
+// v80: arch disabled — gobo off
+// scene.add(gobo, gobo.target);
 
 // CUBE BACKLIGHT — glass transmission (Swarovski technique)
 const cubeBack = new THREE.SpotLight(0xffeedd, 7);
@@ -396,7 +397,7 @@ godRayMesh.rotation.y = Math.PI * 0.10; // slight tilt toward camera, follows be
 // the cube on mobile (camera sees it nearly edge-on; 13m tall × 0.55m wide at y≈7 = bright line).
 // The shaft air-mass concept is now carried by the arch floor stamp + boosted gobo instead.
 godRayMesh.visible = false;
-scene.add(godRayMesh);
+// scene.add(godRayMesh); // v80: arch disabled
 
 // ARCH FLOOR STAMP — additive overlay guarantees pointed arch reads on mobile.
 // SpotLight.map gobo irradiance on dark floor (albedo 0x18182a) is PBR-dim vs AdditiveBlending rays.
@@ -428,7 +429,7 @@ const archBloomMesh = new THREE.Mesh(
 archBloomMesh.rotation.set(-Math.PI / 2, 0, -Math.PI * 0.2); // v23: less steep diagonal — base exits left, tip stays in frame
 archBloomMesh.position.set(-3.5, 0.019, 0); // v56: -3→-3.5, pull arch tip into frame
 archBloomMesh.renderOrder = 1;
-scene.add(archBloomMesh);
+// scene.add(archBloomMesh); // v80: arch disabled
 
 // BASE STAMP — primary arch silhouette, the hero shape
 const archFloorMesh = new THREE.Mesh(
@@ -446,7 +447,7 @@ const archFloorMesh = new THREE.Mesh(
 archFloorMesh.rotation.set(-Math.PI / 2, 0, -Math.PI * 0.2); // v23: less steep diagonal — base exits left, tip stays in frame
 archFloorMesh.position.set(-3.5, 0.022, 0); // v56: -3→-3.5, pull arch tip into frame
 archFloorMesh.renderOrder = 2;
-scene.add(archFloorMesh);
+// scene.add(archFloorMesh); // v80: arch disabled
 
 // v65: outline stamp REMOVED — blur on fill texture carries the shape, no hard edges
 
@@ -509,7 +510,7 @@ shaftMesh.position.set(-3.8, 8, 1.2);
 // Rotate to align with beam angle — tilt back and diagonal
 shaftMesh.rotation.set(-0.15, -Math.PI * 0.2, 0.08);
 shaftMesh.renderOrder = 0;
-scene.add(shaftMesh);
+// scene.add(shaftMesh); // v80: arch disabled
 
 // ─── PRISM GROUP ──────────────────────────────────────────────────────────────
 const prismGroup = new THREE.Group();
@@ -664,13 +665,10 @@ prismGroup.rotation.y = Math.PI / 4;
 // well below floor so it reads as a column going into the ground.
 const PODIUM_W = 1.2 * 2.2; // 2.64 — double the cube width
 const PODIUM_H = 20; // tall enough to extend past any visible floor
-const podiumMat = new THREE.MeshPhysicalMaterial({
-  color: 0xffffff,
-  roughness: 0.15,
-  metalness: 0.85,
-  reflectivity: 0.9,
-  clearcoat: 0.4,
-  clearcoatRoughness: 0.2,
+const podiumMat = new THREE.MeshStandardMaterial({
+  color: 0x3a3a3a,
+  roughness: 0.75,
+  metalness: 0.0,
 });
 const podiumMesh = new THREE.Mesh(
   new THREE.BoxGeometry(PODIUM_W, PODIUM_H, PODIUM_W),
@@ -680,6 +678,26 @@ podiumMesh.position.y = -PODIUM_H / 2; // top face at y=0, extends down
 podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
 prismGroup.add(podiumMesh);
+
+// PODIUM LIGHTING — front-facing key to reveal the side faces
+const podiumKey = new THREE.SpotLight(0xe8e0f0, 8);
+podiumKey.position.set(3, 4, 8);
+podiumKey.target.position.set(0, -2, 0);
+podiumKey.angle = 0.5;
+podiumKey.penumbra = 0.7;
+podiumKey.decay = 1.5;
+podiumKey.castShadow = false;
+scene.add(podiumKey, podiumKey.target);
+
+// PODIUM FILL — opposite side, softer, cooler
+const podiumFill = new THREE.SpotLight(0x6060a0, 4);
+podiumFill.position.set(-4, 3, 6);
+podiumFill.target.position.set(0, -3, 0);
+podiumFill.angle = 0.6;
+podiumFill.penumbra = 0.8;
+podiumFill.decay = 1.5;
+podiumFill.castShadow = false;
+scene.add(podiumFill, podiumFill.target);
 
 // ─── SPECTRAL CLOCK HANDS ─────────────────────────────────────────────────────
 // Three floor rays as H / M / S clock hands, synced to real time.

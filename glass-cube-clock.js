@@ -685,7 +685,9 @@ const podiumMesh = new THREE.Mesh(podiumGeo, podiumMat);
 podiumMesh.position.y = -2; // top at y=0, center at -height/2
 podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
-prismGroup.add(podiumMesh);
+// Add to scene directly (NOT prismGroup) — keep axis-aligned so side faces
+// are visible from the camera angle. Cube rotates 45° above, podium stays square.
+scene.add(podiumMesh);
 
 function updatePodiumHeight() {
   // Calculate how far below y=0 is visible from the camera
@@ -711,11 +713,11 @@ function updatePodiumHeight() {
   // Podium height: from y=0 down to bottomY (clamped to reasonable range)
   var pH = Math.max(3, Math.min(20, -bottomY + 1.0));
   // Update geometry
-  prismGroup.remove(podiumMesh);
+  scene.remove(podiumMesh);
   podiumMesh.geometry.dispose();
   podiumMesh.geometry = new THREE.BoxGeometry(PODIUM_WIDTH, pH, PODIUM_WIDTH);
   podiumMesh.position.y = -pH / 2; // top face at y=0
-  prismGroup.add(podiumMesh);
+  scene.add(podiumMesh);
 }
 updatePodiumHeight();
 

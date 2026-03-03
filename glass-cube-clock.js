@@ -666,14 +666,14 @@ prismGroup.rotation.y = Math.PI / 4;
 const PODIUM_W = 1.2 * 2.2; // 2.64 — double the cube width
 const PODIUM_H = 20; // tall enough to extend past any visible floor
 // Per-face materials: BoxGeometry groups = +x, -x, +y, -y, +z, -z
-const podiumBase = { roughness: 0.5, metalness: 0.05, clearcoat: 0.3, clearcoatRoughness: 0.2, color: 0x101018 };
+const podiumBase = { roughness: 0.4, metalness: 0.05, clearcoat: 0.4, clearcoatRoughness: 0.15, color: 0x14141f, fog: false };
 const podiumMats = [
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x252540, emissiveIntensity: 1.0 }), // +x right — KEY face
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x10101c, emissiveIntensity: 0.5 }), // -x left — edge hint
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x0c0c16, emissiveIntensity: 0.4 }), // +y top — dichroic spill
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x030306, emissiveIntensity: 0.1 }), // -y bottom — invisible
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x1e1e38, emissiveIntensity: 0.8 }), // +z front — FILL face
-  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x040408, emissiveIntensity: 0.1 }), // -z back — hidden
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x585890, emissiveIntensity: 3.0 }), // +x right — KEY face
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x0e0e1a, emissiveIntensity: 0.5 }), // -x left — edge hint
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x0c0c18, emissiveIntensity: 0.5 }), // +y top — dichroic spill
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x020204, emissiveIntensity: 0.1 }), // -y bottom — invisible
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x181830, emissiveIntensity: 1.0 }), // +z front — FILL face
+  new THREE.MeshPhysicalMaterial({ ...podiumBase, emissive: 0x030306, emissiveIntensity: 0.1 }), // -z back — hidden
 ];
 const podiumMesh = new THREE.Mesh(
   new THREE.BoxGeometry(PODIUM_W, PODIUM_H, PODIUM_W),

@@ -665,10 +665,13 @@ prismGroup.rotation.y = Math.PI / 4;
 // well below floor so it reads as a column going into the ground.
 const PODIUM_W = 1.2 * 2.2; // 2.64 — double the cube width
 const PODIUM_H = 20; // tall enough to extend past any visible floor
-const podiumMat = new THREE.MeshStandardMaterial({
-  color: 0x3a3a3a,
-  roughness: 0.75,
-  metalness: 0.0,
+const podiumMat = new THREE.MeshPhysicalMaterial({
+  color: 0x2a2a42,
+  roughness: 0.25,
+  metalness: 0.55,
+  reflectivity: 0.7,
+  clearcoat: 0.5,
+  clearcoatRoughness: 0.2,
 });
 const podiumMesh = new THREE.Mesh(
   new THREE.BoxGeometry(PODIUM_W, PODIUM_H, PODIUM_W),
@@ -677,27 +680,47 @@ const podiumMesh = new THREE.Mesh(
 podiumMesh.position.y = -PODIUM_H / 2; // top face at y=0, extends down
 podiumMesh.receiveShadow = true;
 podiumMesh.castShadow = true;
-prismGroup.add(podiumMesh);
+scene.add(podiumMesh); // axis-aligned (0°) — sides visible while cube rotates 45°
 
-// PODIUM LIGHTING — aimed LOW to light column without flooding cube
-const podiumKey = new THREE.SpotLight(0xe8e0f0, 6);
-podiumKey.position.set(3, -2, 8); // below cube level
-podiumKey.target.position.set(0, -5, 0); // aimed at lower podium
-podiumKey.angle = 0.4;
-podiumKey.penumbra = 0.7;
-podiumKey.decay = 1.2;
-podiumKey.castShadow = false;
-scene.add(podiumKey, podiumKey.target);
+// PODIUM UPLIGHTS — close side-grazing kickers for edge definition
+// Right kicker — warm, positioned tight to right face
+const podiumUpR = new THREE.SpotLight(0xd0c8e0, 12);
+podiumUpR.position.set(3.0, -2, 2.0); // close to right face, slightly forward
+podiumUpR.target.position.set(1.0, -3, 0); // aimed down along right face
+podiumUpR.angle = 0.6;
+podiumUpR.penumbra = 0.6;
+podiumUpR.decay = 1.5;
+podiumUpR.castShadow = false;
+scene.add(podiumUpR, podiumUpR.target);
 
-// PODIUM FILL — opposite side, softer, cooler, also aimed low
-const podiumFill = new THREE.SpotLight(0x6060a0, 3);
-podiumFill.position.set(-4, -1, 6);
-podiumFill.target.position.set(0, -6, 0);
-podiumFill.angle = 0.5;
-podiumFill.penumbra = 0.8;
-podiumFill.decay = 1.2;
-podiumFill.castShadow = false;
-scene.add(podiumFill, podiumFill.target);
+// Left fill — cooler, tight to left face
+const podiumUpL = new THREE.SpotLight(0x8080c0, 8);
+podiumUpL.position.set(-3.0, -2, 2.0); // close to left face
+podiumUpL.target.position.set(-1.0, -3, 0);
+podiumUpL.angle = 0.6;
+podiumUpL.penumbra = 0.6;
+podiumUpL.decay = 1.5;
+podiumUpL.castShadow = false;
+scene.add(podiumUpL, podiumUpL.target);
+
+// Front wash — defines front face
+const podiumUpC = new THREE.SpotLight(0xc0b8d8, 5);
+podiumUpC.position.set(0, -3, 4.5); // below and in front
+podiumUpC.target.position.set(0, -1.5, 0);
+podiumUpC.angle = 0.45;
+podiumUpC.penumbra = 0.8;
+podiumUpC.decay = 1.2;
+podiumUpC.castShadow = false;
+scene.add(podiumUpC, podiumUpC.target);
+
+// Edge-definition point lights — very close to podium edges
+const edgeR = new THREE.PointLight(0xc0b8e0, 3, 6, 2);
+edgeR.position.set(2.0, -2, 1.8); // near right-front edge
+scene.add(edgeR);
+
+const edgeL = new THREE.PointLight(0x7878b0, 2, 6, 2);
+edgeL.position.set(-2.0, -2, 1.8); // near left-front edge
+scene.add(edgeL);
 
 // ─── SPECTRAL CLOCK HANDS ─────────────────────────────────────────────────────
 // Three floor rays as H / M / S clock hands, synced to real time.
